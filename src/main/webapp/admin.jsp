@@ -383,6 +383,7 @@
                             <select class="form-select" id="role" name="role" required>
                                 <option value="admin">Admin</option>
                                 <option value="customer">Customer</option>
+                                <option value="staff">Staff</option>
                             </select>
                         </div>
                     </div>
