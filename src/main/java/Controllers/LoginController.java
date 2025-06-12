@@ -21,6 +21,7 @@ public class LoginController extends HttpServlet {
 
     private static final String ERROR = "login.jsp";
     private static final String AD = "admin";
+    private static final String ST = "staff";
     private static final String ADMIN_PAGE = "AdminController";
     private static final String CS = "customer";
     private static final String CUSTOMER_PAGE = "HomeController";
@@ -46,7 +47,7 @@ public class LoginController extends HttpServlet {
 
                 // Determine the URL based on the role
                 String role = loginUser.getRole();
-                if (AD.equals(role)) {
+                if (AD.equals(role) || ST.equals(role)) {
                     url = ADMIN_PAGE;
                     System.out.println("Redirecting to admin page");
                 } else if (CS.equals(role)) {
