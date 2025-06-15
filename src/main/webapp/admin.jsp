@@ -258,7 +258,7 @@
                                     <option value="all">All Orders</option>
                                     <option value="pending">Pending</option>
                                     <option value="completed">Completed</option>
-                                    <option value="cancelled">Cancelled</option>
+                                    <option value="cancelled">Cancelled </option>
                                 </select>
                             </div>
                             <div class="table-responsive">
