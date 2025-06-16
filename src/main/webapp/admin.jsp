@@ -41,12 +41,12 @@
                                     <i class="fas fa-users me-2"></i>Staff Manage
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a href="#orders" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-shopping-cart me-2"></i>Orders
-                                </a>
-                            </li>
                         </ul>
+                        <li class="nav-item">
+                            <a href="#voucher" class="nav-link" data-bs-toggle="tab">
+                                <i class="fa-solid fa-ticket me-2"></i>Voucher
+                            </a>
+                        </li>
                         <hr>
                         <div class="dropdown">
                             <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown">
@@ -313,6 +313,69 @@
                                     </table>
                                 </div>
                             </div>
+
+                            <!-- Vouchers Tab -->
+                            <div class="tab-pane fade" id="vouchers">
+                                <h2>Vouchers Management</h2>
+                                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addVoucherModal">
+                                    <i class="fas fa-plus"></i> Add New Voucher
+                                </button>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Code</th>
+                                                <th>Type</th>
+                                                <th>Value</th>
+                                                <th>Start Date</th>
+                                                <th>End Date</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach items="${vouchers}" var="voucher">
+                                                <tr data-voucher-id="${voucher.voucherId}"
+                                                    data-voucher-code="${voucher.voucherCode}"
+                                                    data-voucher-discount-type="${voucher.discountType}"
+                                                    data-voucher-discount-value="${voucher.discountValue}"
+                                                    data-voucher-start-date="${voucher.startDate}"
+                                                    data-voucher-end-date="${voucher.endDate}"
+                                                    data-voucher-status="${voucher.status}">
+
+                                                    <td>${voucher.voucherId}</td>
+                                                    <td>${voucher.voucherCode}</td>
+                                                    <td>${voucher.discountType}</td>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${voucher.discountType == 'percentage'}">
+                                                                ${voucher.discountValue}%
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                $${voucher.discountValue}
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td>${voucher.startDate}</td>
+                                                    <td>${voucher.endDate}</td>
+                                                    <td>${voucher.status}</td>
+                                                    <td class="action-buttons">
+                                                        <button class="btn btn-sm btn-warning" onclick="editVoucher('${voucher.voucherId}')">
+                                                            <i class="fas fa-edit"></i> Edit
+                                                        </button>
+                                                        <button class="btn btn-sm btn-danger" onclick="deleteVoucher('${voucher.voucherId}')">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+
                         </div>
                     </div>
                 </div>
@@ -614,6 +677,64 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add Voucher Modal -->
+            <div class="modal fade" id="addVoucherModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add New Voucher</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="AdminController" method="post">
+                            <div class="modal-body">
+                                <input type="hidden" name="action" value="addVoucher">
+
+                                <div class="mb-3">
+                                    <label for="voucherCode" class="form-label">Voucher Code</label>
+                                    <input type="text" class="form-control" id="voucherCode" name="voucherCode" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="discountType" class="form-label">Discount Type</label>
+                                    <select class="form-select" id="discountType" name="discountType" required>
+                                        <option value="percentage">Percentage (%)</option>
+                                        <option value="fixed">Fixed Amount ($)</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="discountValue" class="form-label">Discount Value</label>
+                                    <input type="number" step="0.01" class="form-control" id="discountValue" name="discountValue" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="startDate" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="startDate" name="startDate" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="endDate" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="endDate" name="endDate" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Add</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>

@@ -8,7 +8,7 @@
 
 // Product functions
 function editProduct(productId) {
-   
+
     const row = document.querySelector(`tr[data-product-id="${productId}"]`);
     if (!row)
         return;
@@ -31,7 +31,7 @@ function editProduct(productId) {
 
     // Hiển thị ảnh hiện tại
     const imgPreview = document.getElementById('currentProductImage');
-    imgPreview.src = '/images/products/'+image;
+    imgPreview.src = '/images/products/' + image;
     imgPreview.style.display = 'block';
 
     // Xóa preview ảnh mới nếu có
@@ -47,7 +47,7 @@ function editProduct(productId) {
             reader.readAsDataURL(file);
         } else {
             // Nếu bỏ chọn ảnh, thì trả lại ảnh gốc
-            imgPreview.src = '/images/products/'+image;
+            imgPreview.src = '/images/products/' + image;
         }
     };
 
@@ -69,14 +69,14 @@ function editUser(userId) {
         const username = row.getAttribute('data-username') || '';
         const fullname = row.getAttribute('data-fullname') || '';
         const role = (row.getAttribute('data-role') || '').toLowerCase();  // tránh null.toLowerCase()
-         const password = row.getAttribute('data-password') || '';
+        const password = row.getAttribute('data-password') || '';
         // Gán vào input
         document.getElementById('editUserId').value = userId;
         document.getElementById('displayUsername').value = username;
         document.getElementById('editFullname').value = fullname;
         document.getElementById('editRole').value = role;
         document.getElementById('editPassword').value = password;
-        
+
         console.log('User data:', {
             id: userId,
             username,
@@ -235,4 +235,34 @@ function togglePasswordVisibility() {
     icon.classList.toggle('fa-eye-slash', !isPassword);
 }
 
-   
+// Voucher functions
+function editVoucher(voucherId) {
+    const row = document.querySelector(`tr[data-voucher-id="${voucherId}"]`);
+    if (!row)
+        return;
+
+    const code = row.getAttribute('data-voucher-code') || '';
+    const discountType = row.getAttribute('data-voucher-discount-type') || '';
+    const discountValue = row.getAttribute('data-voucher-discount-value') || '';
+    const startDate = row.getAttribute('data-voucher-start-date') || '';
+    const endDate = row.getAttribute('data-voucher-end-date') || '';
+    const status = row.getAttribute('data-voucher-status') || '';
+
+    // Đổ dữ liệu vào form chỉnh sửa
+    document.getElementById('editVoucherId').value = voucherId;
+    document.getElementById('editVoucherCode').value = code;
+    document.getElementById('editDiscountType').value = discountType;
+    document.getElementById('editDiscountValue').value = discountValue;
+    document.getElementById('editStartDate').value = startDate;
+    document.getElementById('editEndDate').value = endDate;
+    document.getElementById('editVoucherStatus').value = status;
+
+    // Hiển thị modal
+    new bootstrap.Modal(document.getElementById('editVoucherModal')).show();
+}
+
+function deleteVoucher(id) {
+    if (confirm('Are you sure you want to delete this voucher?')) {
+        window.location.href = '/AdminController?action=deleteVoucher&id=' + id;
+    }
+}

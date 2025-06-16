@@ -5,11 +5,13 @@ import DAOs.OrderDetailDAO;
 import DAOs.ProductDAO;
 import DAOs.ProductTypeDAO;
 import DAOs.UserDAO;
+import DAOs.VoucherDAO;
 import Models.Order;
 import Models.OrderDetail;
 import Models.Product;
 import Models.ProductTypes;
 import Models.User;
+import Models.Voucher;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -24,12 +26,14 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
+import java.math.BigDecimal;
+import java.sql.Date;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
-    fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
-    maxFileSize = 1024 * 1024 * 10,      // 10 MB
-    maxRequestSize = 1024 * 1024 * 100   // 100 MB
+        fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
+        maxFileSize = 1024 * 1024 * 10, // 10 MB
+        maxRequestSize = 1024 * 1024 * 100 // 100 MB
 )
 public class AdminController extends HttpServlet {
 
@@ -39,14 +43,14 @@ public class AdminController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         String action = request.getParameter("action");
-        
+
         try {
             // If action is null, load admin page by default
             if (action == null) {
                 loadAdminPage(request, response);
                 return;
             }
-            
+
             switch (action) {
                 case "addProductType":
                     addProductType(request, response);
@@ -84,10 +88,24 @@ public class AdminController extends HttpServlet {
                 case "viewOrderDetails":
                     viewOrderDetails(request, response);
                     break;
+
+                // --- Voucher management ---
+                case "addVoucher":
+                    addVoucher(request, response);
+                    break;
+                case "updateVoucher":
+                    updateVoucher(request, response);
+                    break;
+                case "deleteVoucher":
+                    deleteVoucher(request, response);
+                    break;
+                case "getVoucherDetails":
+                    getVoucherDetails(request, response);
+                    break;
+
                 default:
                     loadAdminPage(request, response);
             }
-
 
         } catch (Exception e) {
             log("Error at AdminController: " + e.toString());
@@ -104,17 +122,20 @@ public class AdminController extends HttpServlet {
             ProductDAO productDAO = new ProductDAO();
             UserDAO userDAO = new UserDAO();
             OrderDAO orderDAO = new OrderDAO();
+            VoucherDAO voucherDAO = new VoucherDAO();
 
             List<ProductTypes> productTypes = productTypeDAO.getAll();
             List<Product> products = productDAO.getAll();
             List<User> users = userDAO.getAll();
             List<Order> orders = orderDAO.getAll();
+            List<Voucher> vouchers = voucherDAO.getAll();
 
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("products", products);
             request.setAttribute("users", users);
             request.setAttribute("orders", orders);
-
+            request.setAttribute("vouchers", vouchers);
+            
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
             throw new ServletException(e);
@@ -235,15 +256,13 @@ public class AdminController extends HttpServlet {
             product.setProPrice(price);
             product.setProQuantity(quantity);
             product.setProTypeId(typeId);
-            
-            
 
             ProductDAO dao = new ProductDAO();
-            
+
             if (fileName != null) {
                 product.setProImage(fileName);
             }
-            
+
             dao.update(product);
 
             response.sendRedirect("AdminController");
@@ -455,14 +474,101 @@ public class AdminController extends HttpServlet {
         }
     }
 
+    private void addVoucher(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String codeName = request.getParameter("codeName");
+            String description = request.getParameter("voucherDescription");
+            String discountType = request.getParameter("discountType");
+            BigDecimal discountValue = new BigDecimal(request.getParameter("discountValue"));
+            BigDecimal minOrderAmount = new BigDecimal(request.getParameter("minOrderAmount"));
+            Date startDate = Date.valueOf(request.getParameter("startDate"));
+            Date endDate = Date.valueOf(request.getParameter("endDate"));
+            boolean isActive = Boolean.parseBoolean(request.getParameter("voucherActive"));
+
+            Voucher voucher = new Voucher(0, codeName, description, discountType,
+                    discountValue, minOrderAmount, startDate, endDate, isActive);
+
+            VoucherDAO dao = new VoucherDAO();
+            dao.create(voucher);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void updateVoucher(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            String codeName = request.getParameter("codeName");
+            String description = request.getParameter("voucherDescription");
+            String discountType = request.getParameter("discountType");
+            BigDecimal discountValue = new BigDecimal(request.getParameter("discountValue"));
+            BigDecimal minOrderAmount = new BigDecimal(request.getParameter("minOrderAmount"));
+            Date startDate = Date.valueOf(request.getParameter("startDate"));
+            Date endDate = Date.valueOf(request.getParameter("endDate"));
+            boolean isActive = Boolean.parseBoolean(request.getParameter("voucherActive"));
+
+            Voucher voucher = new Voucher(id, codeName, description, discountType,
+                    discountValue, minOrderAmount, startDate, endDate, isActive);
+
+            VoucherDAO dao = new VoucherDAO();
+            dao.update(voucher);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void deleteVoucher(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            VoucherDAO dao = new VoucherDAO();
+            dao.delete(id);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void getVoucherDetails(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            VoucherDAO dao = new VoucherDAO();
+            Voucher voucher = dao.getById(id);
+
+            if (voucher == null) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.getWriter().write("Voucher not found");
+                return;
+            }
+
+            response.setContentType("application/json");
+            PrintWriter out = response.getWriter();
+            out.print(new Gson().toJson(voucher));
+            out.flush();
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("Error fetching voucher: " + e.getMessage());
+        }
+    }
+
     // Helper classes for JSON response
     private static class OrderDetailsResponse {
+
         Order order;
         String customerName;
         List<OrderItem> orderItems;
     }
 
     private static class OrderItem {
+
         String productName;
         int quantity;
         double unitPrice;
@@ -480,4 +586,4 @@ public class AdminController extends HttpServlet {
             throws ServletException, IOException {
         processRequest(request, response);
     }
-} 
+}
