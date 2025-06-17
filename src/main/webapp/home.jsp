@@ -254,49 +254,68 @@
             </div>
         </div>
 
-        <!-- Products Grid -->
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-            <c:forEach items="${products}" var="product">
-                <div class="col">
-                    <div class="product-card position-relative">
-                        <c:if test="${product.proQuantity <= 5 && product.proQuantity > 0}">
-                            <span class="stock-badge low-stock">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                Only ${product.proQuantity} left
-                            </span>
-                        </c:if>
-                        <c:if test="${product.proQuantity == 0}">
-                            <span class="stock-badge out-of-stock">
-                                <i class="fas fa-times-circle"></i>
-                                Out of Stock
-                            </span>
-                        </c:if>
-                        <img src="images/products/${product.proImage}" class="product-image" alt="${product.proName}">
-                        <div class="product-info">
-                            <h5 class="product-title">${product.proName}</h5>
-                            <p class="product-description">${product.proDescription}</p>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="product-price">
-                                    <fmt:formatNumber value="${product.proPrice}" type="currency" currencySymbol="$"/>
-                                </span>
-                                <span class="text-muted small">
-                                    <i class="fas fa-box"></i> ${product.proQuantity} in stock
-                                </span>
-                            </div>
-                            <form action="CartController" method="POST">
-                                <input type="hidden" name="action" value="add">
-                                <input type="hidden" name="productId" value="${product.proId}">
-                                <button type="submit" class="btn btn-add-cart"
-                                        ${product.proQuantity == 0 ? 'disabled' : ''}>
-                                    <i class="fas fa-shopping-cart me-2"></i>
-                                    ${product.proQuantity == 0 ? 'Out of Stock' : 'Add to Cart'}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </c:forEach>
-        </div>
+                           <!-- Products Grid -->
+
+                           <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                               <c:forEach items="${products}" var="product">
+                                   <div class="col">
+                                       <div class="product-card position-relative">
+                                           <c:if test="${product.proQuantity <= 5 && product.proQuantity > 0}">
+                                               <span class="stock-badge low-stock">
+                                                   <i class="fas fa-exclamation-triangle"></i>
+                                                   Only ${product.proQuantity} left
+                                               </span>
+                                           </c:if>
+                                           <c:if test="${product.proQuantity == 0}">
+                                               <span class="stock-badge out-of-stock">
+                                                   <i class="fas fa-times-circle"></i>
+                                                   Out of Stock
+                                               </span>
+                                           </c:if>
+
+                                           <img src="images/products/${product.proImage}" class="product-image" alt="${product.proName}">
+
+                                           <div class="product-info">
+                                               <h5 class="product-title">${product.proName}</h5>
+                                               <p class="product-description">${product.proDescription}</p>
+
+                                               <!-- THÔNG SỐ KỸ THUẬT -->
+                                               <c:if test="${not empty product.specification}">
+                                                   <ul class="list-unstyled mb-2 small text-muted">
+                                                       <li><i class="fas fa-microchip me-2"></i>CPU: ${product.specification.cpu}</li>
+                                                       <li><i class="fas fa-memory me-2"></i>RAM: ${product.specification.ram}</li>
+                                                       <li><i class="fas fa-hdd me-2"></i>Storage: ${product.specification.storage}</li>
+                                                       <li><i class="fas fa-desktop me-2"></i>Screen: ${product.specification.screen}</li>
+                                                       <li><i class="fas fa-battery-full me-2"></i>Battery: ${product.specification.battery}</li>
+                                                       <li><i class="fas fa-camera me-2"></i>Camera: ${product.specification.camera}</li>
+                                                       <li><i class="fas fa-video me-2"></i>Graphics: ${product.specification.graphic}</li>
+                                                   </ul>
+                                               </c:if>
+
+                                               <div class="d-flex justify-content-between align-items-center mb-3">
+                                                   <span class="product-price">
+                                                       <fmt:formatNumber value="${product.proPrice}" type="currency" currencySymbol="$"/>
+                                                   </span>
+                                                   <span class="text-muted small">
+                                                       <i class="fas fa-box"></i> ${product.proQuantity} in stock
+                                                   </span>
+                                               </div>
+
+                                               <form action="CartController" method="POST">
+                                                   <input type="hidden" name="action" value="add">
+                                                   <input type="hidden" name="productId" value="${product.proId}">
+                                                   <button type="submit" class="btn btn-add-cart"
+                                                           ${product.proQuantity == 0 ? 'disabled' : ''}>
+                                                       <i class="fas fa-shopping-cart me-2"></i>
+                                                       ${product.proQuantity == 0 ? 'Out of Stock' : 'Add to Cart'}
+                                                   </button>
+                                               </form>
+                                           </div>
+                                       </div>
+                                   </div>
+                               </c:forEach>
+                           </div>
+
 
         <!-- Pagination -->
         <c:if test="${totalPages > 1}">

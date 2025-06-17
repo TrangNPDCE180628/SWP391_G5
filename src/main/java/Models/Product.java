@@ -1,6 +1,7 @@
 package Models;
 
 public class Product {
+
     private int proId;
     private String proName;
     private String proDescription;
@@ -8,6 +9,7 @@ public class Product {
     private String proImage;
     private int proQuantity;
     private int proTypeId;
+    private ProductSpecification specification;
 
     public Product() {
     }
@@ -77,4 +79,12 @@ public class Product {
     public void setProTypeId(int proTypeId) {
         this.proTypeId = proTypeId;
     }
-} 
+
+    public ProductSpecification getSpecification() {
+        return specification;
+    }
+
+    public void setSpecification(ProductSpecification specification) {
+        this.specification = specification;
+    }
+}
