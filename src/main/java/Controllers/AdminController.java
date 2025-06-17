@@ -6,12 +6,16 @@ import DAOs.ProductDAO;
 import DAOs.ProductTypeDAO;
 import DAOs.UserDAO;
 import DAOs.VoucherDAO;
+// UPDATED: Added import for DiscountDAO
+import DAOs.DiscountDAO;
 import Models.Order;
 import Models.OrderDetail;
 import Models.Product;
 import Models.ProductTypes;
 import Models.User;
 import Models.Voucher;
+// UPDATED: Added import for Discount model
+import Models.Discount;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -29,6 +33,8 @@ import com.google.gson.Gson;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.text.SimpleDateFormat;
+//import java.util.Date; // UPDATED: Added for date handling
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
@@ -89,6 +95,16 @@ public class AdminController extends HttpServlet {
                 case "viewOrderDetails":
                     viewOrderDetails(request, response);
                     break;
+                // UPDATED: Added discount-related actions
+                case "addDiscount":
+                    addDiscount(request, response);
+                    break;
+                case "updateDiscount":
+                    updateDiscount(request, response);
+                    break;
+                case "deleteDiscount":
+                    deleteDiscount(request, response);
+                    break;
 
                 // --- Voucher management ---
                 case "addVoucher":
@@ -123,20 +139,28 @@ public class AdminController extends HttpServlet {
             ProductDAO productDAO = new ProductDAO();
             UserDAO userDAO = new UserDAO();
             OrderDAO orderDAO = new OrderDAO();
+            // NEW: Initialize DiscountDAO and load discounts
+            DiscountDAO discountDAO = new DiscountDAO();
+
             VoucherDAO voucherDAO = new VoucherDAO();
 
             List<ProductTypes> productTypes = productTypeDAO.getAll();
             List<Product> products = productDAO.getAll();
             List<User> users = userDAO.getAll();
             List<Order> orders = orderDAO.getAll();
+            // NEW: Retrieve all discounts
+            List<Discount> discounts = discountDAO.getAll();
             List<Voucher> vouchers = voucherDAO.getAll();
 
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("products", products);
             request.setAttribute("users", users);
             request.setAttribute("orders", orders);
+            // NEW: Set discounts attribute for JSP
+            request.setAttribute("discounts", discounts);
+
             request.setAttribute("vouchers", vouchers);
-            
+
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
             throw new ServletException(e);
@@ -495,6 +519,94 @@ public class AdminController extends HttpServlet {
         }
     }
 
+    // UPDATED: Added methods for discount management
+    private void addDiscount(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            String discountType = request.getParameter("discountType");
+            double discountValue = Double.parseDouble(request.getParameter("discountValue"));
+
+            // Parse ngày từ input -> java.util.Date -> java.sql.Date
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            java.util.Date parsedStart = sdf.parse(request.getParameter("startDate"));
+            java.util.Date parsedEnd = sdf.parse(request.getParameter("endDate"));
+            Date startDate = new Date(parsedStart.getTime());
+            Date endDate = new Date(parsedEnd.getTime());
+
+            boolean active = Boolean.parseBoolean(request.getParameter("active"));
+            String adminId = request.getParameter("adminId");
+
+            Discount discount = new Discount();
+            discount.setProId(proId);
+            discount.setDiscountType(discountType);
+            discount.setDiscountValue(discountValue);
+            discount.setStartDate(startDate);
+            discount.setEndDate(endDate);
+            discount.setActive(active);
+            discount.setAdminId(adminId);
+
+            DiscountDAO dao = new DiscountDAO();
+            dao.create(discount);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void updateDiscount(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            String proId = request.getParameter("proId");
+            String discountType = request.getParameter("discountType");
+            double discountValue = Double.parseDouble(request.getParameter("discountValue"));
+
+            // Parse java.util.Date
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            java.util.Date parsedStart = sdf.parse(request.getParameter("startDate"));
+            java.util.Date parsedEnd = sdf.parse(request.getParameter("endDate"));
+
+            // Convert sang java.sql.Date
+            Date startDate = new Date(parsedStart.getTime());
+            Date endDate = new Date(parsedEnd.getTime());
+
+            boolean active = Boolean.parseBoolean(request.getParameter("active"));
+            String adminId = request.getParameter("adminId");
+
+            Discount discount = new Discount();
+            discount.setDiscountId(id);
+            discount.setProId(proId);
+            discount.setDiscountType(discountType);
+            discount.setDiscountValue(discountValue);
+            discount.setStartDate(startDate);
+            discount.setEndDate(endDate);
+            discount.setActive(active);
+            discount.setAdminId(adminId);
+
+            DiscountDAO dao = new DiscountDAO();
+            dao.update(discount);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void deleteDiscount(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            DiscountDAO dao = new DiscountDAO();
+            dao.delete(id);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
     private void addVoucher(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -608,4 +720,3 @@ public class AdminController extends HttpServlet {
         processRequest(request, response);
     }
 }
-  

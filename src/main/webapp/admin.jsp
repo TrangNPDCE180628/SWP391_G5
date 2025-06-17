@@ -41,6 +41,17 @@
                                     <i class="fas fa-users me-2"></i>Staff Manage
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="#orders" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fas fa-shopping-cart me-2"></i>Orders
+                                </a>
+                            </li>
+                            <%-- UPDATED: Added Discounts nav item --%>
+                            <li class="nav-item">
+                                <a href="#discounts" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fas fa-percent me-2"></i>Discounts
+                                </a>
+                            </li>
                         </ul>
                         <li class="nav-item">
                             <a href="#voucher" class="nav-link" data-bs-toggle="tab">
@@ -377,6 +388,60 @@
 
 
                         </div>
+                    
+                    <%-- UPDATED: Added Discounts Tab --%>
+                        <div class="tab-pane fade" id="discounts">
+                            <h2>Discounts Management</h2>
+                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addDiscountModal">
+                                <i class="fas fa-plus"></i> Add New Discount
+                            </button>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Product ID</th>
+                                            <th>Discount Type</th>
+                                            <th>Discount Value</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
+                                            <th>Active</th>
+                                            <th>Admin ID</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach items="${discounts}" var="discount">
+                                            <tr data-discount-id="${discount.discountId}"
+                                                data-pro-id="${discount.proId}"
+                                                data-discount-type="${discount.discountType}"
+                                                data-discount-value="${discount.discountValue}"
+                                                data-start-date="${discount.startDate}"
+                                                data-end-date="${discount.endDate}"
+                                                data-active="${discount.active}"
+                                                data-admin-id="${discount.adminId}">
+                                                <td>${discount.discountId}</td>
+                                                <td>${discount.proId}</td>
+                                                <td>${discount.discountType}</td>
+                                                <td>${discount.discountValue}</td>
+                                                <td><fmt:formatDate value="${discount.startDate}" pattern="yyyy-MM-dd"/></td>
+                                                <td><fmt:formatDate value="${discount.endDate}" pattern="yyyy-MM-dd"/></td>
+                                                <td>${discount.active ? 'Yes' : 'No'}</td>
+                                                <td>${discount.adminId}</td>
+                                                <td class="action-buttons">
+                                                    <button class="btn btn-sm btn-warning" onclick="editDiscount('${discount.discountId}')">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteDiscount('${discount.discountId}')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -680,6 +745,117 @@
                     </div>
                 </div>
             </div>
+            
+            <%-- UPDATED: Added Add Discount Modal --%>
+            <div class="modal fade" id="addDiscountModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add New Discount</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="AdminController" method="post">
+                            <div class="modal-body">
+                                <input type="hidden" name="action" value="addDiscount">
+                                <div class="mb-3">
+                                    <label for="proId" class="form-label">Product ID</label>
+                                    <input type="text" class="form-control" id="proId" name="proId" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="discountType" class="form-label">Discount Type</label>
+                                    <select class="form-select" id="discountType" name="discountType" required>
+                                        <option value="percentage">Percentage</option>
+                                        <option value="fixed">Fixed</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="discountValue" class="form-label">Discount Value</label>
+                                    <input type="number" step="0.01" class="form-control" id="discountValue" name="discountValue" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="startDate" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="startDate" name="startDate" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="endDate" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="endDate" name="endDate" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="active" class="form-label">Active</label>
+                                    <select class="form-select" id="active" name="active" required>
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="adminId" class="form-label">Admin ID</label>
+                                    <input type="text" class="form-control" id="adminId" name="adminId" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Add</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <%-- UPDATED: Added Edit Discount Modal --%>
+            <div class="modal fade" id="editDiscountModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Discount</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="AdminController" method="post">
+                            <div class="modal-body">
+                                <input type="hidden" name="action" value="updateDiscount">
+                                <input type="hidden" name="id" id="editDiscountId">
+                                <div class="mb-3">
+                                    <label for="editProId" class="form-label">Product ID</label>
+                                    <input type="text" class="form-control" id="editProId" name="proId">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editDiscountType" class="form-label">Discount Type</label>
+                                    <select class="form-select" id="editDiscountType" name="discountType">
+                                        <option value="percentage">Percentage</option>
+                                        <option value="fixed">Fixed</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editDiscountValue" class="form-label">Discount Value</label>
+                                    <input type="number" step="0.01" class="form-control" id="editDiscountValue" name="discountValue">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editStartDate" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="editStartDate" name="startDate">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editEndDate" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="editEndDate" name="endDate">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editActive" class="form-label">Active</label>
+                                    <select class="form-select" id="editActive" name="active">
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editAdminId" class="form-label">Admin ID</label>
+                                    <input type="text" class="form-control" id="editAdminId" name="adminId">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Update</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
             <!-- Add Voucher Modal -->
             <div class="modal fade" id="addVoucherModal" tabindex="-1">
@@ -740,6 +916,6 @@
             </div>
 
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-
+           
         </body>
     </html>
