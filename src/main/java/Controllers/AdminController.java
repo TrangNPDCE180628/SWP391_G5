@@ -193,7 +193,7 @@ public class AdminController extends HttpServlet {
             ProductTypeDAO dao = new ProductTypeDAO();
             dao.update(productType);
 
-            response.sendRedirect("AdminController");
+            response.sendRedirect(" AdminController");
         } catch (Exception e) {
             throw new ServletException(e);
         }

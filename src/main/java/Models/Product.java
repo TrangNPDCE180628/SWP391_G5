@@ -184,4 +184,8 @@ public class Product {
     public void setStatus(int status) {
         this.status = status;
     }
+
+    public void setSpecification(ProductSpecification spec) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }
