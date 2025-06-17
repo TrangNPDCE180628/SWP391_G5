@@ -147,7 +147,7 @@ public class AdminController extends HttpServlet {
             ProductTypeDAO dao = new ProductTypeDAO();
             dao.update(productType);
 
-            response.sendRedirect("AdminController");
+            response.sendRedirect(" AdminController");
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -235,11 +235,15 @@ public class AdminController extends HttpServlet {
             product.setProPrice(price);
             product.setProQuantity(quantity);
             product.setProTypeId(typeId);
-            if (fileName != null) {
-                product.setProImage(UPLOAD_DIR + "/" + fileName);
-            }
+            
+            
 
             ProductDAO dao = new ProductDAO();
+            
+            if (fileName != null) {
+                product.setProImage(fileName);
+            }
+            
             dao.update(product);
 
             response.sendRedirect("AdminController");
