@@ -15,13 +15,14 @@ import java.util.List;
 
 @WebServlet(name = "HomeController", urlPatterns = {"/home", "/HomeController", ""})
 public class HomeController extends HttpServlet {
+
     private static final int PRODUCTS_PER_PAGE = 8;
     private static final String DEFAULT_IMAGE = "images/products/default.jpg";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        
+
         try {
             // Initialize DAOs
             ProductDAO productDAO = new ProductDAO();
@@ -61,10 +62,9 @@ public class HomeController extends HttpServlet {
                 totalProducts = productDAO.countAll();
             }
 
-
             // Calculate pagination
             int totalPages = (int) Math.ceil((double) totalProducts / PRODUCTS_PER_PAGE);
-            
+
             // Set request attributes
             request.setAttribute("products", products);
             request.setAttribute("currentPage", page);
@@ -85,7 +85,7 @@ public class HomeController extends HttpServlet {
             // Log the error
             log("Error at HomeController: " + e.getMessage());
             e.printStackTrace();
-            
+
             // Set error message
             request.setAttribute("errorMessage", "An error occurred while loading the products. Please try again later.");
             request.getRequestDispatcher("error.jsp").forward(request, response);
@@ -103,4 +103,4 @@ public class HomeController extends HttpServlet {
             throws ServletException, IOException {
         processRequest(request, response);
     }
-} 
+}

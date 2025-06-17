@@ -680,7 +680,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Add Voucher Modal -->
             <div class="modal fade" id="addVoucherModal" tabindex="-1">
                 <div class="modal-dialog">

@@ -22,10 +22,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
+
 import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.sql.Date;
 
@@ -213,9 +214,9 @@ public class AdminController extends HttpServlet {
             product.setProName(name);
             product.setProDescription(description);
             product.setProPrice(price);
-            product.setProQuantity(quantity);
-            product.setProTypeId(typeId);
-            product.setProImage(fileName != null ? UPLOAD_DIR + "/" + fileName : null);
+            product.setProStockQuantity(quantity); // sửa lại
+            product.setCateId(typeId);             // sửa lại
+            product.setProImageMain(fileName != null ? UPLOAD_DIR + "/" + fileName : null); // sửa lại
 
             ProductDAO dao = new ProductDAO();
             dao.create(product);
@@ -229,12 +230,24 @@ public class AdminController extends HttpServlet {
     private void updateProduct(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            int id = Integer.parseInt(request.getParameter("id"));
+            String proId = request.getParameter("id"); // sửa từ int → String
             String name = request.getParameter("productName");
             String description = request.getParameter("productDescription");
             double price = Double.parseDouble(request.getParameter("productPrice"));
             int quantity = Integer.parseInt(request.getParameter("productQuantity"));
-            int typeId = Integer.parseInt(request.getParameter("productType"));
+            int cateId = Integer.parseInt(request.getParameter("productType")); // sửa tên cho đúng
+
+            // Optional additional fields
+            int brandId = Integer.parseInt(request.getParameter("brandId"));
+            int warrantyMonths = Integer.parseInt(request.getParameter("warrantyMonths"));
+            String model = request.getParameter("model");
+            String color = request.getParameter("color");
+            double weight = Double.parseDouble(request.getParameter("weight"));
+            String dimensions = request.getParameter("dimensions");
+            String origin = request.getParameter("origin");
+            String material = request.getParameter("material");
+            String connectivity = request.getParameter("connectivity");
+            int status = Integer.parseInt(request.getParameter("status")); // 1 or 0
 
             // Handle file upload
             Part filePart = request.getPart("productImage");
@@ -249,20 +262,31 @@ public class AdminController extends HttpServlet {
                 filePart.write(uploadPath + File.separator + fileName);
             }
 
+            // Khởi tạo product và set dữ liệu
             Product product = new Product();
-            product.setProId(id);
+            product.setProId(proId);
             product.setProName(name);
             product.setProDescription(description);
             product.setProPrice(price);
-            product.setProQuantity(quantity);
-            product.setProTypeId(typeId);
-
-            ProductDAO dao = new ProductDAO();
+            product.setProStockQuantity(quantity);
+            product.setCateId(cateId);
+            product.setBrandId(brandId);
+            product.setProWarrantyMonths(warrantyMonths);
+            product.setProModel(model);
+            product.setProColor(color);
+            product.setProWeight(weight);
+            product.setProDimensions(dimensions);
+            product.setProOrigin(origin);
+            product.setProMaterial(material);
+            product.setProConnectivity(connectivity);
+            product.setStatus(status);
 
             if (fileName != null) {
-                product.setProImage(fileName);
+                product.setProImageMain(fileName);
             }
 
+            // Cập nhật
+            ProductDAO dao = new ProductDAO();
             dao.update(product);
 
             response.sendRedirect("AdminController");
@@ -274,9 +298,9 @@ public class AdminController extends HttpServlet {
     private void deleteProduct(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            int id = Integer.parseInt(request.getParameter("id"));
+            String proId = request.getParameter("id"); // sửa từ int → String
             ProductDAO dao = new ProductDAO();
-            dao.delete(id);
+            dao.delete(proId);
 
             response.sendRedirect("AdminController");
         } catch (Exception e) {
@@ -376,7 +400,8 @@ public class AdminController extends HttpServlet {
             responseObj.orderItems = new ArrayList<>();
 
             for (OrderDetail detail : orderDetails) {
-                Product product = productDAO.getById(detail.getProductId());
+                Product product = productDAO.getById(String.valueOf(detail.getProductId()));
+
                 OrderItem item = new OrderItem();
                 item.productName = product.getProName();
                 item.quantity = detail.getQuantity();
@@ -385,14 +410,10 @@ public class AdminController extends HttpServlet {
                 responseObj.orderItems.add(item);
             }
 
-            // Convert to JSON and send response
-            response.setContentType("application/json");
-            PrintWriter out = response.getWriter();
-            out.print(new Gson().toJson(responseObj));
-            out.flush();
+            request.setAttribute("orderDetails", responseObj);
+            request.getRequestDispatcher("admin-order-detail.jsp").forward(request, response);
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("Error fetching order details: " + e.getMessage());
+            throw new ServletException(e);
         }
     }
 
@@ -587,3 +608,4 @@ public class AdminController extends HttpServlet {
         processRequest(request, response);
     }
 }
+  

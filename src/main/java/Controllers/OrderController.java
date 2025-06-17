@@ -8,16 +8,11 @@ import Models.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import com.google.gson.Gson;
 
 @WebServlet(name = "OrderController", urlPatterns = {"/OrderController"})
@@ -27,13 +22,13 @@ public class OrderController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         String action = request.getParameter("action");
-        
+
         try {
             if (action == null) {
                 loadOrdersPage(request, response);
                 return;
             }
-            
+
             switch (action) {
                 case "checkout":
                     checkout(request, response);
@@ -56,7 +51,7 @@ public class OrderController extends HttpServlet {
         try {
             HttpSession session = request.getSession();
             User user = (User) session.getAttribute("LOGIN_USER");
-            
+
             if (user == null) {
                 response.sendRedirect("login.jsp");
                 return;
@@ -67,15 +62,15 @@ public class OrderController extends HttpServlet {
             ProductDAO productDAO = new ProductDAO();
 
             List<Order> orders = orderDAO.getByUserId(user.getId());
-            
-            // Tạo map chứa danh sách OrderDetailWithProductName cho từng order
-            Map<Integer, List<OrderDetailWithProductName>> orderDetailsMap = new java.util.HashMap<>();
+
+            Map<Integer, List<OrderDetailWithProductName>> orderDetailsMap = new HashMap<>();
             for (Order order : orders) {
                 List<OrderDetail> details = orderDetailDAO.getByOrderId(order.getId());
                 List<OrderDetailWithProductName> detailsWithProductName = new ArrayList<>();
                 for (OrderDetail detail : details) {
-                    Product product = productDAO.getById(detail.getProductId());
-                    OrderDetailWithProductName detailWithName = new OrderDetailWithProductName(detail, product != null ? product.getProName() : "");
+                    Product product = productDAO.getById(String.valueOf(detail.getProductId())); // FIXED
+                    OrderDetailWithProductName detailWithName = new OrderDetailWithProductName(detail,
+                            product != null ? product.getProName() : "");
                     detailsWithProductName.add(detailWithName);
                 }
                 orderDetailsMap.put(order.getId(), detailsWithProductName);
@@ -107,24 +102,20 @@ public class OrderController extends HttpServlet {
                 return;
             }
 
-            // Create new order
             Order order = new Order();
             order.setUserId(user.getId());
             order.setOrderDate(new Timestamp(System.currentTimeMillis()));
             order.setStatus("pending");
-            
-            // Calculate total price
+
             double totalPrice = 0;
             for (CartItem item : cart.values()) {
                 totalPrice += item.getPrice() * item.getQuantity();
             }
             order.setTotalPrice(totalPrice);
 
-            // Save order
             OrderDAO orderDAO = new OrderDAO();
             orderDAO.create(order);
 
-            // Save order details
             OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
             for (CartItem item : cart.values()) {
                 OrderDetail detail = new OrderDetail();
@@ -136,11 +127,9 @@ public class OrderController extends HttpServlet {
                 orderDetailDAO.create(detail);
             }
 
-            // Clear cart
             session.removeAttribute("cart");
             session.removeAttribute("cartSize");
 
-            // Redirect to orders page
             response.sendRedirect("OrderController");
         } catch (Exception e) {
             throw new ServletException(e);
@@ -158,22 +147,20 @@ public class OrderController extends HttpServlet {
             Order order = orderDAO.getById(orderId);
             List<OrderDetail> orderDetails = orderDetailDAO.getByOrderId(orderId);
 
-            // Create a response object with all the necessary information
             OrderDetailsResponse responseObj = new OrderDetailsResponse();
             responseObj.order = order;
             responseObj.orderItems = new ArrayList<>();
 
             for (OrderDetail detail : orderDetails) {
-                Product product = productDAO.getById(detail.getProductId());
+                Product product = productDAO.getById(String.valueOf(detail.getProductId())); // FIXED
                 OrderItem item = new OrderItem();
-                item.productName = product.getProName();
+                item.productName = product != null ? product.getProName() : "";
                 item.quantity = detail.getQuantity();
                 item.unitPrice = detail.getUnitPrice();
                 item.totalPrice = detail.getTotalPrice();
                 responseObj.orderItems.add(item);
             }
 
-            // Convert to JSON and send response
             response.setContentType("application/json");
             PrintWriter out = response.getWriter();
             out.print(new Gson().toJson(responseObj));
@@ -184,22 +171,24 @@ public class OrderController extends HttpServlet {
         }
     }
 
-    // Helper classes for JSON response
     private static class OrderDetailsResponse {
+
         Order order;
         List<OrderItem> orderItems;
     }
 
     private static class OrderItem {
+
         String productName;
         int quantity;
         double unitPrice;
         double totalPrice;
     }
 
-    // Helper class for customer order details with product name
     public static class OrderDetailWithProductName extends OrderDetail {
+
         private String productName;
+
         public OrderDetailWithProductName(OrderDetail detail, String productName) {
             super.setOrderId(detail.getOrderId());
             super.setProductId(detail.getProductId());
@@ -208,8 +197,14 @@ public class OrderController extends HttpServlet {
             super.setTotalPrice(detail.getTotalPrice());
             this.productName = productName;
         }
-        public String getProductName() { return productName; }
-        public void setProductName(String productName) { this.productName = productName; }
+
+        public String getProductName() {
+            return productName;
+        }
+
+        public void setProductName(String productName) {
+            this.productName = productName;
+        }
     }
 
     @Override
@@ -223,4 +218,4 @@ public class OrderController extends HttpServlet {
             throws ServletException, IOException {
         processRequest(request, response);
     }
-} 
+}

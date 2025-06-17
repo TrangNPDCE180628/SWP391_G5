@@ -31,7 +31,7 @@ public class CartController extends HttpServlet {
                 return;
             }
 
-            switch(action) {
+            switch (action) {
                 case "add":
                     addToCart(request, response);
                     break;
@@ -69,8 +69,8 @@ public class CartController extends HttpServlet {
         System.out.println("Adding to cart - ProductID: " + productIdStr);
 
         try {
-            int productId = Integer.parseInt(productIdStr);
-            
+            int productId = Integer.parseInt(productIdStr); // vẫn dùng để lưu key trong cart
+
             // Check if product already exists in cart
             if (cart.containsKey(productId)) {
                 System.out.println("Product already in cart");
@@ -80,13 +80,14 @@ public class CartController extends HttpServlet {
             }
 
             ProductDAO productDAO = new ProductDAO();
-            Product product = productDAO.getById(productId);
+            // ✅ Fix: ép kiểu về String để khớp với ProductDAO
+            Product product = productDAO.getById(productIdStr);
 
             if (product != null) {
-                System.out.println("Found product: " + product.getProName() + ", Stock: " + product.getProQuantity());
-                
+                System.out.println("Found product: " + product.getProName() + ", Stock: " + product.getProStockQuantity());
+
                 // Check if product is in stock
-                if (product.getProQuantity() <= 0) {
+                if (product.getProStockQuantity() <= 0) {
                     System.out.println("Product out of stock");
                     session.setAttribute("error", "Sorry, this product is out of stock.");
                     response.sendRedirect("HomeController");
@@ -95,11 +96,11 @@ public class CartController extends HttpServlet {
 
                 // Create new cart item with quantity = 1
                 CartItem item = new CartItem(
-                    productId,
-                    product.getProName(),
-                    product.getProPrice(),
-                    1,  // Always set quantity to 1 for new items
-                    product.getProImage()
+                        productId,
+                        product.getProName(),
+                        product.getProPrice(),
+                        1, // Always set quantity to 1 for new items
+                        product.getProImageMain()
                 );
                 System.out.println("Created new cart item: " + item.getProductName());
 
@@ -107,15 +108,15 @@ public class CartController extends HttpServlet {
                 cart.put(productId, item);
                 session.setAttribute("cart", cart);
                 session.setAttribute("cartSize", cart.size());
-                
+
                 // Debug cart contents
                 System.out.println("Cart contents after update:");
                 for (Map.Entry<Integer, CartItem> entry : cart.entrySet()) {
-                    System.out.println("Product ID: " + entry.getKey() + 
-                                     ", Name: " + entry.getValue().getProductName() +
-                                     ", Quantity: " + entry.getValue().getQuantity());
+                    System.out.println("Product ID: " + entry.getKey()
+                            + ", Name: " + entry.getValue().getProductName()
+                            + ", Quantity: " + entry.getValue().getQuantity());
                 }
-                
+
                 session.setAttribute("message", "Product added to cart successfully!");
                 response.sendRedirect("HomeController");
             } else {
@@ -131,34 +132,36 @@ public class CartController extends HttpServlet {
         }
     }
 
-    private void updateCart(HttpServletRequest request, HttpServletResponse response) 
+    private void updateCart(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         Map<Integer, CartItem> cart = (Map<Integer, CartItem>) session.getAttribute("cart");
-        
+
         if (cart != null) {
             try {
                 int productId = Integer.parseInt(request.getParameter("productId"));
                 int change = Integer.parseInt(request.getParameter("change"));
-                
+
                 System.out.println("Updating cart - ProductID: " + productId + ", Change: " + change);
-                
+
                 CartItem item = cart.get(productId);
                 if (item != null) {
                     ProductDAO productDAO = new ProductDAO();
-                    Product product = productDAO.getById(productId);
-                    
+                    // ✅ Ép kiểu sang String để khớp với DAO
+                    Product product = productDAO.getById(String.valueOf(productId));
+
                     int newQuantity = item.getQuantity() + change;
                     System.out.println("Current quantity: " + item.getQuantity() + ", New quantity: " + newQuantity);
-                    
-                    if (newQuantity > 0 && newQuantity <= product.getProQuantity()) {
+
+                    // ✅ Dùng đúng getter: getProStockQuantity() thay vì getProQuantity()
+                    if (newQuantity > 0 && newQuantity <= product.getProStockQuantity()) {
                         item.setQuantity(newQuantity);
                         System.out.println("Updated quantity to: " + newQuantity);
                     } else if (newQuantity <= 0) {
                         cart.remove(productId);
                         System.out.println("Removed item from cart (quantity <= 0)");
                     }
-                    
+
                     session.setAttribute("cart", cart);
                     session.setAttribute("cartSize", cart.size());
                 } else {
@@ -171,20 +174,20 @@ public class CartController extends HttpServlet {
         } else {
             System.out.println("Cart is null");
         }
-        
+
         response.sendRedirect("cart.jsp");
     }
 
-    private void removeFromCart(HttpServletRequest request, HttpServletResponse response) 
+    private void removeFromCart(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         Map<Integer, CartItem> cart = (Map<Integer, CartItem>) session.getAttribute("cart");
-        
+
         if (cart != null) {
             try {
                 int productId = Integer.parseInt(request.getParameter("productId"));
                 System.out.println("Removing from cart - ProductID: " + productId);
-                
+
                 CartItem removedItem = cart.remove(productId);
                 if (removedItem != null) {
                     System.out.println("Successfully removed item: " + removedItem.getProductName());
@@ -192,7 +195,7 @@ public class CartController extends HttpServlet {
                 } else {
                     System.out.println("Item not found in cart");
                 }
-                
+
                 session.setAttribute("cart", cart);
                 session.setAttribute("cartSize", cart.size());
             } catch (Exception e) {
@@ -202,7 +205,7 @@ public class CartController extends HttpServlet {
         } else {
             System.out.println("Cart is null");
         }
-        
+
         response.sendRedirect("cart.jsp");
     }
 
@@ -218,4 +221,3 @@ public class CartController extends HttpServlet {
         processRequest(request, response);
     }
 }
-
