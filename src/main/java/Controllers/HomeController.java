@@ -1,9 +1,9 @@
 package Controllers;
 
+import DAOs.CategoryDAO;
 import DAOs.ProductDAO;
-import DAOs.ProductTypeDAO;
+import Models.Category;
 import Models.Product;
-import Models.ProductTypes;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -20,12 +20,12 @@ public class HomeController extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
+            response.setContentType("text/html;charset=UTF-8");
         
         try {
             // Initialize DAOs
             ProductDAO productDAO = new ProductDAO();
-            ProductTypeDAO productTypeDAO = new ProductTypeDAO();
+            CategoryDAO productTypeDAO = new CategoryDAO();
 
             // Get parameters
             String pageStr = request.getParameter("page");
@@ -38,7 +38,7 @@ public class HomeController extends HttpServlet {
             int typeId = (typeIdStr != null && !typeIdStr.isEmpty()) ? Integer.parseInt(typeIdStr) : 0;
 
             // Get all product types for category filter
-            List<ProductTypes> productTypes = productTypeDAO.getAll();
+            List<Category> productTypes = productTypeDAO.getAllCategories();
             request.setAttribute("productTypes", productTypes);
 
             // Get products based on filters
@@ -52,8 +52,8 @@ public class HomeController extends HttpServlet {
                 request.setAttribute("searchTerm", searchTerm);
             } else if (typeId > 0) {
                 // Get products by category
-                products = productDAO.getByTypeId(typeId, page, PRODUCTS_PER_PAGE);
-                totalProducts = productDAO.countByTypeId(typeId);
+                products = productDAO.getByCategoryId(typeId, page, PRODUCTS_PER_PAGE);
+                totalProducts = productDAO.countByCategoryId(typeId);
                 request.setAttribute("selectedTypeId", typeId);
             } else {
                 // Get all products
@@ -85,13 +85,17 @@ public class HomeController extends HttpServlet {
             // Log the error
             log("Error at HomeController: " + e.getMessage());
             e.printStackTrace();
-            
+           
+            response.setContentType("text/plain");
+            response.getWriter().println("Error: " + e.getMessage());
             // Set error message
             request.setAttribute("errorMessage", "An error occurred while loading the products. Please try again later.");
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
+    
 
+        
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
