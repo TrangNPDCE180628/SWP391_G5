@@ -5,11 +5,15 @@ import DAOs.OrderDetailDAO;
 import DAOs.ProductDAO;
 import DAOs.ProductTypeDAO;
 import DAOs.UserDAO;
+// UPDATED: Added import for DiscountDAO
+import DAOs.DiscountDAO;
 import Models.Order;
 import Models.OrderDetail;
 import Models.Product;
 import Models.ProductTypes;
 import Models.User;
+// UPDATED: Added import for Discount model
+import Models.Discount;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -24,6 +28,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
+import java.util.Date; // UPDATED: Added for date handling
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
@@ -84,6 +89,16 @@ public class AdminController extends HttpServlet {
                 case "viewOrderDetails":
                     viewOrderDetails(request, response);
                     break;
+                // UPDATED: Added discount-related actions
+                case "addDiscount":
+                    addDiscount(request, response);
+                    break;
+                case "updateDiscount":
+                    updateDiscount(request, response);
+                    break;
+                case "deleteDiscount":
+                    deleteDiscount(request, response);
+                    break;
                 default:
                     loadAdminPage(request, response);
             }
@@ -104,16 +119,23 @@ public class AdminController extends HttpServlet {
             ProductDAO productDAO = new ProductDAO();
             UserDAO userDAO = new UserDAO();
             OrderDAO orderDAO = new OrderDAO();
+            // NEW: Initialize DiscountDAO and load discounts
+            DiscountDAO discountDAO = new DiscountDAO();
+            
 
             List<ProductTypes> productTypes = productTypeDAO.getAll();
             List<Product> products = productDAO.getAll();
             List<User> users = userDAO.getAll();
             List<Order> orders = orderDAO.getAll();
+            // NEW: Retrieve all discounts
+            List<Discount> discounts = discountDAO.getAll();
 
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("products", products);
             request.setAttribute("users", users);
             request.setAttribute("orders", orders);
+            // NEW: Set discounts attribute for JSP
+            request.setAttribute("discounts", discounts);
 
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
@@ -454,6 +476,80 @@ public class AdminController extends HttpServlet {
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
+    
+    // UPDATED: Added methods for discount management
+    private void addDiscount(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            String discountType = request.getParameter("discountType");
+            double discountValue = Double.parseDouble(request.getParameter("discountValue"));
+            Date startDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("startDate"));
+            Date endDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("endDate"));
+            boolean active = Boolean.parseBoolean(request.getParameter("active"));
+            String adminId = request.getParameter("adminId");
+
+            Discount discount = new Discount();
+            discount.setProId(proId);
+            discount.setDiscountType(discountType);
+            discount.setDiscountValue(discountValue);
+            discount.setStartDate(startDate);
+            discount.setEndDate(endDate);
+            discount.setActive(active);
+            discount.setAdminId(adminId);
+
+            DiscountDAO dao = new DiscountDAO();
+            dao.create(discount);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void updateDiscount(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            String proId = request.getParameter("proId");
+            String discountType = request.getParameter("discountType");
+            double discountValue = Double.parseDouble(request.getParameter("discountValue"));
+            Date startDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("startDate"));
+            Date endDate = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("endDate"));
+            boolean active = Boolean.parseBoolean(request.getParameter("active"));
+            String adminId = request.getParameter("adminId");
+
+            Discount discount = new Discount();
+            discount.setDiscountId(id);
+            discount.setProId(proId);
+            discount.setDiscountType(discountType);
+            discount.setDiscountValue(discountValue);
+            discount.setStartDate(startDate);
+            discount.setEndDate(endDate);
+            discount.setActive(active);
+            discount.setAdminId(adminId);
+
+            DiscountDAO dao = new DiscountDAO();
+            dao.update(discount);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void deleteDiscount(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            DiscountDAO dao = new DiscountDAO();
+            dao.delete(id);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
 
     // Helper classes for JSON response
     private static class OrderDetailsResponse {
@@ -480,4 +576,4 @@ public class AdminController extends HttpServlet {
             throws ServletException, IOException {
         processRequest(request, response);
     }
-} 
+}

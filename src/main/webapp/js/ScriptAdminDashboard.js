@@ -235,4 +235,21 @@ function togglePasswordVisibility() {
     icon.classList.toggle('fa-eye-slash', !isPassword);
 }
 
-   
+    function editDiscount(id) {
+                    const row = document.querySelector(`tr[data-discount-id="${id}"]`);
+                    document.getElementById('editDiscountId').value = id;
+                    document.getElementById('editProId').value = row.dataset.proId;
+                    document.getElementById('editDiscountType').value = row.dataset.discountType;
+                    document.getElementById('editDiscountValue').value = row.dataset.discountValue;
+                    document.getElementById('editStartDate').value = row.dataset.startDate.split(' ')[0];
+                    document.getElementById('editEndDate').value = row.dataset.endDate.split(' ')[0];
+                    document.getElementById('editActive').value = row.dataset.active;
+                    document.getElementById('editAdminId').value = row.dataset.adminId;
+                    new bootstrap.Modal(document.getElementById('editDiscountModal')).show();
+                }
+
+                function deleteDiscount(id) {
+                    if (confirm('Are you sure you want to delete this discount?')) {
+                        window.location.href = `AdminController?action=deleteDiscount&id=${id}`;
+                    }
+                }
