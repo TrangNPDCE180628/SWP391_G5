@@ -6,6 +6,7 @@ import DAOs.CustomerDAO;
 import DAOs.OrderDAO;
 import DAOs.ProductDAO;
 import DAOs.StaffDAO;
+import DAOs.DiscountDAO;
 import DAOs.VoucherDAO;
 
 import Models.Admin;
@@ -14,6 +15,9 @@ import Models.Customer;
 import Models.Order;
 import Models.Product;
 import Models.Staff;
+import Models.Discount;
+//import java.util.Date;
+//import java.text.SimpleDateFormat;
 import Models.Voucher;
 import Models.User;
 
@@ -52,7 +56,6 @@ public class AdminController extends HttpServlet {
         String action = request.getParameter("action");
 
         try {
-            // If action is null, load admin page by default
             if (action == null) {
                 loadAdminPage(request, response);
                 return;
@@ -89,16 +92,17 @@ public class AdminController extends HttpServlet {
                 case "deleteUser":
                     deleteUser(request, response);
                     break;
-                /*case "getOrderDetails":
-                    getOrderDetails(request, response);
+                case "addDiscount":
+                    addDiscount(request, response);
                     break;
-                case "updateOrderStatus":
-                    updateOrderStatus(request, response);
+                case "updateDiscount":
+                    updateDiscount(request, response);
                     break;
-                case "viewOrderDetails":
-                    viewOrderDetails(request, response);
-                    break;*/
-
+                case "deleteDiscount":
+                    deleteDiscount(request, response);
+//                case "viewOrderDetails":
+//                    viewOrderDetails(request, response);
+//                    break;
                 case "addVoucher":
                     addVoucher(request, response);
                     break;
@@ -114,13 +118,11 @@ public class AdminController extends HttpServlet {
                 default:
                     loadAdminPage(request, response);
             }
-
         } catch (Exception e) {
             log("Error at AdminController: " + e.toString());
             request.setAttribute("ERROR", "An error occurred: " + e.getMessage());
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
-
     }
 
     private void loadAdminPage(HttpServletRequest request, HttpServletResponse response)
@@ -131,18 +133,21 @@ public class AdminController extends HttpServlet {
             ProductDAO productDAO = new ProductDAO();
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
+            DiscountDAO discountDAO = new DiscountDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
 
             List<Category> productTypes = productTypeDAO.getAllCategories();
             List<Product> products = productDAO.getAllProducts();
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
+            List<Discount> discounts = discountDAO.getAll();
             List<Voucher> vouchers = voucherDAO.getAll();
 
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("products", products);
             request.setAttribute("users", users);
             request.setAttribute("staffs", staffs);
+            request.setAttribute("discounts", discounts);
             request.setAttribute("vouchers", vouchers);
 
             // Load profile info
@@ -174,7 +179,7 @@ public class AdminController extends HttpServlet {
             String fullName = request.getParameter("fullName");
             String email = request.getParameter("email");
 
-            Part imagePart = request.getPart("image"); 
+            Part imagePart = request.getPart("image");
             String currentImage = request.getParameter("currentImage");
 
             String imageFileName = "";
@@ -304,7 +309,6 @@ public class AdminController extends HttpServlet {
             String connectivity = request.getParameter("productConnectivity");
             int status = Integer.parseInt(request.getParameter("productStatus"));
 
-            // Handle file upload
             Part filePart = request.getPart("productImage");
             String fileName = null;
             if (filePart != null && filePart.getSize() > 0) {
@@ -365,7 +369,6 @@ public class AdminController extends HttpServlet {
             String connectivity = request.getParameter("productConnectivity");
             int status = Integer.parseInt(request.getParameter("productStatus"));
 
-            // Handle file upload
             Part filePart = request.getPart("productImage");
             String fileName = null;
             if (filePart != null && filePart.getSize() > 0) {
@@ -445,7 +448,6 @@ public class AdminController extends HttpServlet {
 
                 CustomerDAO customerDAO = new CustomerDAO();
                 customerDAO.insertCustomer(customer);
-
             } else if ("staff".equalsIgnoreCase(role)) {
                 Staff staff = new Staff();
                 staff.setStaffName(username);
@@ -455,7 +457,7 @@ public class AdminController extends HttpServlet {
                 staff.setStaffImage(image);
                 staff.setStaffGmail(gmail);
                 staff.setStaffPhone(phone);
-                staff.setStaffPosition("staff"); // hoặc request.getParameter("position") nếu có input riêng
+                staff.setStaffPosition("staff");
 
                 StaffDAO staffDAO = new StaffDAO();
                 staffDAO.create(staff);
@@ -470,7 +472,7 @@ public class AdminController extends HttpServlet {
     private void updateUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            String id = request.getParameter("id"); // dùng String vì ID có thể là VARCHAR
+            String id = request.getParameter("id");
             String username = request.getParameter("username");
             String password = request.getParameter("password");
             String fullname = request.getParameter("fullname");
@@ -484,18 +486,16 @@ public class AdminController extends HttpServlet {
                 customer.setCusPassword(password);
                 customer.setCusFullName(fullname);
                 customer.setCusGender(gender);
-                // Có thể thêm các field khác nếu cần
 
                 CustomerDAO customerDAO = new CustomerDAO();
                 customerDAO.updateCustomer(customer);
             } else if ("staff".equalsIgnoreCase(role)) {
                 Staff staff = new Staff();
                 staff.setStaffId(id);
-                staff.setStaffName(username); // hoặc staffFullName tuỳ cách bạn dùng
+                staff.setStaffName(username);
                 staff.setStaffPassword(password);
                 staff.setStaffFullName(fullname);
                 staff.setStaffGender(gender);
-                // Có thể thêm các field khác nếu cần
 
                 StaffDAO staffDAO = new StaffDAO();
                 staffDAO.update(staff);
@@ -510,8 +510,8 @@ public class AdminController extends HttpServlet {
     private void deleteUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            String id = request.getParameter("id"); // String vì ID có thể là VARCHAR
-            String role = request.getParameter("role"); // Truyền từ view hoặc query string
+            String id = request.getParameter("id");
+            String role = request.getParameter("role");
 
             if ("customer".equalsIgnoreCase(role)) {
                 CustomerDAO customerDAO = new CustomerDAO();
@@ -520,6 +520,79 @@ public class AdminController extends HttpServlet {
                 StaffDAO staffDAO = new StaffDAO();
                 staffDAO.delete(id);
             }
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void addDiscount(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            String discountType = request.getParameter("discountType");
+            double discountValue = Double.parseDouble(request.getParameter("discountValue"));
+            Date startDate = Date.valueOf(request.getParameter("startDate"));
+            Date endDate = Date.valueOf(request.getParameter("endDate"));
+            boolean active = Boolean.parseBoolean(request.getParameter("active"));
+            String adminId = request.getParameter("adminId");
+
+            Discount discount = new Discount();
+            discount.setProId(proId);
+            discount.setDiscountType(discountType);
+            discount.setDiscountValue(discountValue);
+            discount.setStartDate(startDate);
+            discount.setEndDate(endDate);
+            discount.setActive(active);
+            discount.setAdminId(adminId);
+
+            DiscountDAO dao = new DiscountDAO();
+            dao.create(discount);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException("Error adding discount: " + e.getMessage());
+        }
+    }
+
+    private void updateDiscount(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            String proId = request.getParameter("proId");
+            String discountType = request.getParameter("discountType");
+            double discountValue = Double.parseDouble(request.getParameter("discountValue"));
+            Date startDate = Date.valueOf(request.getParameter("startDate"));
+            Date endDate = Date.valueOf(request.getParameter("endDate"));
+            boolean active = Boolean.parseBoolean(request.getParameter("active"));
+            String adminId = request.getParameter("adminId");
+
+            Discount discount = new Discount();
+            discount.setDiscountId(id);
+            discount.setProId(proId);
+            discount.setDiscountType(discountType);
+            discount.setDiscountValue(discountValue);
+            discount.setStartDate(startDate);
+            discount.setEndDate(endDate);
+            discount.setActive(active);
+            discount.setAdminId(adminId);
+
+            DiscountDAO dao = new DiscountDAO();
+            dao.update(discount);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException("Error updating discount: " + e.getMessage());
+        }
+    }
+
+    private void deleteDiscount(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            DiscountDAO dao = new DiscountDAO();
+            dao.delete(id);
 
             response.sendRedirect("AdminController");
         } catch (Exception e) {
