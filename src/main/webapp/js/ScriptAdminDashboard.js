@@ -2,13 +2,66 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/javascript.js to edit this template
  */
+// Lưu ý: bạn cần khai báo biến contextPath ở file JSP như sau:
+// <script>const contextPath = '${pageContext.request.contextPath}';</script>
 
+function editProfile(role, id) {
+    const row = document.querySelector(`tr[data-user-id="${id}"][data-user-role="${role}"]`);
+    if (!row)
+        return;
 
+    // Lấy dữ liệu chung từ thẻ <tr>
+    const fullName = row.getAttribute('data-user-fullname') || '';
+    const email = row.getAttribute('data-user-email') || '';
+    const image = row.getAttribute('data-user-image') || '';
 
+    // Set giá trị vào input
+    document.getElementById('editUserRole').value = role;
+    document.getElementById('editUserId').value = id;
+    document.getElementById('editProfileFullName').value = fullName;
+    document.getElementById('editProfileEmail').value = email;
+    document.getElementById('currentProfileImagePath').value = image;
+
+    // Set preview ảnh
+    document.getElementById('previewProfileImage').src = `${contextPath}/images/${image}`;
+
+    // Nếu là Staff thì set thêm các trường riêng
+    if (role === 'Staff') {
+        document.getElementById('editProfileGender').value = row.getAttribute('data-user-gender') || '';
+        document.getElementById('editProfilePhone').value = row.getAttribute('data-user-phone') || '';
+        document.getElementById('editProfilePosition').value = row.getAttribute('data-user-position') || '';
+        document.getElementById('staffFields').style.display = 'block';
+    } else {
+        document.getElementById('staffFields').style.display = 'none';
+    }
+
+    // Hiển thị modal
+    const modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+    modal.show();
+}
+
+// Xử lý xem trước ảnh mới khi người dùng chọn ảnh mới
+document.addEventListener('DOMContentLoaded', function () {
+    const imageInput = document.getElementById('editProfileImage');
+    const previewImg = document.getElementById('previewProfileImage');
+
+    if (imageInput && previewImg) {
+        imageInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (evt) {
+                    previewImg.src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
 
 // Product functions
 function editProduct(productId) {
-   
+
     const row = document.querySelector(`tr[data-product-id="${productId}"]`);
     if (!row)
         return;
@@ -18,7 +71,7 @@ function editProduct(productId) {
     const price = row.getAttribute('data-product-price') || '';
     const quantity = row.getAttribute('data-product-quantity') || '';
     const type = row.getAttribute('data-product-type-id') || '';
-    const image = row.getAttribute('data-product-image') || ''; 
+    const image = row.getAttribute('data-product-image') || '';
 
     // Set giá trị vào form
     document.getElementById('editProductId').value = productId;
@@ -31,7 +84,7 @@ function editProduct(productId) {
 
     // Hiển thị ảnh hiện tại
     const imgPreview = document.getElementById('currentProductImage');
-    imgPreview.src = '/images/products/'+image;
+    imgPreview.src = '/images/products/' + image;
     imgPreview.style.display = 'block';
 
     // Xóa preview ảnh mới nếu có
@@ -47,7 +100,7 @@ function editProduct(productId) {
             reader.readAsDataURL(file);
         } else {
             // Nếu bỏ chọn ảnh, thì trả lại ảnh gốc
-            imgPreview.src = '/images/products/'+image;
+            imgPreview.src = '/images/products/' + image;
         }
     };
 
@@ -69,14 +122,14 @@ function editUser(userId) {
         const username = row.getAttribute('data-username') || '';
         const fullname = row.getAttribute('data-fullname') || '';
         const role = (row.getAttribute('data-role') || '').toLowerCase();  // tránh null.toLowerCase()
-         const password = row.getAttribute('data-password') || '';
+        const password = row.getAttribute('data-password') || '';
         // Gán vào input
         document.getElementById('editUserId').value = userId;
         document.getElementById('displayUsername').value = username;
         document.getElementById('editFullname').value = fullname;
         document.getElementById('editRole').value = role;
         document.getElementById('editPassword').value = password;
-        
+
         console.log('User data:', {
             id: userId,
             username,
@@ -235,4 +288,47 @@ function togglePasswordVisibility() {
     icon.classList.toggle('fa-eye-slash', !isPassword);
 }
 
-   
+// Voucher functions
+function editVoucher(voucherId) {
+    const row = document.querySelector(`tr[data-voucher-id="${voucherId}"]`);
+    if (!row)
+        return;
+
+    const codeName = row.getAttribute('data-voucher-code') || '';
+    const description = row.getAttribute('data-voucher-description') || '';
+    const discountType = row.getAttribute('data-voucher-discount-type') || '';
+    const discountValue = row.getAttribute('data-voucher-discount-value') || '';
+    const minOrderAmount = row.getAttribute('data-voucher-min-order') || '';
+    const startDateRaw = row.getAttribute('data-voucher-start-date') || '';
+    const endDateRaw = row.getAttribute('data-voucher-end-date') || '';
+    const voucherActive = row.getAttribute('data-voucher-status') || '';
+
+    const formatDate = (dateStr) => {
+        if (!dateStr)
+            return '';
+        const date = new Date(dateStr);
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
+
+    document.getElementById('editVoucherId').value = voucherId;
+    document.getElementById('editDescription').value = description;
+    document.getElementById('editCodeName').value = codeName;
+    document.getElementById('editDiscountType').value = discountType;
+    document.getElementById('editDiscountValue').value = discountValue;
+    document.getElementById('editMinOrderAmount').value = minOrderAmount;
+    document.getElementById('editStartDate').value = formatDate(startDateRaw);
+    document.getElementById('editEndDate').value = formatDate(endDateRaw);
+    document.getElementById('editVoucherActive').value = voucherActive;
+
+    new bootstrap.Modal(document.getElementById('editVoucherModal')).show();
+}
+
+
+function deleteVoucher(id) {
+    if (confirm('Are you sure you want to delete this voucher?')) {
+        window.location.href = '/AdminController?action=deleteVoucher&id=' + id;
+    }
+}
