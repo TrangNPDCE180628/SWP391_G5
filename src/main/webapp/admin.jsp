@@ -1,915 +1,702 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Admin Dashboard</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-        <link href="css/admindashboard.css" rel="stylesheet" />
-        <script src="${pageContext.request.contextPath}/js/ScriptAdminDashboard.js"></script>
-        <style>
-            .action-buttons .btn {
-                margin-right: 5px;
-            }
-            .action-buttons .btn-info {
-                background-color: #17a2b8;
-                border-color: #17a2b8;
-            }
-            .action-buttons .btn-warning {
-                background-color: #ffc107;
-                border-color: #ffc107;
-            }
-            .action-buttons .btn-danger {
-                background-color: #dc3545;
-                border-color: #dc3545;
-            }
-        </style>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <style>
+        /* Existing Styles (unchanged) */
+        .orders-card {
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .orders-card .card-header {
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 10px 10px 0 0;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .orders-table th {
+            font-weight: 600;
+            color: #333;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .orders-table td {
+            vertical-align: middle;
+            padding: 1rem;
+        }
+        .orders-table tr {
+            transition: background-color 0.2s ease;
+        }
+        .orders-table tr:hover {
+            background-color: #f1f3f5;
+        }
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 12px;
+        }
+        .status-pending { background-color: #ffc107; color: #333; }
+        .status-done { background-color: #28a745; color: white; }
+        .status-cancel { background-color: #dc3545; color: white; }
+        .action-buttons .btn, .action-buttons .form-select {
+            margin-right: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .action-buttons .btn i { margin-right: 0.3rem; }
+        .filter-form select {
+            border-radius: 8px;
+            padding: 0.5rem;
+            font-size: 0.95rem;
+            border: 1px solid #ced4da;
+        }
+        .filter-form select:focus {
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+            border-color: #007bff;
+        }
+        .sidebar {
+            background: #2c3e50;
+            min-height: 100vh;
+        }
+        .sidebar .nav-link {
+            color: #dcdcdc;
+            padding: 0.75rem 1rem;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: #34495e;
+            color: white;
+        }
+        .main-content {
+            padding: 2rem;
+            background-color: #f4f6f9;
+        }
 
-    <body>
-        <div class="container-fluid">
-            <div class="row">
-                <!-- Sidebar -->
-                <div class="col-md-3 col-lg-2 px-0 sidebar">
-                    <div class="d-flex flex-column p-3">
-                        <h4 class="mb-4">Admin Dashboard</h4>
-                        <ul class="nav nav-pills flex-column mb-auto">
-                            <li class="nav-item">
-                                <a href="#profile" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-user me-2"></i>Profile
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#productTypes" class="nav-link active" data-bs-toggle="tab">
-                                    <i class="fas fa-tags me-2"></i>Product Types
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#products" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-shoe-prints me-2"></i>Products
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#users" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-users me-2"></i>Customer
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#staff" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-users me-2"></i>Staff Manage
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#orders" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-shopping-cart me-2"></i>Orders
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fa-solid fa-ticket me-2"></i>Voucher
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#discounts" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-percent me-2"></i>Discounts
-                                </a>
-                            </li>
-                        </ul>
-                        <hr>
-                        <div class="dropdown">
-                            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle me-2"></i>
-                                <strong>${sessionScope.LOGIN_USER.fullName}</strong>
+        /* New Styles for Revenue Tab */
+        .revenue-card {
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        .revenue-card .card-header {
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px 10px 0 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .filter-section {
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .filter-btn {
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+        .filter-btn:hover {
+            border-color: #007bff;
+        }
+        .filter-btn.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .metric-card {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-right: 1rem;
+        }
+        .metric-card h4 {
+            color: #6c757d;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .metric-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .metric-card .change {
+            font-size: 0.9rem;
+            color: #28a745;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 2rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .legend-item span {
+            width: 12px;
+            height: 12px;
+            margin-right: 0.5rem;
+            display: inline-block;
+        }
+        .color-enrollments { background-color: #6f42c1; }
+        .color-intro-offers { background-color: #28a745; }
+        .color-drop-ins { background-color: #007bff; }
+        .color-plans { background-color: #ff6384; }
+        .color-retail { background-color: #ff9f40; }
+        .color-fees { background-color: #dc3545; }
+        .color-courses { background-color: #6610f2; }
+        .color-appointments { background-color: #fd7e14; }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .orders-table th, .orders-table td {
+                font-size: 0.85rem;
+                padding: 0.75rem;
+            }
+            .action-buttons .btn, .action-buttons .form-select {
+                margin-bottom: 0.5rem;
+            }
+            .orders-card .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .orders-card .card-header h2 {
+                margin-bottom: 1rem;
+            }
+            .filter-section {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .metric-card {
+                margin-bottom: 1rem;
+                margin-right: 0;
+            }
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0 sidebar">
+                <div class="d-flex flex-column p-3">
+                    <h4 class="mb-4 text-white">Admin Dashboard</h4>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="#productTypes" class="nav-link ${activeTab == null || activeTab != 'orders' && activeTab != 'revenue' ? 'active' : ''}" data-bs-toggle="tab">
+                                <i class="fas fa-tags me-2"></i>Product Types
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
-                                <li>
-                                    <a class="dropdown-item" href="login.jsp">Logout</a>
-                                </li>
-                            </ul>
-
-                        </div>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#products" class="nav-link" data-bs-toggle="tab">
+                                <i class="fas fa-shoe-prints me-2"></i>Products
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#users" class="nav-link" data-bs-toggle="tab">
+                                <i class="fas fa-users me-2"></i>Customer
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#staff" class="nav-link" data-bs-toggle="tab">
+                                <i class="fas fa-users me-2"></i>Staff Manage
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#orders" class="nav-link ${activeTab == 'orders' ? 'active' : ''}" data-bs-toggle="tab">
+                                <i class="fas fa-shopping-cart me-2"></i>Orders
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#revenue" class="nav-link ${activeTab == 'revenue' ? 'active' : ''}" data-bs-toggle="tab">
+                                <i class="fas fa-chart-bar me-2"></i>Revenue
+                            </a>
+                        </li>
+                    </ul>
+                    <hr class="text-white">
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <strong>${sessionScope.LOGIN_USER.fullName}</strong>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+                            <li><a class="dropdown-item" href="login.jsp">Logout</a></li>
+                        </ul>
                     </div>
                 </div>
+            </div>
 
-                <!-- Main Content -->
-                <div class="col-md-9 col-lg-10 main-content">
-                    <div class="tab-content">
-
-                        <!-- Profile Tab -->
-                        <div class="tab-pane fade" id="profile">
-                            <h2>My Profile</h2>
-
-                            <button class="btn btn-primary mb-3"
-                                    onclick="editProfile('${LOGIN_USER.role}', '${LOGIN_USER.id}')">
-                                <i class="fas fa-edit me-1"></i> Edit Profile
-                            </button>
-
-                            <div id="profileTabContent">
-                                <table class="table table-striped">
-                                    <tbody>
-                                        <c:choose>
-                                            <c:when test="${LOGIN_USER.role == 'Admin'}">
-                                                <tr
-                                                    data-user-role="Admin"
-                                                    data-user-id="${LOGIN_USER.id}"
-                                                    data-user-fullname="${profile.adminFullName}"
-                                                    data-user-email="${profile.adminGmail}"
-                                                    data-user-image="${profile.adminImage}">
-                                                    <td colspan="2" class="text-center">
-                                                        <img src="${pageContext.request.contextPath}/images/${profile.adminImage}"
-                                                             alt="Avatar" class="rounded-circle"
-                                                             style="width: 120px; height: 120px; object-fit: cover;">
-                                                    </td>
-                                                </tr>
-                                            </c:when>
-                                            <c:when test="${LOGIN_USER.role == 'Staff'}">
-                                                <tr
-                                                    data-user-role="Staff"
-                                                    data-user-id="${LOGIN_USER.id}"
-                                                    data-user-fullname="${profile.staffFullName}"
-                                                    data-user-email="${profile.staffGmail}"
-                                                    data-user-image="${profile.staffImage}"
-                                                    data-user-gender="${profile.staffGender}"
-                                                    data-user-phone="${profile.staffPhone}"
-                                                    data-user-position="${profile.staffPosition}">
-                                                    <td colspan="2" class="text-center">
-                                                        <img src="${pageContext.request.contextPath}/images/${profile.staffImage}"
-                                                             alt="Avatar" class="rounded-circle"
-                                                             style="width: 120px; height: 120px; object-fit: cover;">
-                                                    </td>
-                                                </tr>
-                                            </c:when>
-                                        </c:choose>
-
-                                        <tr>
-                                            <th>Full Name</th>
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${LOGIN_USER.role == 'Admin'}">
-                                                        ${profile.adminFullName}
-                                                    </c:when>
-                                                    <c:when test="${LOGIN_USER.role == 'Staff'}">
-                                                        ${profile.staffFullName}
-                                                    </c:when>
-                                                </c:choose>
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="tab-content">
+                    <!-- Product Types Tab (Unchanged) -->
+                    <div class="tab-pane fade ${activeTab == null || activeTab != 'orders' && activeTab != 'revenue' ? 'show active' : ''}" id="productTypes">
+                        <h2>Product Types Management</h2>
+                        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductTypeModal">
+                            <i class="fas fa-plus"></i> Add New Product Type
+                        </button>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:forEach items="${productTypes}" var="cate">
+                                        <tr data-type-id="${cate.cateId}">
+                                            <td>${cate.cateId}</td>
+                                            <td data-type-name>${cate.cateName}</td>
+                                            <td class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="editProductType(`${cate.cateId}`, `${cate.cateName}`)">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteProductType('${cate.cateId}')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <th>Email</th>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Products Tab (Unchanged) -->
+                    <div class="tab-pane fade" id="products">
+                        <h2>Products Management</h2>
+                        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                            <i class="fas fa-plus"></i> Add New Product
+                        </button>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Price</th>
+                                        <th>Category</th>
+                                        <th>Stock</th>
+                                        <th>Image</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:forEach items="${products}" var="product">
+                                        <tr 
+                                            data-pro-id="${product.proId}"
+                                            data-pro-name="${product.proName}"
+                                            data-pro-description="${product.proDescription}"
+                                            data-pro-price="${product.proPrice}"
+                                            data-pro-stock-quantity="${product.proStockQuantity}"
+                                            data-pro-warranty-months="${product.proWarrantyMonths}"
+                                            data-pro-model="${product.proModel}"
+                                            data-pro-color="${product.proColor}"
+                                            data-pro-weight="${product.proWeight}"
+                                            data-pro-dimensions="${product.proDimensions}"
+                                            data-pro-origin="${product.proOrigin}"
+                                            data-pro-material="${product.proMaterial}"
+                                            data-pro-connectivity="${product.proConnectivity}"
+                                            data-pro-image-main="${product.proImageMain}"
+                                            data-cate-id="${product.cateId}"
+                                            data-brand-id="${product.brandId}"
+                                            data-status="${product.status}">
+                                            <td>${product.proId}</td>
+                                            <td>${product.proName}</td>
+                                            <td>$${product.proPrice}</td>
+                                            <td>
+                                                <c:forEach items="${productTypes}" var="cate">
+                                                    <c:if test="${cate.cateId == product.cateId}">
+                                                        ${cate.cateName}
+                                                    </c:if>
+                                                </c:forEach>
+                                            </td>
+                                            <td>${product.proStockQuantity}</td>
+                                            <td>
+                                                <img src="${pageContext.request.contextPath}/images/products/${product.proImageMain}" 
+                                                     alt="Image" width="120" height="150">
+                                            </td>
                                             <td>
                                                 <c:choose>
-                                                    <c:when test="${LOGIN_USER.role == 'Admin'}">
-                                                        ${profile.adminGmail}
-                                                    </c:when>
-                                                    <c:when test="${LOGIN_USER.role == 'Staff'}">
-                                                        ${profile.staffGmail}
-                                                    </c:when>
+                                                    <c:when test="${product.status == 1}">Available</c:when>
+                                                    <c:when test="${product.status == 2}">Out of Stock</c:when>
+                                                    <c:otherwise>Unavailable</c:otherwise>
                                                 </c:choose>
                                             </td>
+                                            <td class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="editProduct('${product.proId}')">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.proId}')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </td>
                                         </tr>
-
-                                        <c:if test="${LOGIN_USER.role == 'Staff'}">
-                                            <tr>
-                                                <th>Gender</th>
-                                                <td>${profile.staffGender}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Phone</th>
-                                                <td>${profile.staffPhone}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Position</th>
-                                                <td>${profile.staffPosition}</td>
-                                            </tr>
-                                        </c:if>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Product Types Tab -->
-                        <div class="tab-pane fade show active" id="productTypes">
-                            <h2>Product Types Management</h2>
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductTypeModal">
-                                <i class="fas fa-plus"></i> Add New Product Type
-                            </button>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Name</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach items="${productTypes}" var="cate">
-                                            <tr data-type-id="${cate.cateId}">
-                                                <td>${cate.cateId}</td>
-                                                <td data-type-name>${cate.cateName}</td>
-                                                <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-warning" onclick="editProductType(`${cate.cateId}`, `${cate.cateName}`)">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteProductType('${cate.cateId}')">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Products Tab -->
-                        <div class="tab-pane fade" id="products">
-                            <h2>Products Management</h2>
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                                <i class="fas fa-plus"></i> Add New Product
-                            </button>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Name</th>
-                                            <th>Price</th>
-                                            <th>Category</th>
-                                            <th>Stock</th>
-                                            <th>Image</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach items="${products}" var="product">
-                                            <tr 
-                                                data-pro-id="${product.proId}"
-                                                data-pro-name="${product.proName}"
-                                                data-pro-description="${product.proDescription}"
-                                                data-pro-price="${product.proPrice}"
-                                                data-pro-stock-quantity="${product.proStockQuantity}"
-                                                data-pro-warranty-months="${product.proWarrantyMonths}"
-                                                data-pro-model="${product.proModel}"
-                                                data-pro-color="${product.proColor}"
-                                                data-pro-weight="${product.proWeight}"
-                                                data-pro-dimensions="${product.proDimensions}"
-                                                data-pro-origin="${product.proOrigin}"
-                                                data-pro-material="${product.proMaterial}"
-                                                data-pro-connectivity="${product.proConnectivity}"
-                                                data-pro-image-main="${product.proImageMain}"
-                                                data-cate-id="${product.cateId}"
-                                                data-brand-id="${product.brandId}"
-                                                data-status="${product.status}"
-                                                >
-                                                <td>${product.proId}</td>
-                                                <td>${product.proName}</td>
-                                                <td>$${product.proPrice}</td>
-                                                <td>
-                                                    <c:forEach items="${productTypes}" var="cate">
-                                                        <c:if test="${cate.cateId == product.cateId}">
-                                                            ${cate.cateName}
-                                                        </c:if>
-                                                    </c:forEach>
-                                                </td>
-                                                <td>${product.proStockQuantity}</td>
-                                                <td>
-                                                    <img src="${pageContext.request.contextPath}/images/products/${product.proImageMain}" 
-                                                         alt="Image" width="120" height="150">
-                                                </td>
-                                                <td>
-                                                    <c:choose>
-                                                        <c:when test="${product.status == 1}">Available</c:when>
-                                                        <c:when test="${product.status == 2}">Out of Stock</c:when>
-                                                        <c:otherwise>Unavailable</c:otherwise>
-                                                    </c:choose>
-                                                </td>
-                                                <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-warning" onclick="editProduct('${product.proId}')">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.proId}')">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <!-- Users Tab -->
-                        <div class="tab-pane fade" id="users">
-                            <h2>Customer Management</h2>
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                                <i class="fas fa-plus"></i> Add New Customer
-                            </button>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Username</th>
-                                            <th>Full Name</th>
-                                            <th>Image</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach items="${users}" var="cus">
-                                            <tr 
-                                                data-cusid="${cus.cusId}"
-                                                data-username="${cus.username}"
-                                                data-password="${cus.cusPassword}"
-                                                data-fullname="${cus.cusFullName}"
-                                                data-gender="${cus.cusGender}"
-                                                data-gmail="${cus.cusGmail}"
-                                                data-phone="${cus.cusPhone}"
-                                                data-image="${cus.cusImage}">
-
-                                                <td>${cus.cusId}</td>
-                                                <td>${cus.username}</td>
-                                                <td>${cus.cusFullName}</td>
-                                                <td>
-                                                    <img src="${pageContext.request.contextPath}/images/customers/${cus.cusImage}"
-                                                         alt="Customer Image" width="80" height="100">
-                                                </td>
-                                                <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-info" onclick="viewDetail('${cus.cusId}')">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </button>
-                                                    <button class="btn btn-sm btn-warning" onclick="editUser('${cus.cusId}')">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteUser('${cus.cusId}')">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Staff Tab -->
-                        <div class="tab-pane fade" id="staff">
-                            <h2>Staff Management</h2>
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addStaffModal">
-                                <i class="fas fa-plus"></i> Add New Staff
-                            </button>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Username</th>
-                                            <th>Full Name</th>
-                                            <th>Image</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach items="${staffs}" var="staff">
-                                            <tr
-                                                data-staff-id="${staff.staffId}"
-                                                data-staff-name="${staff.staffName}"
-                                                data-fullname="${staff.staffFullName}"
-                                                data-password="${staff.staffPassword}"
-                                                data-gender="${staff.staffGender}"
-                                                data-gmail="${staff.staffGmail}"
-                                                data-phone="${staff.staffPhone}"
-                                                data-position="${staff.staffPosition}"
-                                                data-image="${staff.staffImage}">
-
-                                                <td>${staff.staffId}</td>
-                                                <td>${staff.staffName}</td>
-                                                <td>${staff.staffFullName}</td>
-                                                <td>
-                                                    <img src="${pageContext.request.contextPath}/images/staff/${staff.staffImage}" 
-                                                         alt="Staff Image" width="80" height="100">
-                                                </td>
-                                                <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-info" onclick="viewStaffDetail('${staff.staffId}')">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </button>
-                                                    <button class="btn btn-sm btn-warning" onclick="editStaff('${staff.staffId}')">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteStaff('${staff.staffId}')">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Vouchers Tab -->
-                        <div class="tab-pane fade" id="vouchers">
-                            <h2>Vouchers Management</h2>
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addVoucherModal">
-                                <i class="fas fa-plus"></i> Add New Voucher
-                            </button>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Code</th>
-                                            <th>Type</th>
-                                            <th>Value</th>
-                                            <th>Start Date</th>
-                                            <th>End Date</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach items="${vouchers}" var="voucher">
-                                            <tr 
-                                                data-voucher-id="${voucher.voucherId}"
-                                                data-voucher-code="${voucher.codeName}"
-                                                data-voucher-description="${voucher.voucherDescription}"
-                                                data-voucher-discount-type="${voucher.discountType}"
-                                                data-voucher-discount-value="${voucher.discountValue}"
-                                                data-voucher-min-order="${voucher.minOrderAmount}"
-                                                data-voucher-start-date="<fmt:formatDate value='${voucher.startDate}' pattern='yyyy-MM-dd' />"
-                                                data-voucher-end-date="<fmt:formatDate value='${voucher.endDate}' pattern='yyyy-MM-dd' />"
-                                                data-voucher-status="${voucher.voucherActive}">
-                                                <td>${voucher.voucherId}</td>
-                                                <td>${voucher.codeName}</td>
-                                                <td>${voucher.discountType}</td>
-                                                <td>
-                                                    <c:choose>
-                                                        <c:when test="${voucher.discountType == 'percentage'}">
-                                                            ${voucher.discountValue}%
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            $${voucher.discountValue}
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </td>
-                                                <td><fmt:formatDate value="${voucher.startDate}" pattern="yyyy-MM-dd" /></td>
-                                                <td><fmt:formatDate value="${voucher.endDate}" pattern="yyyy-MM-dd" /></td>
-                                                <td>
-                                                    <c:choose>
-                                                        <c:when test="${voucher.voucherActive}">
-                                                            Active
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            Inactive
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </td>
-                                                <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-warning" onclick="editVoucher('${voucher.voucherId}')">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteVoucher('${voucher.voucherId}')">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Discounts Tab -->
-                        <div class="tab-pane fade" id="discounts">
-                            <h2>Discounts Management</h2>
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addDiscountModal">
-                                <i class="fas fa-plus"></i> Add New Discount
-                            </button>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Product ID</th>
-                                            <th>Discount Type</th>
-                                            <th>Discount Value</th>
-                                            <th>Start Date</th>
-                                            <th>End Date</th>
-                                            <th>Active</th>
-                                            <th>Admin ID</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach items="${discounts}" var="discount">
-                                            <tr data-discount-id="${discount.discountId}"
-                                                data-pro-id="${discount.proId}"
-                                                data-discount-type="${discount.discountType}"
-                                                data-discount-value="${discount.discountValue}"
-                                                data-start-date="<fmt:formatDate value='${discount.startDate}' pattern='yyyy-MM-dd' type='date'/>"
-                                                data-end-date="<fmt:formatDate value='${discount.endDate}' pattern='yyyy-MM-dd' type='date'/>"
-                                                data-active="${discount.active}"
-                                                data-admin-id="${discount.adminId}">
-                                                <td>${discount.discountId}</td>
-                                                <td>${discount.proId}</td>
-                                                <td>${discount.discountType}</td>
-                                                <td>${discount.discountValue}</td>
-                                                <td><fmt:formatDate value="${discount.startDate}" pattern="yyyy-MM-dd" type="date"/></td>
-                                                <td><fmt:formatDate value="${discount.endDate}" pattern="yyyy-MM-dd" type="date"/></td>
-                                                <td>${discount.active ? 'Yes' : 'No'}</td>
-                                                <td>${discount.adminId}</td>
-                                                <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-info" onclick="viewDiscount('${discount.discountId}')">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </button>
-                                                    <button class="btn btn-sm btn-warning" onclick="editDiscount('${discount.discountId}')">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteDiscount('${discount.discountId}')">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Edit Profile Modal -->
-        <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <form action="AdminController" method="post" enctype="multipart/form-data" class="modal-content">
-                    <!-- BẮT BUỘC: Cho servlet biết action đang gọi -->
-                    <input type="hidden" name="action" value="editProfile">
-
-                    <!-- Hidden fields -->
-                    <input type="hidden" name="userId" id="editUserId">
-                    <input type="hidden" name="userRole" id="editUserRole">
-                    <input type="hidden" name="currentImage" id="currentProfileImagePath">
-
-                    <div class="modal-body">
-                        <div class="row">
-                            <!-- Avatar -->
-                            <div class="col-md-4 text-center">
-                                <img id="previewProfileImage" src="" alt="Preview" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                                <input type="file" class="form-control" name="image" id="editProfileImage" accept="image/*">
-                            </div>
-
-                            <!-- Thông tin chung -->
-                            <div class="col-md-8">
-                                <div class="mb-3">
-                                    <label for="editProfileFullName" class="form-label">Full Name</label>
-                                    <input type="text" class="form-control" name="fullName" id="editProfileFullName" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editProfileEmail" class="form-label">Email</label>
-                                    <input type="email" class="form-control" name="email" id="editProfileEmail" required>
-                                </div>
-
-                                <!-- Staff-only fields -->
-                                <div id="staffFields" style="display: none;">
-                                    <div class="mb-3">
-                                        <label for="editProfileGender" class="form-label">Gender</label>
-                                        <select class="form-select" name="gender" id="editProfileGender">
-                                            <option value="Male">Male</option>
-                                            <option value="Female">Female</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="editProfilePhone" class="form-label">Phone</label>
-                                        <input type="text" class="form-control" name="phone" id="editProfilePhone">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="editProfilePosition" class="form-label">Position</label>
-                                        <input type="text" class="form-control" name="position" id="editProfilePosition">
-                                    </div>
-                                </div>
-                            </div>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save me-1"></i> Save Changes
+                    <!-- Users Tab (Unchanged) -->
+                    <div class="tab-pane fade" id="users">
+                        <h2>Customer Management</h2>
+                        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                            <i class="fas fa-plus"></i> Add New Customer
                         </button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-1"></i> Cancel
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Full Name</th>
+                                        <th>Image</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:forEach items="${users}" var="cus">
+                                        <tr 
+                                            data-cusid="${cus.cusId}"
+                                            data-username="${cus.username}"
+                                            data-password="${cus.cusPassword}"
+                                            data-fullname="${cus.cusFullName}"
+                                            data-gender="${cus.cusGender}"
+                                            data-gmail="${cus.cusGmail}"
+                                            data-phone="${cus.cusPhone}"
+                                            data-image="${cus.cusImage}">
+                                            <td>${cus.cusId}</td>
+                                            <td>${cus.username}</td>
+                                            <td>${cus.cusFullName}</td>
+                                            <td>
+                                                <img src="${pageContext.request.contextPath}/images/customers/${cus.cusImage}"
+                                                     alt="Customer Image" width="80" height="100">
+                                            </td>
+                                            <td class="action-buttons">
+                                                <button class="btn btn-sm btn-info" onclick="viewDetail('${cus.cusId}')">
+                                                    <i class="fas fa-eye"></i> View
+                                                </button>
+                                                <button class="btn btn-sm btn-warning" onclick="editUser('${cus.cusId}')">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteUser('${cus.cusId}')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Staff Tab (Unchanged) -->
+                    <div class="tab-pane fade" id="staff">
+                        <h2>Staff Management</h2>
+                        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+                            <i class="fas fa-plus"></i> Add New Staff
                         </button>
-                    </div>
-                </form>
-
-            </div>
-        </div>
-
-        <!-- Add Voucher Modal -->
-        <div class="modal fade" id="addVoucherModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add New Voucher</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <form action="AdminController" method="post">
-                        <div class="modal-body">
-                            <input type="hidden" name="action" value="addVoucher">
-
-                            <div class="mb-3">
-                                <label for="codeName" class="form-label">Voucher Code</label>
-                                <input type="text" class="form-control" id="codeName" name="codeName" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="voucherDescription" class="form-label">Description</label>
-                                <textarea class="form-control" id="voucherDescription" name="voucherDescription"></textarea>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="discountType" class="form-label">Discount Type</label>
-                                <select class="form-select" id="discountType" name="discountType" required>
-                                    <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed Amount ($)</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="discountValue" class="form-label">Discount Value</label>
-                                <input type="number" step="0.01" class="form-control" id="discountValue" name="discountValue" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="minOrderAmount" class="form-label">Min Order Amount</label>
-                                <input type="number" step="0.01" class="form-control" id="minOrderAmount" name="minOrderAmount" value="0">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="startDate" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="startDate" name="startDate" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="endDate" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="endDate" name="endDate" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="voucherActive" class="form-label">Status</label>
-                                <select class="form-select" id="voucherActive" name="voucherActive" required>
-                                    <option value="true">Active</option>
-                                    <option value="false">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <!-- Edit Voucher Modal -->
-        <div class="modal fade" id="editVoucherModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form action="AdminController" method="post">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Edit Voucher</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-
-                        <div class="modal-body">
-                            <input type="hidden" id="editVoucherId" name="voucherId">
-                            <input type="hidden" name="action" value="updateVoucher">
-
-                            <div class="mb-3">
-                                <label for="editCodeName" class="form-label">Voucher Code</label>
-                                <input type="text" class="form-control" id="editCodeName" name="codeName" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editDescription" class="form-label">Description</label>
-                                <textarea class="form-control" id="editDescription" name="voucherDescription" rows="3"></textarea>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editDiscountType" class="form-label">Discount Type</label>
-                                <select class="form-select" id="editDiscountType" name="discountType">
-                                    <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed Amount ($)</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editDiscountValue" class="form-label">Discount Value</label>
-                                <input type="number" class="form-control" id="editDiscountValue" name="discountValue" step="0.01" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editMinOrderAmount" class="form-label">Minimum Order Amount</label>
-                                <input type="number" class="form-control" id="editMinOrderAmount" name="minOrderAmount" step="0.01" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editStartDate" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="editStartDate" name="startDate" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editEndDate" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="editEndDate" name="endDate" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editVoucherActive" class="form-label">Status</label>
-                                <select class="form-select" id="editVoucherActive" name="voucherActive" required>
-                                    <option value="true">Active</option>
-                                    <option value="false">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Update</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modals -->
-        <div class="modal fade" id="addDiscountModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add New Discount</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <form action="AdminController" method="post">
-                        <div class="modal-body">
-                            <input type="hidden" name="action" value="addDiscount">
-                            <div class="mb-3">
-                                <label for="proId" class="form-label">Product ID</label>
-                                <input type="text" class="form-control" id="proId" name="proId" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="discountType" class="form-label">Discount Type</label>
-                                <select class="form-select" id="discountType" name="discountType" required>
-                                    <option value="percentage">Percentage</option>
-                                    <option value="fixed">Fixed</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="discountValue" class="form-label">Discount Value</label>
-                                <input type="number" step="0.01" class="form-control" id="discountValue" name="discountValue" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="startDate" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="startDate" name="startDate" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="endDate" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="endDate" name="endDate" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="active" class="form-label">Active</label>
-                                <select class="form-select" id="active" name="active" required>
-                                    <option value="true">Yes</option>
-                                    <option value="false">No</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="adminId" class="form-label">Admin ID</label>
-                                <input type="text" class="form-control" id="adminId" name="adminId" required>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="editDiscountModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit Discount</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <form action="AdminController" method="post">
-                        <div class="modal-body">
-                            <input type="hidden" name="action" value="updateDiscount">
-                            <input type="hidden" name="id" id="editDiscountId">
-                            <div class="mb-3">
-                                <label for="editProId" class="form-label">Product ID</label>
-                                <input type="text" class="form-control" id="editProId" name="proId">
-                            </div>
-                            <div class="mb-3">
-                                <label for="editDiscountType" class="form-label">Discount Type</label>
-                                <select class="form-select" id="editDiscountType" name="discountType">
-                                    <option value="percentage">Percentage</option>
-                                    <option value="fixed">Fixed</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editDiscountValue" class="form-label">Discount Value</label>
-                                <input type="number" step="0.01" class="form-control" id="editDiscountValue" name="discountValue">
-                            </div>
-                            <div class="mb-3">
-                                <label for="editStartDate" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="editStartDate" name="startDate">
-                            </div>
-                            <div class="mb-3">
-                                <label for="editEndDate" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="editEndDate" name="endDate">
-                            </div>
-                            <div class="mb-3">
-                                <label for="editActive" class="form-label">Active</label>
-                                <select class="form-select" id="editActive" name="active">
-                                    <option value="true">Yes</option>
-                                    <option value="false">No</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editAdminId" class="form-label">Admin ID</label>
-                                <input type="text" class="form-control" id="editAdminId" name="adminId">
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Update</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="viewDiscountModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">View Discount</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Discount ID</label>
-                            <p id="viewDiscountId" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Product ID</label>
-                            <p id="viewProId" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Discount Type</label>
-                            <p id="viewDiscountType" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Discount Value</label>
-                            <p id="viewDiscountValue" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Start Date</label>
-                            <p id="viewStartDate" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">End Date</label>
-                            <p id="viewEndDate" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Active</label>
-                            <p id="viewActive" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Admin ID</label>
-                            <p id="viewAdminId" class="form-control-plaintext"></p>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Full Name</th>
+                                        <th>Image</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:forEach items="${staffs}" var="staff">
+                                        <tr
+                                            data-staff-id="${staff.staffId}"
+                                            data-staff-name="${staff.staffName}"
+                                            data-fullname="${staff.staffFullName}"
+                                            data-password="${staff.staffPassword}"
+                                            data-gender="${staff.staffGender}"
+                                            data-gmail="${staff.staffGmail}"
+                                            data-phone="${staff.staffPhone}"
+                                            data-position="${staff.staffPosition}"
+                                            data-image="${staff.staffImage}">
+                                            <td>${staff.staffId}</td>
+                                            <td>${staff.staffName}</td>
+                                            <td>${staff.staffFullName}</td>
+                                            <td>
+                                                <img src="${pageContext.request.contextPath}/images/staff/${staff.staffImage}" 
+                                                     alt="Staff Image" width="80" height="100">
+                                            </td>
+                                            <td class="action-buttons">
+                                                <button class="btn btn-sm btn-info" onclick="viewStaffDetail('${staff.staffId}')">
+                                                    <i class="fas fa-eye"></i> View
+                                                </button>
+                                                <button class="btn btn-sm btn-warning" onclick="editStaff('${staff.staffId}')">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteStaff('${staff.staffId}')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+                    <!-- Orders Tab (Unchanged) -->
+                    <div class="tab-pane fade ${activeTab == 'orders' ? 'show active' : ''}" id="orders">
+                        <div class="card orders-card">
+                            <div class="card-header">
+                                <h2 class="mb-0">Orders Management</h2>
+                                <form action="AdminController" method="get" class="filter-form d-flex align-items-center">
+                                    <input type="hidden" name="action" value="filterOrders">
+                                    <label for="statusFilter" class="me-2 text-white">Filter by Status:</label>
+                                    <select id="statusFilter" name="status" class="form-select me-2" style="width: auto;" onchange="this.form.submit()">
+                                        <option value="All" ${selectedStatus == 'All' || empty selectedStatus ? 'selected' : ''}>All</option>
+                                        <option value="Pending" ${selectedStatus == 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="Done" ${selectedStatus == 'Done' ? 'selected' : ''}>Done</option>
+                                        <option value="Cancel" ${selectedStatus == 'Cancel' ? 'selected' : ''}>Cancel</option>
+                                    </select>
+                                </form>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table orders-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Customer ID</th>
+                                                <th>Order Date</th>
+                                                <th>Status</th>
+                                                <th>Total Amount</th>
+                                                <th>Final Amount</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach items="${orders}" var="order">
+                                                <tr>
+                                                    <td>${order.id}</td>
+                                                    <td>${order.cusId}</td>
+                                                    <td>${order.orderDate}</td>
+                                                    <td>
+                                                        <span class="status-badge status-${order.status.toLowerCase()}">
+                                                            ${order.status}
+                                                        </span>
+                                                    </td>
+                                                    <td>$${order.totalAmount}</td>
+                                                    <td>$${order.finalAmount}</td>
+                                                    <td class="action-buttons">
+                                                        <a href="AdminController?action=viewOrderDetails&id=${order.id}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="View Order Details">
+                                                            <i class="fas fa-eye"></i> View
+                                                        </a>
+                                                        <select class="form-select form-select-sm" onchange="updateOrderStatus(${order.id}, this.value, '${selectedStatus}', this)">
+                                                            <option value="" disabled selected>Change Status</option>
+                                                            <option value="Pending">Pending</option>
+                                                            <option value="Done">Done</option>
+                                                            <option value="Cancel">Cancel</option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue Tab (New) -->
+                    <div class="tab-pane fade ${activeTab == 'revenue' ? 'show active' : ''}" id="revenue">
+                        <div class="revenue-card">
+                            <div class="card-header">Manage Revenue</div>
+                            <div class="card-body">
+                                <!-- Filter Section -->
+                                <div class="filter-section d-flex justify-content-between align-items-center">
+                                    <div class="d-flex gap-2">
+                                        <div class="dropdown">
+                                            <button class="filter-btn dropdown-toggle" type="button" id="timeFrameDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Time Frame <span class="ms-2">${param.timeFrame != null ? param.timeFrame : 'Last Month (Jan 1 - ...)'}</span>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="timeFrameDropdown">
+                                                <li><a class="dropdown-item" href="?action=viewRevenue&timeFrame=Last Month">Last Month</a></li>
+                                                <li><a class="dropdown-item" href="?action=viewRevenue&timeFrame=Last Week">Last Week</a></li>
+                                                <li><a class="dropdown-item" href="?action=viewRevenue&timeFrame=This Month">This Month</a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="filter-btn dropdown-toggle" type="button" id="locationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Location <span class="ms-2">${param.location != null ? param.location : 'Coast'}</span>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="locationDropdown">
+                                                <li><a class="dropdown-item" href="?action=viewRevenue&location=Coast">Coast</a></li>
+                                                <li><a class="dropdown-item" href="?action=viewRevenue&location=Inland">Inland</a></li>
+                                                <li><a class="dropdown-item" href="?action=viewRevenue&location=All">All</a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="filter-btn dropdown-toggle" type="button" id="paymentMethodDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Payment Method <span class="ms-2">${param.paymentMethod != null ? param.paymentMethod : 'All'}</span>
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="paymentMethodDropdown">
+                                                <li><a class="dropdown-item" href="?action=viewRevenue&paymentMethod=All">All</a></li>
+                                                <li><a class="dropdown-item" href="?action=viewRevenue&paymentMethod=Credit Card">Credit Card</a></li>
+                                                <li><a class="dropdown-item" href="?action=viewRevenue&paymentMethod=PayPal">PayPal</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="filter-btn dropdown-toggle" type="button" id="revenueTypeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                            ${param.revenueType != null ? param.revenueType : 'Appointments'}
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="revenueTypeDropdown">
+                                            <li><a class="dropdown-item" href="?action=viewRevenue&revenueType=Appointments">Appointments</a></li>
+                                            <li><a class="dropdown-item" href="?action=viewRevenue&revenueType=Courses">Courses</a></li>
+                                            <li><a class="dropdown-item" href="?action=viewRevenue&revenueType=Drop-Ins">Drop-Ins</a></li>
+                                            <li><a class="dropdown-item" href="?action=viewRevenue&revenueType=Enrollments">Enrollments</a></li>
+                                            <li><a class="dropdown-item" href="?action=viewRevenue&revenueType=Fees">Fees</a></li>
+                                            <li><a class="dropdown-item" href="?action=viewRevenue&revenueType=Intro Offers">Intro Offers</a></li>
+                                            <li><a class="dropdown-item" href="?action=viewRevenue&revenueType=Plans">Plans</a></li>
+                                            <li><a class="dropdown-item" href="?action=viewRevenue&revenueType=Retail">Retail</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Metrics Section -->
+                                <div class="d-flex justify-content-between mt-4">
+                                    <div class="metric-card flex-fill">
+                                        <h4>Total</h4>
+                                        <div class="value">${totalRevenue != null ? String.format('%,.2f', totalRevenue) : '0.00'}</div>
+                                        <div class="change">${totalRevenueChange != null ? totalRevenueChange : '0.00'}%</div>
+                                    </div>
+                                    <div class="metric-card flex-fill">
+                                        <h4>Total Today</h4>
+                                        <div class="value">${totalToday != null ? String.format('%,.2f', totalToday) : '0.00'}</div>
+                                        <div class="change">${totalTodayChange != null ? totalTodayChange : '0.00'}%</div>
+                                    </div>
+                                    <div class="metric-card flex-fill">
+                                        <h4>Average per day</h4>
+                                        <div class="value">${averagePerDay != null ? String.format('%,.2f', averagePerDay) : '0.00'}</div>
+                                        <div class="change">0.00%</div>
+                                    </div>
+                                </div>
+
+                                <!-- Chart Section -->
+                                <div class="chart-container">
+                                    <canvas id="revenueChart"></canvas>
+                                </div>
+                                <div class="mt-3">
+                                    <c:forEach var="type" items="${revenueTypes}">
+                                        <div class="legend-item">
+                                            <span class="color-${type}"></span>
+                                            <span>${type}</span>
+                                        </div>
+                                    </c:forEach>
+                                </div>
+
+                                <!-- View Revenue List Button -->
+                                <a href="AdminController?action=viewRevenueList" class="btn btn-primary mt-4">View Revenue List</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <script>const contextPath = '${pageContext.request.contextPath}';</script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript for Order Status Update, Tab Activation, and Revenue Chart -->
+    <script>
+        function updateOrderStatus(orderId, status, currentStatus, selectElement) {
+            if (confirm('Are you sure you want to update the status to ' + status + '?')) {
+                selectElement.disabled = true;
+                window.location.href = 'AdminController?action=updateOrderStatus&id=' + orderId + 
+                                      '&status=' + status + '¤tStatus=' + encodeURIComponent(currentStatus);
+            } else {
+                selectElement.value = '';
+            }
+        }
 
-    </body>
+        // Ensure active tab on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const activeTab = '${activeTab}';
+            if (activeTab) {
+                const tab = document.querySelector('a[href="#' + activeTab + '"]');
+                const pane = document.querySelector('#' + activeTab);
+                if (tab && pane) {
+                    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('show', 'active'));
+                    tab.classList.add('active');
+                    pane.classList.add('show', 'active');
+                }
+            }
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        // Revenue Chart
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ${revenueData != null ? revenueData.stream().map(d -> "'" + d.date + "'").collect(Collectors.joining(",")) : "[]"},
+                datasets: [
+                    { label: 'Enrollments', data: ${revenueData != null ? revenueData.stream().map(d -> d.enrollments).collect(Collectors.joining(",")) : "[]"}, backgroundColor: '#6f42c1' },
+                    { label: 'Intro Offers', data: ${revenueData != null ? revenueData.stream().map(d -> d.introOffers).collect(Collectors.joining(",")) : "[]"}, backgroundColor: '#28a745' },
+                    { label: 'Drop-Ins', data: ${revenueData != null ? revenueData.stream().map(d -> d.dropIns).collect(Collectors.joining(",")) : "[]"}, backgroundColor: '#007bff' },
+                    { label: 'Plans', data: ${revenueData != null ? revenueData.stream().map(d -> d.plans).collect(Collectors.joining(",")) : "[]"}, backgroundColor: '#ff6384' },
+                    { label: 'Retail', data: ${revenueData != null ? revenueData.stream().map(d -> d.retail).collect(Collectors.joining(",")) : "[]"}, backgroundColor: '#ff9f40' },
+                    { label: 'Fees', data: ${revenueData != null ? revenueData.stream().map(d -> d.fees).collect(Collectors.joining(",")) : "[]"}, backgroundColor: '#dc3545' },
+                    { label: 'Courses', data: ${revenueData != null ? revenueData.stream().map(d -> d.courses).collect(Collectors.joining(",")) : "[]"}, backgroundColor: '#6610f2' },
+                    { label: 'Appointments', data: ${revenueData != null ? revenueData.stream().map(d -> d.appointments).collect(Collectors.joining(",")) : "[]"}, backgroundColor: '#fd7e14' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Revenue ($)' } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="${pageContext.request.contextPath}/js/ScriptAdminDashboard.js"></script>
+</body>
 </html>

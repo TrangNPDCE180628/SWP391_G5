@@ -5,21 +5,31 @@ import java.util.List;
 
 public class Order {
     private int id;
-    private int userId;
+    private String cusId; // UPDATED: Changed from userId to cusId to match DB schema
     private Timestamp orderDate;
     private String status;
-    private double totalPrice;
+    private double totalAmount; // UPDATED: Renamed totalPrice to totalAmount
+    private double discountAmount; // NEW: Added to match DB schema
+    private double finalAmount; // NEW: Added to match DB schema
+    private String paymentMethod; // NEW: Added to match DB schema
+    private String shippingAddress; // NEW: Added to match DB schema
     private List<OrderDetail> orderDetails;
 
     public Order() {
     }
 
-    public Order(int id, int userId, Timestamp orderDate, String status, double totalPrice) {
+    // UPDATED: Constructor updated to include new fields
+    public Order(int id, String cusId, Timestamp orderDate, String status, double totalAmount, 
+                 double discountAmount, double finalAmount, String paymentMethod, String shippingAddress) {
         this.id = id;
-        this.userId = userId;
+        this.cusId = cusId;
         this.orderDate = orderDate;
         this.status = status;
-        this.totalPrice = totalPrice;
+        this.totalAmount = totalAmount;
+        this.discountAmount = discountAmount;
+        this.finalAmount = finalAmount;
+        this.paymentMethod = paymentMethod;
+        this.shippingAddress = shippingAddress;
     }
 
     public int getId() {
@@ -30,12 +40,14 @@ public class Order {
         this.id = id;
     }
 
-    public int getUserId() {
-        return userId;
+    // UPDATED: Changed from getUserId to getCusId
+    public String getCusId() {
+        return cusId;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
+    // UPDATED: Changed from setUserId to setCusId
+    public void setCusId(String cusId) {
+        this.cusId = cusId;
     }
 
     public Timestamp getOrderDate() {
@@ -54,12 +66,50 @@ public class Order {
         this.status = status;
     }
 
-    public double getTotalPrice() {
-        return totalPrice;
+    // UPDATED: Renamed to getTotalAmount
+    public double getTotalAmount() {
+        return totalAmount;
     }
 
-    public void setTotalPrice(double totalPrice) {
-        this.totalPrice = totalPrice;
+    // UPDATED: Renamed to setTotalAmount
+    public void setTotalAmount(double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    // NEW: Getter and setter for discountAmount
+    public double getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(double discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    // NEW: Getter and setter for finalAmount
+    public double getFinalAmount() {
+        return finalAmount;
+    }
+
+    public void setFinalAmount(double finalAmount) {
+        this.finalAmount = finalAmount;
+    }
+
+    // NEW: Getter and setter for paymentMethod
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    // NEW: Getter and setter for shippingAddress
+    public String getShippingAddress() {
+        return shippingAddress;
+    }
+
+    public void setShippingAddress(String shippingAddress) {
+        this.shippingAddress = shippingAddress;
     }
 
     public List<OrderDetail> getOrderDetails() {
@@ -69,4 +119,4 @@ public class Order {
     public void setOrderDetails(List<OrderDetail> orderDetails) {
         this.orderDetails = orderDetails;
     }
-} 
+}

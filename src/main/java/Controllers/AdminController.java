@@ -1,27 +1,17 @@
 package Controllers;
 
-import DAOs.AdminDAO;
 import DAOs.CategoryDAO;
 import DAOs.CustomerDAO;
 import DAOs.OrderDAO;
+import DAOs.OrderDetailDAO;
 import DAOs.ProductDAO;
 import DAOs.StaffDAO;
-import DAOs.DiscountDAO;
-import DAOs.VoucherDAO;
-
-import Models.Admin;
 import Models.Category;
 import Models.Customer;
 import Models.Order;
+import Models.OrderDetail;
 import Models.Product;
 import Models.Staff;
-import Models.Discount;
-//import java.util.Date;
-//import java.text.SimpleDateFormat;
-import Models.Voucher;
-import Models.User;
-
-import com.google.gson.Gson;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -32,13 +22,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.math.BigDecimal;
-import java.nio.file.Paths;
-import java.sql.Date;
-import java.sql.SQLException;
 import java.util.List;
-import javax.servlet.http.HttpSession;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
@@ -56,15 +41,13 @@ public class AdminController extends HttpServlet {
         String action = request.getParameter("action");
 
         try {
+            // If action is null, load admin page by default
             if (action == null) {
                 loadAdminPage(request, response);
                 return;
             }
 
             switch (action) {
-                case "editProfile":
-                    editProfile(request, response);
-                    break;
                 case "addProductType":
                     addProductType(request, response);
                     break;
@@ -92,32 +75,22 @@ public class AdminController extends HttpServlet {
                 case "deleteUser":
                     deleteUser(request, response);
                     break;
-                case "addDiscount":
-                    addDiscount(request, response);
+                case "viewOrders":
+                    viewOrders(request, response);
                     break;
-                case "updateDiscount":
-                    updateDiscount(request, response);
+                case "updateOrderStatus":
+                    updateOrderStatus(request, response);
                     break;
-                case "deleteDiscount":
-                    deleteDiscount(request, response);
-//                case "viewOrderDetails":
-//                    viewOrderDetails(request, response);
-//                    break;
-                case "addVoucher":
-                    addVoucher(request, response);
+                case "filterOrders":
+                    filterOrders(request, response);
                     break;
-                case "updateVoucher":
-                    updateVoucher(request, response);
-                    break;
-                case "deleteVoucher":
-                    deleteVoucher(request, response);
-                    break;
-                case "getVoucherDetails":
-                    getVoucherDetails(request, response);
+                case "viewOrderDetails":
+                    viewOrderDetails(request, response);
                     break;
                 default:
                     loadAdminPage(request, response);
             }
+
         } catch (Exception e) {
             log("Error at AdminController: " + e.toString());
             request.setAttribute("ERROR", "An error occurred: " + e.getMessage());
@@ -128,119 +101,109 @@ public class AdminController extends HttpServlet {
     private void loadAdminPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Load common data
             CategoryDAO productTypeDAO = new CategoryDAO();
             ProductDAO productDAO = new ProductDAO();
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
-            DiscountDAO discountDAO = new DiscountDAO();
-            VoucherDAO voucherDAO = new VoucherDAO();
+            OrderDAO orderDAO = new OrderDAO();
 
             List<Category> productTypes = productTypeDAO.getAllCategories();
             List<Product> products = productDAO.getAllProducts();
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
-            List<Discount> discounts = discountDAO.getAll();
-            List<Voucher> vouchers = voucherDAO.getAll();
+            List<Order> orders = orderDAO.getAll();
 
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("products", products);
             request.setAttribute("users", users);
             request.setAttribute("staffs", staffs);
-            request.setAttribute("discounts", discounts);
-            request.setAttribute("vouchers", vouchers);
+            request.setAttribute("orders", orders);
 
-            // Load profile info
-            User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
-            if (loginUser != null) {
-                String role = loginUser.getRole();
-
-                if ("Admin".equals(role)) {
-                    AdminDAO adminDAO = new AdminDAO();
-                    Admin adminProfile = adminDAO.getAdminById(String.valueOf(loginUser.getId()));
-                    request.setAttribute("profile", adminProfile);
-                } else if ("Staff".equals(role)) {
-                    StaffDAO staffDAO2 = new StaffDAO();
-                    Staff staffProfile = staffDAO2.getById(String.valueOf(loginUser.getId()));
-                    request.setAttribute("profile", staffProfile);
-                }
-            }
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
             throw new ServletException(e);
         }
     }
 
-    private void editProfile(HttpServletRequest request, HttpServletResponse response)
+    private void viewOrders(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            String role = request.getParameter("userRole");
-            String id = request.getParameter("userId");
-            String fullName = request.getParameter("fullName");
-            String email = request.getParameter("email");
-
-            Part imagePart = request.getPart("image");
-            String currentImage = request.getParameter("currentImage");
-
-            String imageFileName = "";
-            if (imagePart != null && imagePart.getSize() > 0) {
-                imageFileName = Paths.get(imagePart.getSubmittedFileName()).getFileName().toString();
-                String savePath = getServletContext().getRealPath("/images") + File.separator + imageFileName;
-                imagePart.write(savePath);
-            } else {
-                imageFileName = currentImage;
-            }
-
-            HttpSession session = request.getSession();
-            User loginUser = (User) session.getAttribute("LOGIN_USER");
-
-            if ("Admin".equals(role)) {
-                AdminDAO adminDAO = new AdminDAO();
-                Admin admin = adminDAO.getAdminById(id);
-                if (admin != null) {
-                    admin.setAdminFullName(fullName);
-                    admin.setAdminGmail(email);
-                    admin.setAdminImage(imageFileName);
-                    adminDAO.updateProfileInfo(admin);
-
-                    loginUser.setFullName(fullName);
-                    loginUser.setEmail(email);
-                    loginUser.setImage(imageFileName);
-                    session.setAttribute("LOGIN_USER", loginUser);
-                }
-
-            } else if ("Staff".equals(role)) {
-                String gender = request.getParameter("gender");
-                String phone = request.getParameter("phone");
-                String position = request.getParameter("position");
-
-                StaffDAO staffDAO = new StaffDAO();
-                Staff staff = staffDAO.getById(id);
-                if (staff != null) {
-                    staff.setStaffFullName(fullName);
-                    staff.setStaffGmail(email);
-                    staff.setStaffGender(gender);
-                    staff.setStaffPhone(phone);
-                    staff.setStaffPosition(position);
-                    staff.setStaffImage(imageFileName);
-                    staffDAO.updateProfileInfo(staff);
-
-                    loginUser.setFullName(fullName);
-                    loginUser.setEmail(email);
-                    loginUser.setGender(gender);
-                    loginUser.setPhone(phone);
-                    loginUser.setImage(imageFileName);
-                    session.setAttribute("LOGIN_USER", loginUser);
-                }
-            }
-
-            loadAdminPage(request, response);
-
+            OrderDAO orderDAO = new OrderDAO();
+            List<Order> orders = orderDAO.getAll();
+            request.setAttribute("orders", orders);
+            request.setAttribute("activeTab", "orders"); // NEW: Set active tab
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
-            log("Error in editProfile(): " + e.getMessage());
-            e.printStackTrace();
-            request.setAttribute("ERROR", "Lỗi cập nhật hồ sơ: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            throw new ServletException(e);
+        }
+    }
+
+    // UPDATED: Forward to admin.jsp instead of redirecting
+    private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int orderId = Integer.parseInt(request.getParameter("id"));
+            String newStatus = request.getParameter("status");
+            String currentStatus = request.getParameter("currentStatus"); // NEW: Get current filter status
+            OrderDAO orderDAO = new OrderDAO();
+            orderDAO.updateOrderStatus(orderId, newStatus);
+
+            // Reload orders with the current filter
+            List<Order> orders;
+            if (currentStatus == null || currentStatus.isEmpty() || currentStatus.equals("All")) {
+                orders = orderDAO.getAll();
+            } else {
+                orders = orderDAO.getByStatus(currentStatus);
+            }
+            request.setAttribute("orders", orders);
+            request.setAttribute("selectedStatus", currentStatus);
+            request.setAttribute("activeTab", "orders"); // NEW: Set active tab
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    // UPDATED: Set activeTab attribute
+    private void filterOrders(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String status = request.getParameter("status");
+            OrderDAO orderDAO = new OrderDAO();
+            List<Order> orders;
+            if (status == null || status.isEmpty() || status.equals("All")) {
+                orders = orderDAO.getAll();
+            } else {
+                orders = orderDAO.getByStatus(status);
+            }
+            request.setAttribute("orders", orders);
+            request.setAttribute("selectedStatus", status);
+            request.setAttribute("activeTab", "orders"); // NEW: Set active tab
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void viewOrderDetails(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int orderId = Integer.parseInt(request.getParameter("id"));
+            OrderDAO orderDAO = new OrderDAO();
+            OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
+            CustomerDAO cusDAO = new CustomerDAO();
+
+            Order order = orderDAO.getById(orderId);
+            List<OrderDetail> orderDetails = orderDetailDAO.getByOrderId(orderId);
+            Customer customer = cusDAO.getCustomerById(order.getCusId());
+
+            request.setAttribute("order", order);
+            request.setAttribute("orderDetails", orderDetails);
+            request.setAttribute("customer", customer);
+
+            request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
+        } catch (Exception e) {
+            throw new ServletException(e);
         }
     }
 
@@ -448,6 +411,7 @@ public class AdminController extends HttpServlet {
 
                 CustomerDAO customerDAO = new CustomerDAO();
                 customerDAO.insertCustomer(customer);
+
             } else if ("staff".equalsIgnoreCase(role)) {
                 Staff staff = new Staff();
                 staff.setStaffName(username);
@@ -527,79 +491,6 @@ public class AdminController extends HttpServlet {
         }
     }
 
-    private void addDiscount(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String proId = request.getParameter("proId");
-            String discountType = request.getParameter("discountType");
-            double discountValue = Double.parseDouble(request.getParameter("discountValue"));
-            Date startDate = Date.valueOf(request.getParameter("startDate"));
-            Date endDate = Date.valueOf(request.getParameter("endDate"));
-            boolean active = Boolean.parseBoolean(request.getParameter("active"));
-            String adminId = request.getParameter("adminId");
-
-            Discount discount = new Discount();
-            discount.setProId(proId);
-            discount.setDiscountType(discountType);
-            discount.setDiscountValue(discountValue);
-            discount.setStartDate(startDate);
-            discount.setEndDate(endDate);
-            discount.setActive(active);
-            discount.setAdminId(adminId);
-
-            DiscountDAO dao = new DiscountDAO();
-            dao.create(discount);
-
-            response.sendRedirect("AdminController");
-        } catch (Exception e) {
-            throw new ServletException("Error adding discount: " + e.getMessage());
-        }
-    }
-
-    private void updateDiscount(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            String proId = request.getParameter("proId");
-            String discountType = request.getParameter("discountType");
-            double discountValue = Double.parseDouble(request.getParameter("discountValue"));
-            Date startDate = Date.valueOf(request.getParameter("startDate"));
-            Date endDate = Date.valueOf(request.getParameter("endDate"));
-            boolean active = Boolean.parseBoolean(request.getParameter("active"));
-            String adminId = request.getParameter("adminId");
-
-            Discount discount = new Discount();
-            discount.setDiscountId(id);
-            discount.setProId(proId);
-            discount.setDiscountType(discountType);
-            discount.setDiscountValue(discountValue);
-            discount.setStartDate(startDate);
-            discount.setEndDate(endDate);
-            discount.setActive(active);
-            discount.setAdminId(adminId);
-
-            DiscountDAO dao = new DiscountDAO();
-            dao.update(discount);
-
-            response.sendRedirect("AdminController");
-        } catch (Exception e) {
-            throw new ServletException("Error updating discount: " + e.getMessage());
-        }
-    }
-
-    private void deleteDiscount(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            DiscountDAO dao = new DiscountDAO();
-            dao.delete(id);
-
-            response.sendRedirect("AdminController");
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
-    }
-
     private String getFileName(Part part) {
         String contentDisp = part.getHeader("content-disposition");
         String[] tokens = contentDisp.split(";");
@@ -609,107 +500,6 @@ public class AdminController extends HttpServlet {
             }
         }
         return "";
-    }
-
-    private void addVoucher(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String codeName = request.getParameter("codeName");
-            String description = request.getParameter("voucherDescription");
-            String discountType = request.getParameter("discountType");
-            BigDecimal discountValue = new BigDecimal(request.getParameter("discountValue"));
-            BigDecimal minOrderAmount = new BigDecimal(request.getParameter("minOrderAmount"));
-            Date startDate = Date.valueOf(request.getParameter("startDate"));
-            Date endDate = Date.valueOf(request.getParameter("endDate"));
-            boolean isActive = Boolean.parseBoolean(request.getParameter("voucherActive"));
-
-            Voucher voucher = new Voucher(0, codeName, description, discountType,
-                    discountValue, minOrderAmount, startDate, endDate, isActive);
-
-            VoucherDAO dao = new VoucherDAO();
-            dao.create(voucher);
-
-            response.sendRedirect("AdminController");
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
-    }
-
-    private void updateVoucher(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("voucherId"));
-            String codeName = request.getParameter("codeName");
-            String description = request.getParameter("voucherDescription"); // Optional, null nếu không có
-            String discountType = request.getParameter("discountType");
-            BigDecimal discountValue = new BigDecimal(request.getParameter("discountValue"));
-            BigDecimal minOrderAmount = new BigDecimal(request.getParameter("minOrderAmount"));
-            Date startDate = Date.valueOf(request.getParameter("startDate"));
-            Date endDate = Date.valueOf(request.getParameter("endDate"));
-            boolean isActive = Boolean.parseBoolean(request.getParameter("voucherActive"));
-
-            Voucher voucher = new Voucher(id, codeName, description, discountType,
-                    discountValue, minOrderAmount, startDate, endDate, isActive);
-
-            VoucherDAO dao = new VoucherDAO();
-            dao.update(voucher);
-
-            response.sendRedirect("AdminController");
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
-    }
-
-    private void deleteVoucher(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            VoucherDAO dao = new VoucherDAO();
-            dao.delete(id);
-
-            response.sendRedirect("AdminController");
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
-    }
-
-    private void getVoucherDetails(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            VoucherDAO dao = new VoucherDAO();
-            Voucher voucher = dao.getById(id);
-
-            if (voucher == null) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write("Voucher not found");
-                return;
-            }
-
-            response.setContentType("application/json");
-            PrintWriter out = response.getWriter();
-            out.print(new Gson().toJson(voucher));
-            out.flush();
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("Error fetching voucher: " + e.getMessage());
-        }
-    }
-
-    // Helper classes for JSON response
-    private static class OrderDetailsResponse {
-
-        Order order;
-        String customerName;
-        List<OrderItem> orderItems;
-    }
-
-    private static class OrderItem {
-
-        String productName;
-        int quantity;
-        double unitPrice;
-        double totalPrice;
     }
 
     @Override
