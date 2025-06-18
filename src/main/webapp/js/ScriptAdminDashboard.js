@@ -8,7 +8,7 @@
 
 // Product functions
 function editProduct(productId) {
-   
+
     const row = document.querySelector(`tr[data-product-id="${productId}"]`);
     if (!row)
         return;
@@ -18,7 +18,7 @@ function editProduct(productId) {
     const price = row.getAttribute('data-product-price') || '';
     const quantity = row.getAttribute('data-product-quantity') || '';
     const type = row.getAttribute('data-product-type-id') || '';
-    const image = row.getAttribute('data-product-image') || ''; 
+    const image = row.getAttribute('data-product-image') || '';
 
     // Set giá trị vào form
     document.getElementById('editProductId').value = productId;
@@ -31,7 +31,7 @@ function editProduct(productId) {
 
     // Hiển thị ảnh hiện tại
     const imgPreview = document.getElementById('currentProductImage');
-    imgPreview.src = '/images/products/'+image;
+    imgPreview.src = '/images/products/' + image;
     imgPreview.style.display = 'block';
 
     // Xóa preview ảnh mới nếu có
@@ -47,7 +47,7 @@ function editProduct(productId) {
             reader.readAsDataURL(file);
         } else {
             // Nếu bỏ chọn ảnh, thì trả lại ảnh gốc
-            imgPreview.src = '/images/products/'+image;
+            imgPreview.src = '/images/products/' + image;
         }
     };
 
@@ -69,14 +69,14 @@ function editUser(userId) {
         const username = row.getAttribute('data-username') || '';
         const fullname = row.getAttribute('data-fullname') || '';
         const role = (row.getAttribute('data-role') || '').toLowerCase();  // tránh null.toLowerCase()
-         const password = row.getAttribute('data-password') || '';
+        const password = row.getAttribute('data-password') || '';
         // Gán vào input
         document.getElementById('editUserId').value = userId;
         document.getElementById('displayUsername').value = username;
         document.getElementById('editFullname').value = fullname;
         document.getElementById('editRole').value = role;
         document.getElementById('editPassword').value = password;
-        
+
         console.log('User data:', {
             id: userId,
             username,
@@ -235,4 +235,35 @@ function togglePasswordVisibility() {
     icon.classList.toggle('fa-eye-slash', !isPassword);
 }
 
-   
+function editDiscount(id) {
+    const row = document.querySelector(`tr[data-discount-id="${id}"]`);
+    document.getElementById('editDiscountId').value = id;
+    document.getElementById('editProId').value = row.dataset.proId;
+    document.getElementById('editDiscountType').value = row.dataset.discountType;
+    document.getElementById('editDiscountValue').value = row.dataset.discountValue;
+    document.getElementById('editStartDate').value = row.dataset.startDate;
+    document.getElementById('editEndDate').value = row.dataset.endDate;
+    document.getElementById('editActive').value = row.dataset.active;
+    document.getElementById('editAdminId').value = row.dataset.adminId;
+    new bootstrap.Modal(document.getElementById('editDiscountModal')).show();
+}
+
+function deleteDiscount(id) {
+    if (confirm('Are you sure you want to delete this discount?')) {
+        window.location.href = `AdminController?action=deleteDiscount&id=${id}`;
+    }
+}
+
+// NEW: Add viewDiscount function
+function viewDiscount(id) {
+    const row = document.querySelector(`tr[data-discount-id="${id}"]`);
+    document.getElementById('viewDiscountId').textContent = id;
+    document.getElementById('viewProId').textContent = row.dataset.proId;
+    document.getElementById('viewDiscountType').textContent = row.dataset.discountType;
+    document.getElementById('viewDiscountValue').textContent = row.dataset.discountValue;
+    document.getElementById('viewStartDate').textContent = row.dataset.startDate;
+    document.getElementById('viewEndDate').textContent = row.dataset.endDate;
+    document.getElementById('viewActive').textContent = row.dataset.active === 'true' ? 'Yes' : 'No';
+    document.getElementById('viewAdminId').textContent = row.dataset.adminId;
+    new bootstrap.Modal(document.getElementById('viewDiscountModal')).show();
+}
