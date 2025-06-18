@@ -1,8 +1,8 @@
 package Controllers;
 
 import DAOs.OrderDAO;
+import Models.Customer; // UPDATED: Changed from User to Customer
 import Models.Order;
-import Models.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -18,9 +18,9 @@ public class PaymentController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             HttpSession session = request.getSession();
-            User user = (User) session.getAttribute("LOGIN_USER");
-            if (user == null) {
-                System.out.println("User not logged in. Redirecting to login page.");
+            Customer customer = (Customer) session.getAttribute("LOGIN_USER"); // UPDATED: Changed from User to Customer
+            if (customer == null) {
+                System.out.println("Customer not logged in. Redirecting to login page.");
                 response.sendRedirect("login.jsp");
                 return;
             }
@@ -29,14 +29,14 @@ public class PaymentController extends HttpServlet {
 
             OrderDAO orderDAO = new OrderDAO();
             Order order = orderDAO.getById(orderId);
-            if (order == null || order.getUserId() != user.getId()) {
-                System.out.println("Order not found or user ID mismatch. Order: " + order);
+            if (order == null || !order.getCusId().equals(customer.getCusId())) { // UPDATED: Changed from getUserId to getCusId
+                System.out.println("Order not found or customer ID mismatch. Order: " + order);
                 request.setAttribute("error", "Order not found or access denied.");
                 request.getRequestDispatcher("error.jsp").forward(request, response);
                 return;
             }
-            if (!"pending".equals(order.getStatus())) {
-                System.out.println("Order status not pending. Current status: " + order.getStatus());
+            if (!"Pending".equals(order.getStatus())) { // UPDATED: Changed from "pending" to "Pending"
+                System.out.println("Order status not Pending. Current status: " + order.getStatus());
                 request.setAttribute("error", "Order is not available for payment.");
                 request.getRequestDispatcher("error.jsp").forward(request, response);
                 return;
@@ -55,9 +55,9 @@ public class PaymentController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             HttpSession session = request.getSession();
-            User user = (User) session.getAttribute("LOGIN_USER");
-            if (user == null) {
-                System.out.println("User not logged in. Redirecting to login page.");
+            Customer customer = (Customer) session.getAttribute("LOGIN_USER"); // UPDATED: Changed from User to Customer
+            if (customer == null) {
+                System.out.println("Customer not logged in. Redirecting to login page.");
                 response.sendRedirect("login.jsp");
                 return;
             }
@@ -77,14 +77,14 @@ public class PaymentController extends HttpServlet {
                 request.getRequestDispatcher("error.jsp").forward(request, response);
                 return;
             }
-            if (order.getUserId() != user.getId()) {
-                System.out.println("User ID mismatch. User ID: " + user.getId() + ", Order User ID: " + order.getUserId());
+            if (!order.getCusId().equals(customer.getCusId())) { // UPDATED: Changed from getUserId to getCusId
+                System.out.println("Customer ID mismatch. Customer ID: " + customer.getCusId() + ", Order Customer ID: " + order.getCusId());
                 request.setAttribute("error", "You do not have permission to pay for this order.");
                 request.getRequestDispatcher("error.jsp").forward(request, response);
                 return;
             }
-            if (!"pending".equals(order.getStatus())) {
-                System.out.println("Order status not pending. Current status: " + order.getStatus());
+            if (!"Pending".equals(order.getStatus())) { // UPDATED: Changed from "pending" to "Pending"
+                System.out.println("Order status not Pending. Current status: " + order.getStatus());
                 request.setAttribute("error", "Order is not available for payment. Current status: " + order.getStatus());
                 request.getRequestDispatcher("error.jsp").forward(request, response);
                 return;
@@ -113,7 +113,7 @@ public class PaymentController extends HttpServlet {
             }
 
             if (paymentSuccess) {
-                orderDAO.updateOrderStatus(orderId, "completed");
+                orderDAO.updateOrderStatus(orderId, "Done"); // UPDATED: Changed from "completed" to "Done"
                 System.out.println("Order payment completed. Order ID: " + orderId);
                 response.sendRedirect(request.getContextPath() + "/payment_success.jsp?message=" + java.net.URLEncoder.encode("Payment successful! Your order is now completed.", "UTF-8"));
                 return;

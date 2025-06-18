@@ -3,18 +3,21 @@ package Models;
 public class OrderDetail {
     private int id;
     private int orderId;
-    private int productId;
+    private String proId; // UPDATED: Changed to String to match DB schema
     private int quantity;
     private double unitPrice;
     private double totalPrice;
+    private int voucherId; // NEW: Added to match DB schema
+    private String productName; // NEW: For display purposes in order details
 
     public OrderDetail() {
     }
 
-    public OrderDetail(int id, int orderId, int productId, int quantity, double unitPrice, double totalPrice) {
+    // UPDATED: Constructor updated to include new fields
+    public OrderDetail(int id, int orderId, String proId, int quantity, double unitPrice, double totalPrice) {
         this.id = id;
         this.orderId = orderId;
-        this.productId = productId;
+        this.proId = proId;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.totalPrice = totalPrice;
@@ -36,12 +39,14 @@ public class OrderDetail {
         this.orderId = orderId;
     }
 
-    public int getProductId() {
-        return productId;
+    // UPDATED: Changed to getProId
+    public String getProductId() {
+        return proId;
     }
 
-    public void setProductId(int productId) {
-        this.productId = productId;
+    // UPDATED: Changed to setProId
+    public void setProductId(String proId) {
+        this.proId = proId;
     }
 
     public int getQuantity() {
@@ -67,4 +72,22 @@ public class OrderDetail {
     public void setTotalPrice(double totalPrice) {
         this.totalPrice = totalPrice;
     }
-} 
+
+    // NEW: Getter and setter for voucherId
+    public int getVoucherId() {
+        return voucherId;
+    }
+
+    public void setVoucherId(int voucherId) {
+        this.voucherId = voucherId;
+    }
+
+    // NEW: Getter and setter for productName
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+}
