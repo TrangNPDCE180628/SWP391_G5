@@ -1,5 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -22,6 +24,11 @@
                         <h4 class="mb-4">Admin Dashboard</h4>
                         <ul class="nav nav-pills flex-column mb-auto">
                             <li class="nav-item">
+                                <a href="#profile" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fas fa-user me-2"></i>Profile
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a href="#productTypes" class="nav-link active" data-bs-toggle="tab">
                                     <i class="fas fa-tags me-2"></i>Product Types
                                 </a>
@@ -33,7 +40,7 @@
                             </li>
                             <li class="nav-item">
                                 <a href="#users" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-users me-2"></i>Users
+                                    <i class="fas fa-users me-2"></i>Customer
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -46,17 +53,24 @@
                                     <i class="fas fa-shopping-cart me-2"></i>Orders
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fa-solid fa-ticket me-2"></i>Voucher
+                                </a>
+                            </li>
                         </ul>
                         <hr>
                         <div class="dropdown">
                             <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown">
                                 <i class="fas fa-user-circle me-2"></i>
-                                <strong>${sessionScope.LOGIN_USER.fullname}</strong>
+                                <strong>${sessionScope.LOGIN_USER.fullName}</strong>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
-                                <li><a class="dropdown-item" href="login.jsp">Logout</a></li>
-
+                                <li>
+                                    <a class="dropdown-item" href="login.jsp">Logout</a>
+                                </li>
                             </ul>
+
                         </div>
                     </div>
                 </div>
@@ -64,6 +78,99 @@
                 <!-- Main Content -->
                 <div class="col-md-9 col-lg-10 main-content">
                     <div class="tab-content">
+
+                        <!-- Profile Tab -->
+                        <div class="tab-pane fade" id="profile">
+                            <h2>My Profile</h2>
+
+                            <button class="btn btn-primary mb-3"
+                                    onclick="editProfile('${LOGIN_USER.role}', '${LOGIN_USER.id}')">
+                                <i class="fas fa-edit me-1"></i> Edit Profile
+                            </button>
+
+                            <div id="profileTabContent">
+                                <table class="table table-striped">
+                                    <tbody>
+                                        <c:choose>
+                                            <c:when test="${LOGIN_USER.role == 'Admin'}">
+                                                <tr
+                                                    data-user-role="Admin"
+                                                    data-user-id="${LOGIN_USER.id}"
+                                                    data-user-fullname="${profile.adminFullName}"
+                                                    data-user-email="${profile.adminGmail}"
+                                                    data-user-image="${profile.adminImage}">
+                                                    <td colspan="2" class="text-center">
+                                                        <img src="${pageContext.request.contextPath}/images/${profile.adminImage}"
+                                                             alt="Avatar" class="rounded-circle"
+                                                             style="width: 120px; height: 120px; object-fit: cover;">
+                                                    </td>
+                                                </tr>
+                                            </c:when>
+                                            <c:when test="${LOGIN_USER.role == 'Staff'}">
+                                                <tr
+                                                    data-user-role="Staff"
+                                                    data-user-id="${LOGIN_USER.id}"
+                                                    data-user-fullname="${profile.staffFullName}"
+                                                    data-user-email="${profile.staffGmail}"
+                                                    data-user-image="${profile.staffImage}"
+                                                    data-user-gender="${profile.staffGender}"
+                                                    data-user-phone="${profile.staffPhone}"
+                                                    data-user-position="${profile.staffPosition}">
+                                                    <td colspan="2" class="text-center">
+                                                        <img src="${pageContext.request.contextPath}/images/${profile.staffImage}"
+                                                             alt="Avatar" class="rounded-circle"
+                                                             style="width: 120px; height: 120px; object-fit: cover;">
+                                                    </td>
+                                                </tr>
+                                            </c:when>
+                                        </c:choose>
+
+                                        <tr>
+                                            <th>Full Name</th>
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${LOGIN_USER.role == 'Admin'}">
+                                                        ${profile.adminFullName}
+                                                    </c:when>
+                                                    <c:when test="${LOGIN_USER.role == 'Staff'}">
+                                                        ${profile.staffFullName}
+                                                    </c:when>
+                                                </c:choose>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email</th>
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${LOGIN_USER.role == 'Admin'}">
+                                                        ${profile.adminGmail}
+                                                    </c:when>
+                                                    <c:when test="${LOGIN_USER.role == 'Staff'}">
+                                                        ${profile.staffGmail}
+                                                    </c:when>
+                                                </c:choose>
+                                            </td>
+                                        </tr>
+
+                                        <c:if test="${LOGIN_USER.role == 'Staff'}">
+                                            <tr>
+                                                <th>Gender</th>
+                                                <td>${profile.staffGender}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Phone</th>
+                                                <td>${profile.staffPhone}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Position</th>
+                                                <td>${profile.staffPosition}</td>
+                                            </tr>
+                                        </c:if>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         <!-- Product Types Tab -->
                         <div class="tab-pane fade show active" id="productTypes">
                             <h2>Product Types Management</h2>
@@ -80,15 +187,15 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <c:forEach items="${productTypes}" var="type">
-                                            <tr data-type-id="${type.id}">
-                                                <td>${type.id}</td>
-                                                <td data-type-name>${type.name}</td>
+                                        <c:forEach items="${productTypes}" var="cate">
+                                            <tr data-type-id="${cate.cateId}">
+                                                <td>${cate.cateId}</td>
+                                                <td data-type-name>${cate.cateName}</td>
                                                 <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-warning" onclick="editProductType(`${type.id}`, `${type.name}`)">
+                                                    <button class="btn btn-sm btn-warning" onclick="editProductType(`${cate.cateId}`, `${cate.cateName}`)">
                                                         <i class="fas fa-edit"></i> Edit
                                                     </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteProductType('${type.id}')">
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteProductType('${cate.cateId}')">
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </td>
@@ -111,40 +218,57 @@
                                         <tr>
                                             <th>ID</th>
                                             <th>Name</th>
-                                            <th>Description</th>
                                             <th>Price</th>
-                                            <th>Quantity</th>
-                                            <th>Type</th>
+                                            <th>Category</th>
+                                            <th>Stock</th>
                                             <th>Image</th>
+                                            <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <c:forEach items="${products}" var="product">
-                                            <tr data-product-id="${product.proId}" 
-                                                data-product-name="${product.proName}"
-                                                data-product-description="${product.proDescription}"
-                                                data-product-price="${product.proPrice}"
-                                                data-product-quantity="${product.proQuantity}"
-                                                data-product-type-id="${product.proTypeId}"
-                                                data-product-image="${product.proImage}">
-
+                                            <tr 
+                                                data-pro-id="${product.proId}"
+                                                data-pro-name="${product.proName}"
+                                                data-pro-description="${product.proDescription}"
+                                                data-pro-price="${product.proPrice}"
+                                                data-pro-stock-quantity="${product.proStockQuantity}"
+                                                data-pro-warranty-months="${product.proWarrantyMonths}"
+                                                data-pro-model="${product.proModel}"
+                                                data-pro-color="${product.proColor}"
+                                                data-pro-weight="${product.proWeight}"
+                                                data-pro-dimensions="${product.proDimensions}"
+                                                data-pro-origin="${product.proOrigin}"
+                                                data-pro-material="${product.proMaterial}"
+                                                data-pro-connectivity="${product.proConnectivity}"
+                                                data-pro-image-main="${product.proImageMain}"
+                                                data-cate-id="${product.cateId}"
+                                                data-brand-id="${product.brandId}"
+                                                data-status="${product.status}"
+                                                >
                                                 <td>${product.proId}</td>
                                                 <td>${product.proName}</td>
-                                                <td>${product.proDescription}</td>
                                                 <td>$${product.proPrice}</td>
-                                                <td>${product.proQuantity}</td>
                                                 <td>
-                                                    <c:forEach items="${productTypes}" var="type">
-                                                        <c:if test="${type.id == product.proTypeId}">
-                                                            ${type.name}
+                                                    <c:forEach items="${productTypes}" var="cate">
+                                                        <c:if test="${cate.cateId == product.cateId}">
+                                                            ${cate.cateName}
                                                         </c:if>
                                                     </c:forEach>
                                                 </td>
+                                                <td>${product.proStockQuantity}</td>
                                                 <td>
-                                                    <img src="${pageContext.request.contextPath}/images/products/${product.proImage}" alt="Image" width="120" height="150">
+                                                    <img src="${pageContext.request.contextPath}/images/products/${product.proImageMain}" 
+                                                         alt="Image" width="120" height="150">
                                                 </td>
-
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${product.status == 1}">Available</c:when>
+                                                        <c:when test="${product.status == 2}">Out of Stock</c:when>
+                                                        <c:otherwise>Unavailable</c:otherwise>
+                                                    </c:choose>
+                                                </td>
                                                 <td class="action-buttons">
                                                     <button class="btn btn-sm btn-warning" onclick="editProduct('${product.proId}')">
                                                         <i class="fas fa-edit"></i> Edit
@@ -159,12 +283,11 @@
                                 </table>
                             </div>
                         </div>
-
                         <!-- Users Tab -->
                         <div class="tab-pane fade" id="users">
-                            <h2>Users Management</h2>
+                            <h2>Customer Management</h2>
                             <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                                <i class="fas fa-plus"></i> Add New User
+                                <i class="fas fa-plus"></i> Add New Customer
                             </button>
                             <div class="table-responsive">
                                 <table class="table table-striped">
@@ -173,30 +296,40 @@
                                             <th>ID</th>
                                             <th>Username</th>
                                             <th>Full Name</th>
-                                            <th>Role</th>
+                                            <th>Image</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <c:forEach items="${users}" var="user">
-                                            <tr data-user-id="${user.id}"
-                                                data-username="${user.username}"
-                                                data-fullname="${user.fullname}"
-                                                data-role="${user.role}"
-                                                data-password="${user.password}">
-                                                <td>${user.id}</td>
-                                                <td>${user.username}</td>
-                                                <td>${user.fullname}</td>
-                                                <td>${user.role}</td>
+                                        <c:forEach items="${users}" var="cus">
+                                            <tr 
+                                                data-cusid="${cus.cusId}"
+                                                data-username="${cus.username}"
+                                                data-password="${cus.cusPassword}"
+                                                data-fullname="${cus.cusFullName}"
+                                                data-gender="${cus.cusGender}"
+                                                data-gmail="${cus.cusGmail}"
+                                                data-phone="${cus.cusPhone}"
+                                                data-image="${cus.cusImage}">
+
+                                                <td>${cus.cusId}</td>
+                                                <td>${cus.username}</td>
+                                                <td>${cus.cusFullName}</td>
+                                                <td>
+                                                    <img src="${pageContext.request.contextPath}/images/customers/${cus.cusImage}"
+                                                         alt="Customer Image" width="80" height="100">
+                                                </td>
                                                 <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-warning" onclick="editUser('${user.id}')">
+                                                    <button class="btn btn-sm btn-info" onclick="viewDetail('${cus.cusId}')">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </button>
+                                                    <button class="btn btn-sm btn-warning" onclick="editUser('${cus.cusId}')">
                                                         <i class="fas fa-edit"></i> Edit
                                                     </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')">
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteUser('${cus.cusId}')">
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </td>
-                                                <td style="display: none;">${user.password}</td> <!-- Ẩn password khỏi giao diện -->
                                             </tr>
                                         </c:forEach>
                                     </tbody>
@@ -207,7 +340,7 @@
                         <!-- Staff Tab -->
                         <div class="tab-pane fade" id="staff">
                             <h2>Staff Management</h2>
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addStaffModal">
                                 <i class="fas fa-plus"></i> Add New Staff
                             </button>
                             <div class="table-responsive">
@@ -217,408 +350,330 @@
                                             <th>ID</th>
                                             <th>Username</th>
                                             <th>Full Name</th>
-                                            <th>Role</th>
+                                            <th>Image</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <c:forEach items="${users}" var="user">
-                                            <c:if test="${user.role eq 'staff'}">
-                                                <tr data-user-id="${user.id}"
-                                                    data-username="${user.username}"
-                                                    data-fullname="${user.fullname}"
-                                                    data-role="${user.role}">
-                                                    <td>${user.id}</td>
-                                                    <td>${user.username}</td>
-                                                    <td>${user.fullname}</td>
-                                                    <td>${user.role}</td>
-                                                    <td class="action-buttons">
-                                                        <button class="btn btn-sm btn-warning" onclick="editUser('${user.id}')">
-                                                            <i class="fas fa-edit"></i> Edit
-                                                        </button>
-                                                        <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')">
-                                                            <i class="fas fa-trash"></i> Delete
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            </c:if>
-                                        </c:forEach>
+                                        <c:forEach items="${staffs}" var="staff">
+                                            <tr
+                                                data-staff-id="${staff.staffId}"
+                                                data-staff-name="${staff.staffName}"
+                                                data-fullname="${staff.staffFullName}"
+                                                data-password="${staff.staffPassword}"
+                                                data-gender="${staff.staffGender}"
+                                                data-gmail="${staff.staffGmail}"
+                                                data-phone="${staff.staffPhone}"
+                                                data-position="${staff.staffPosition}"
+                                                data-image="${staff.staffImage}">
 
+                                                <td>${staff.staffId}</td>
+                                                <td>${staff.staffName}</td>
+                                                <td>${staff.staffFullName}</td>
+                                                <td>
+                                                    <img src="${pageContext.request.contextPath}/images/staff/${staff.staffImage}" 
+                                                         alt="Staff Image" width="80" height="100">
+                                                </td>
+                                                <td class="action-buttons">
+                                                    <button class="btn btn-sm btn-info" onclick="viewStaffDetail('${staff.staffId}')">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </button>
+                                                    <button class="btn btn-sm btn-warning" onclick="editStaff('${staff.staffId}')">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteStaff('${staff.staffId}')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
-                        <!-- Orders Tab -->
-                        <div class="tab-pane fade" id="orders">
-                            <h2>Orders Management</h2>
-                            <div class="mb-3">
-                                <label for="orderStatusFilter" class="form-label">Filter by Status:</label>
-                                <select class="form-select" id="orderStatusFilter" onchange="filterOrders()">
-                                    <option value="all">All Orders</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
-                            </div>
+                        <!-- Vouchers Tab -->
+                        <div class="tab-pane fade" id="vouchers">
+                            <h2>Vouchers Management</h2>
+                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addVoucherModal">
+                                <i class="fas fa-plus"></i> Add New Voucher
+                            </button>
                             <div class="table-responsive">
                                 <table class="table table-striped">
                                     <thead>
                                         <tr>
-                                            <th>Order ID</th>
-                                            <th>Customer</th>
-                                            <th>Order Date</th>
-                                            <th>Total Price</th>
+                                            <th>ID</th>
+                                            <th>Code</th>
+                                            <th>Type</th>
+                                            <th>Value</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
                                             <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <c:forEach items="${orders}" var="order">
-                                            <tr data-order-id="${order.id}" 
-                                                data-user-id="${order.userId}"
-                                                data-status="${order.status}">
-                                                <td>${order.id}</td>
+                                        <c:forEach items="${vouchers}" var="voucher">
+                                            <tr 
+                                                data-voucher-id="${voucher.voucherId}"
+                                                data-voucher-code="${voucher.codeName}"
+                                                data-voucher-description="${voucher.voucherDescription}"
+                                                data-voucher-discount-type="${voucher.discountType}"
+                                                data-voucher-discount-value="${voucher.discountValue}"
+                                                data-voucher-min-order="${voucher.minOrderAmount}"
+                                                data-voucher-start-date="<fmt:formatDate value='${voucher.startDate}' pattern='yyyy-MM-dd' />"
+                                                data-voucher-end-date="<fmt:formatDate value='${voucher.endDate}' pattern='yyyy-MM-dd' />"
+                                                data-voucher-status="${voucher.voucherActive}">
+                                                <td>${voucher.voucherId}</td>
+                                                <td>${voucher.codeName}</td>
+                                                <td>${voucher.discountType}</td>
                                                 <td>
-                                                    <c:forEach items="${users}" var="user">
-                                                        <c:if test="${user.id == order.userId}">
-                                                            ${user.fullname}
-                                                        </c:if>
-                                                    </c:forEach>
+                                                    <c:choose>
+                                                        <c:when test="${voucher.discountType == 'percentage'}">
+                                                            ${voucher.discountValue}%
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            $${voucher.discountValue}
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </td>
-                                                <td>${order.orderDate}</td>
-                                                <td>$${order.totalPrice}</td>
+                                                <td><fmt:formatDate value="${voucher.startDate}" pattern="yyyy-MM-dd" /></td>
+                                                <td><fmt:formatDate value="${voucher.endDate}" pattern="yyyy-MM-dd" /></td>
                                                 <td>
-                                                    <span class="badge ${order.status == 'pending' ? 'bg-warning' : 
-                                                                         order.status == 'completed' ? 'bg-success' : 'bg-danger'}">
-                                                              ${order.status}
-                                                          </span>
-                                                    </td>
-                                                    <td class="action-buttons">
-                                                        <a class="btn btn-sm btn-info" href="${pageContext.request.contextPath}/AdminController?action=viewOrderDetails&id=${order.id}">
-                                                            <i class="fas fa-eye"></i> View Details
-                                                        </a>
-                                                        <c:if test="${order.status == 'pending'}">
-                                                            <button class="btn btn-sm btn-success" onclick="updateOrderStatus('${order.id}', 'completed')">
-                                                                <i class="fas fa-check"></i> Complete
-                                                            </button>
-                                                            <button class="btn btn-sm btn-danger" onclick="updateOrderStatus('${order.id}', 'cancelled')">
-                                                                <i class="fas fa-times"></i> Cancel
-                                                            </button>
-                                                        </c:if>
-                                                    </td>
-                                                </tr>
-                                            </c:forEach>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Add Product Type Modal -->
-            <div class="modal fade" id="addProductTypeModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Add New Product Type</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <form action="AdminController" method="post">
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="addProductType">
-                                <div class="mb-3">
-                                    <label for="typeName" class="form-label">Type Name</label>
-                                    <input type="text" class="form-control" id="typeName" name="typeName" required>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Add</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Add Product Modal -->
-            <div class="modal fade" id="addProductModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Add New Product</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <form action="AdminController" method="post" enctype="multipart/form-data">
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="addProduct">
-                                <div class="mb-3">
-                                    <label for="productName" class="form-label">Product Name</label>
-                                    <input type="text" class="form-control" id="productName" name="productName" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="productDescription" class="form-label">Description</label>
-                                    <textarea class="form-control" id="productDescription" name="productDescription" required></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="productPrice" class="form-label">Price</label>
-                                    <input type="number" step="0.01" class="form-control" id="productPrice" name="productPrice" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="productQuantity" class="form-label">Quantity</label>
-                                    <input type="number" class="form-control" id="productQuantity" name="productQuantity" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="productType" class="form-label">Product Type</label>
-                                    <select class="form-select" id="productType" name="productType" required>
-                                        <c:forEach items="${productTypes}" var="type">
-                                            <option value="${type.id}">${type.name}</option>
+                                                    <c:choose>
+                                                        <c:when test="${voucher.voucherActive}">
+                                                            Active
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            Inactive
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td class="action-buttons">
+                                                    <button class="btn btn-sm btn-warning" onclick="editVoucher('${voucher.voucherId}')">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteVoucher('${voucher.voucherId}')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
                                         </c:forEach>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="productImage" class="form-label">Product Image</label>
-                                    <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*">
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Add</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Add User Modal -->
-            <div class="modal fade" id="addUserModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Add New User</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <form action="AdminController" method="post">
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="addUser">
-                                <div class="mb-3">
-                                    <label for="username" class="form-label">Username</label>
-                                    <input type="text" class="form-control" id="username" name="username" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="password" class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="fullname" class="form-label">Full Name</label>
-                                    <input type="text" class="form-control" id="fullname" name="fullname" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="role" class="form-label">Role</label>
-                                    <select class="form-select" id="role" name="role" required>
-                                        <option value="admin">Admin</option>
-                                        <option value="customer">Customer</option>
-                                        <option value="staff">Staff</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Add</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Edit Product Type Modal -->
-            <div class="modal fade" id="editProductTypeModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Edit Product Type</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <form action="AdminController" method="post">
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="updateProductType">
-                                <input type="hidden" name="id" id="editTypeId">
-                                <div class="mb-3">
-                                    <label for="editTypeName" class="form-label">Type Name</label>
-                                    <input type="text" class="form-control" id="editTypeName" name="typeName" required>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Update</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Edit Product Modal -->
-            <div class="modal fade" id="editProductModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Edit Product</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <form action="AdminController" method="post" enctype="multipart/form-data">
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="updateProduct">
-                                <input type="hidden" name="id" id="editProductId">
-                                <input type="hidden" name="currentImage" id="currentImagePath">
-
-                                <div class="mb-3">
-                                    <label for="editProductName" class="form-label">Product Name</label>
-                                    <input type="text" class="form-control" id="editProductName" name="productName">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editProductDescription" class="form-label">Description</label>
-                                    <textarea class="form-control" id="editProductDescription" name="productDescription"></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editProductPrice" class="form-label">Price</label>
-                                    <input type="number" step="0.01" class="form-control" id="editProductPrice" name="productPrice">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editProductQuantity" class="form-label">Quantity</label>
-                                    <input type="number" class="form-control" id="editProductQuantity" name="productQuantity">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editProductType" class="form-label">Product Type</label>
-                                    <select class="form-select" id="editProductType" name="productType">
-                                        <c:forEach items="${productTypes}" var="type">
-                                            <option value="${type.id}">${type.name}</option>
-                                        </c:forEach>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <script>
-                                        const contextPath = '<%= request.getContextPath()%>';
-                                    </script>
-
-                                    <label for="editProductImage" class="form-label">Product Image</label>
-                                    <input type="file" class="form-control" id="editProductImage" name="productImage" accept="image/*">
-                                    <small class="text-muted">Leave empty to keep current image</small>
-
-                                    <!-- Hiển thị ảnh hiện tại -->
-                                    <div class="mt-2 text-center">
-                                        <img id="currentProductImage" src="" alt="Current Image" style="max-width: 200px; max-height: 200px;">
-                                    </div>
-                                </div>
-
-
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Update</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Edit User Modal -->
-            <div class="modal fade" id="editUserModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Edit User</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <form action="AdminController" method="post">
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="updateUser">
-                                <input type="hidden" name="id" id="editUserId">
-                                <div class="mb-3">
-                                    <label for="displayUsername" class="form-label">Username</label>
-                                    <input type="text" class="form-control" id="displayUsername" name="username" readonly>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editFullname" class="form-label">Full Name</label>
-                                    <input type="text" class="form-control" id="editFullname" name="fullname">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editPassword" class="form-label">Password</label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control" id="editPassword" name="password">
-                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility()">
-                                            <i id="passwordToggleIcon" class="fas fa-eye-slash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="editRole" class="form-label">Role</label>
-                                    <select class="form-select" id="editRole" name="role">
-                                        <option value="admin">Admin</option>
-                                        <option value="customer">Customer</option>
-                                        <option value="staff">Staff</option>
-                                    </select>
-                                </div>
-
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Update</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Order Details Modal -->
-            <div class="modal fade" id="orderDetailsModal" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Order Details</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <h6>Order Information</h6>
-                                    <p><strong>Order ID:</strong> <span id="detailOrderId"></span></p>
-                                    <p><strong>Customer:</strong> <span id="detailCustomer"></span></p>
-                                    <p><strong>Order Date:</strong> <span id="detailOrderDate"></span></p>
-                                    <p><strong>Status:</strong> <span id="detailStatus"></span></p>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6>Payment Information</h6>
-                                    <p><strong>Total Price:</strong> $<span id="detailTotalPrice"></span></p>
-                                </div>
-                            </div>
-                            <h6>Order Items</h6>
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Quantity</th>
-                                            <th>Unit Price</th>
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="orderItemsTable">
-                                        <!-- Order items will be populated here -->
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
+
                     </div>
                 </div>
             </div>
+        </div>
+        <!-- Edit Profile Modal -->
+        <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <form action="AdminController" method="post" enctype="multipart/form-data" class="modal-content">
+                    <!-- BẮT BUỘC: Cho servlet biết action đang gọi -->
+                    <input type="hidden" name="action" value="editProfile">
 
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+                    <!-- Hidden fields -->
+                    <input type="hidden" name="userId" id="editUserId">
+                    <input type="hidden" name="userRole" id="editUserRole">
+                    <input type="hidden" name="currentImage" id="currentProfileImagePath">
 
-        </body>
-    </html>
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- Avatar -->
+                            <div class="col-md-4 text-center">
+                                <img id="previewProfileImage" src="" alt="Preview" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                                <input type="file" class="form-control" name="image" id="editProfileImage" accept="image/*">
+                            </div>
+
+                            <!-- Thông tin chung -->
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="editProfileFullName" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" name="fullName" id="editProfileFullName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editProfileEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" name="email" id="editProfileEmail" required>
+                                </div>
+
+                                <!-- Staff-only fields -->
+                                <div id="staffFields" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="editProfileGender" class="form-label">Gender</label>
+                                        <select class="form-select" name="gender" id="editProfileGender">
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editProfilePhone" class="form-label">Phone</label>
+                                        <input type="text" class="form-control" name="phone" id="editProfilePhone">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editProfilePosition" class="form-label">Position</label>
+                                        <input type="text" class="form-control" name="position" id="editProfilePosition">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i> Save Changes
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Add Voucher Modal -->
+        <div class="modal fade" id="addVoucherModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Voucher</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="AdminController" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="addVoucher">
+
+                            <div class="mb-3">
+                                <label for="codeName" class="form-label">Voucher Code</label>
+                                <input type="text" class="form-control" id="codeName" name="codeName" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="voucherDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="voucherDescription" name="voucherDescription"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="discountType" class="form-label">Discount Type</label>
+                                <select class="form-select" id="discountType" name="discountType" required>
+                                    <option value="percentage">Percentage (%)</option>
+                                    <option value="fixed">Fixed Amount ($)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="discountValue" class="form-label">Discount Value</label>
+                                <input type="number" step="0.01" class="form-control" id="discountValue" name="discountValue" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="minOrderAmount" class="form-label">Min Order Amount</label>
+                                <input type="number" step="0.01" class="form-control" id="minOrderAmount" name="minOrderAmount" value="0">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="startDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="endDate" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="voucherActive" class="form-label">Status</label>
+                                <select class="form-select" id="voucherActive" name="voucherActive" required>
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Edit Voucher Modal -->
+        <div class="modal fade" id="editVoucherModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="AdminController" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Voucher</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <input type="hidden" id="editVoucherId" name="voucherId">
+                            <input type="hidden" name="action" value="updateVoucher">
+
+                            <div class="mb-3">
+                                <label for="editCodeName" class="form-label">Voucher Code</label>
+                                <input type="text" class="form-control" id="editCodeName" name="codeName" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="editDescription" name="voucherDescription" rows="3"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editDiscountType" class="form-label">Discount Type</label>
+                                <select class="form-select" id="editDiscountType" name="discountType">
+                                    <option value="percentage">Percentage (%)</option>
+                                    <option value="fixed">Fixed Amount ($)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editDiscountValue" class="form-label">Discount Value</label>
+                                <input type="number" class="form-control" id="editDiscountValue" name="discountValue" step="0.01" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editMinOrderAmount" class="form-label">Minimum Order Amount</label>
+                                <input type="number" class="form-control" id="editMinOrderAmount" name="minOrderAmount" step="0.01" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editStartDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="editStartDate" name="startDate" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editEndDate" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="editEndDate" name="endDate" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editVoucherActive" class="form-label">Status</label>
+                                <select class="form-select" id="editVoucherActive" name="voucherActive" required>
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>const contextPath = '${pageContext.request.contextPath}';</script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    </body>
+</html>

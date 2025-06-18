@@ -80,13 +80,13 @@ public class CartController extends HttpServlet {
             }
 
             ProductDAO productDAO = new ProductDAO();
-            Product product = productDAO.getById(productId);
+            Product product = productDAO.getProductById(productIdStr);
 
             if (product != null) {
-                System.out.println("Found product: " + product.getProName() + ", Stock: " + product.getProQuantity());
+                System.out.println("Found product: " + product.getProName() + ", Stock: " + product.getProStockQuantity());
                 
                 // Check if product is in stock
-                if (product.getProQuantity() <= 0) {
+                if (product.getProStockQuantity()<= 0) {
                     System.out.println("Product out of stock");
                     session.setAttribute("error", "Sorry, this product is out of stock.");
                     response.sendRedirect("HomeController");
@@ -94,12 +94,13 @@ public class CartController extends HttpServlet {
                 }
 
                 // Create new cart item with quantity = 1
+                double priceFecth = product.getProPrice().doubleValue();
                 CartItem item = new CartItem(
                     productId,
                     product.getProName(),
-                    product.getProPrice(),
+                    priceFecth,
                     1,  // Always set quantity to 1 for new items
-                    product.getProImage()
+                    product.getProImageMain()
                 );
                 System.out.println("Created new cart item: " + item.getProductName());
 
@@ -146,12 +147,12 @@ public class CartController extends HttpServlet {
                 CartItem item = cart.get(productId);
                 if (item != null) {
                     ProductDAO productDAO = new ProductDAO();
-                    Product product = productDAO.getById(productId);
+                    Product product = productDAO.getProductById(request.getParameter("productId"));
                     
                     int newQuantity = item.getQuantity() + change;
                     System.out.println("Current quantity: " + item.getQuantity() + ", New quantity: " + newQuantity);
                     
-                    if (newQuantity > 0 && newQuantity <= product.getProQuantity()) {
+                    if (newQuantity > 0 && newQuantity <= product.getProStockQuantity()) {
                         item.setQuantity(newQuantity);
                         System.out.println("Updated quantity to: " + newQuantity);
                     } else if (newQuantity <= 0) {

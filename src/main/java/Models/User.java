@@ -4,20 +4,25 @@ public class User {
     private int id;
     private String username;
     private String password;
-    private String fullname;
+    private String fullName;
     private String gender;
+    private String image;
+    private String email;
+    private String phone;
     private String role;
 
-    // Default constructor
-    public User() {}
+    public User() {
+    }
 
-    // Parameterized constructor
-    public User(int id, String username, String password, String fullname, String gender, String role) {
+    public User(int id, String username, String password, String fullName, String gender, String image, String email, String phone, String role) {
         this.id = id;
         this.username = username;
         this.password = password;
-        this.fullname = fullname;
+        this.fullName = fullName;
         this.gender = gender;
+        this.image = image;
+        this.email = email;
+        this.phone = phone;
         this.role = role;
     }
 
@@ -46,12 +51,12 @@ public class User {
         this.password = password;
     }
 
-    public String getFullname() {
-        return fullname;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getGender() {
@@ -60,6 +65,30 @@ public class User {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getRole() {

@@ -1,10 +1,10 @@
 package Controllers;
 
-import DAOs.ProductDAO;
-import DAOs.ProductTypeDAO;
-import DAOs.UserDAO;
-import Models.Product;
-import Models.ProductTypes;
+
+
+import DAOs.ViewUserDAO;
+
+
 import Models.User;
 
 import javax.servlet.ServletException;
@@ -16,14 +16,14 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name="LoginController", urlPatterns = {"/LoginController"})
+@WebServlet(name = "LoginController", urlPatterns = {"/LoginController"})
 public class LoginController extends HttpServlet {
 
     private static final String ERROR = "login.jsp";
-    private static final String AD = "admin";
-    private static final String ST = "staff";
+    private static final String AD = "Admin";
+    private static final String ST = "Staff";
     private static final String ADMIN_PAGE = "AdminController";
-    private static final String CS = "customer";
+    private static final String CS = "Customer";
     private static final String CUSTOMER_PAGE = "HomeController";
     private static final int PRODUCTS_PER_PAGE = 8;
 
@@ -31,45 +31,46 @@ public class LoginController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         String url = ERROR;
+
         try {
             String username = request.getParameter("username");
             String password = request.getParameter("password");
             System.out.println("Login attempt - Username: " + username);
 
-            // Authenticate user
-            UserDAO dao = new UserDAO();
-            User loginUser = dao.login(username, password);
+            ViewUserDAO viewDao = new ViewUserDAO();
+            User loginUser = viewDao.getUserByUsername(username);
 
             if (loginUser != null) {
-                System.out.println("User found - Role: " + loginUser.getRole());
-                HttpSession session = request.getSession();
-                session.setAttribute("LOGIN_USER", loginUser);
+                // Check password
+                if (password.equals(loginUser.getPassword())) {
+                    System.out.println("Password correct - Role: " + loginUser.getRole());
 
-                // Determine the URL based on the role
-                String role = loginUser.getRole();
-                if (AD.equals(role) || ST.equals(role)) {
-                    url = ADMIN_PAGE;
-                    System.out.println("Redirecting to admin page");
-                } else if (CS.equals(role)) {
-                    url = CUSTOMER_PAGE;
-                    System.out.println("Redirecting to customer page");
+                    HttpSession session = request.getSession();
+                    session.setAttribute("LOGIN_USER", loginUser);
+
+                    // Role-based redirection
+                    String role = loginUser.getRole();
+                    if (AD.equals(role) || ST.equals(role)) {
+                        url = ADMIN_PAGE;
+                    } else if (CS.equals(role)) {
+                        url = CUSTOMER_PAGE;
+                    } else {
+                        request.setAttribute("ERROR", "Your role is not supported!");
+                        url = ERROR;
+                    }
                 } else {
-                    System.out.println("Unsupported role: " + role);
-                    request.setAttribute("ERROR", "Your role is not supported!");
-                    url = ERROR;
+                    System.out.println("Password incorrect");
+                    request.setAttribute("ERROR", "Incorrect username or password");
                 }
-
-
             } else {
-                System.out.println("Login failed - User not found or incorrect password");
+                System.out.println("User not found");
                 request.setAttribute("ERROR", "Incorrect username or password");
             }
         } catch (Exception e) {
             log("Error at LoginController: " + e.toString());
-            System.out.println("Login error: " + e.getMessage());
             request.setAttribute("ERROR", "An error occurred during login. Please try again.");
         } finally {
-            // Use sendRedirect for client-side redirection
+            // Chuyển hướng lại trang theo kết quả xử lý
             response.sendRedirect(url);
         }
     }
