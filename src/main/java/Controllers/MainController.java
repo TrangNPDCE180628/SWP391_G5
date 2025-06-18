@@ -14,6 +14,7 @@ public class MainController extends HttpServlet {
 
     private static final String LOGIN = "Login";
     private static final String LOGIN_CONTROLLER = "LoginController";
+    
     private static final String REGISTER = "Register";
     private static final String REGISTER_CONTROLLER = "RegisterController";
     private static final String LOGOUT = "Logout";
@@ -36,6 +37,8 @@ public class MainController extends HttpServlet {
             } else if(LOGOUT.equals(action)){
                 url=LOGOUT_CONTROLLER;
             } else {
+                
+                
                 request.setAttribute("ERROR", "Your action is not supported");
             }
             System.out.println("Forwarding to: " + url);

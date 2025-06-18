@@ -1,15 +1,16 @@
 package Controllers;
 
+import DAOs.CategoryDAO;
+import DAOs.CustomerDAO;
 import DAOs.OrderDAO;
-import DAOs.OrderDetailDAO;
 import DAOs.ProductDAO;
-import DAOs.ProductTypeDAO;
-import DAOs.UserDAO;
+import DAOs.StaffDAO;
+import Models.Category;
+
+import Models.Customer;
 import Models.Order;
-import Models.OrderDetail;
 import Models.Product;
-import Models.ProductTypes;
-import Models.User;
+import Models.Staff;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -20,16 +21,14 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.List;
-import com.google.gson.Gson;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
-    fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
-    maxFileSize = 1024 * 1024 * 10,      // 10 MB
-    maxRequestSize = 1024 * 1024 * 100   // 100 MB
+        fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
+        maxFileSize = 1024 * 1024 * 10, // 10 MB
+        maxRequestSize = 1024 * 1024 * 100 // 100 MB
 )
 public class AdminController extends HttpServlet {
 
@@ -39,14 +38,14 @@ public class AdminController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         String action = request.getParameter("action");
-        
+
         try {
             // If action is null, load admin page by default
             if (action == null) {
                 loadAdminPage(request, response);
                 return;
             }
-            
+
             switch (action) {
                 case "addProductType":
                     addProductType(request, response);
@@ -75,7 +74,7 @@ public class AdminController extends HttpServlet {
                 case "deleteUser":
                     deleteUser(request, response);
                     break;
-                case "getOrderDetails":
+                /*case "getOrderDetails":
                     getOrderDetails(request, response);
                     break;
                 case "updateOrderStatus":
@@ -83,37 +82,37 @@ public class AdminController extends HttpServlet {
                     break;
                 case "viewOrderDetails":
                     viewOrderDetails(request, response);
-                    break;
+                    break;*/
                 default:
                     loadAdminPage(request, response);
             }
-
 
         } catch (Exception e) {
             log("Error at AdminController: " + e.toString());
             request.setAttribute("ERROR", "An error occurred: " + e.getMessage());
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
+
     }
 
     private void loadAdminPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             // Load all data needed for the admin page
-            ProductTypeDAO productTypeDAO = new ProductTypeDAO();
+            CategoryDAO productTypeDAO = new CategoryDAO();
             ProductDAO productDAO = new ProductDAO();
-            UserDAO userDAO = new UserDAO();
-            OrderDAO orderDAO = new OrderDAO();
+            CustomerDAO cusDAO = new CustomerDAO();
+            StaffDAO staffDAO = new StaffDAO();
 
-            List<ProductTypes> productTypes = productTypeDAO.getAll();
-            List<Product> products = productDAO.getAll();
-            List<User> users = userDAO.getAll();
-            List<Order> orders = orderDAO.getAll();
+            List<Category> productTypes = productTypeDAO.getAllCategories();
+            List<Product> products = productDAO.getAllProducts();
+            List<Customer> users = cusDAO.getAllCustomers();
+            List<Staff> staffs = staffDAO.getAll();
 
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("products", products);
             request.setAttribute("users", users);
-            request.setAttribute("orders", orders);
+            request.setAttribute("staffs", staffs);
 
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
@@ -125,11 +124,11 @@ public class AdminController extends HttpServlet {
             throws ServletException, IOException {
         try {
             String name = request.getParameter("typeName");
-            ProductTypes productType = new ProductTypes();
-            productType.setName(name);
+            Category productType = new Category();
+            productType.setCateName(name);
 
-            ProductTypeDAO dao = new ProductTypeDAO();
-            dao.create(productType);
+            CategoryDAO dao = new CategoryDAO();
+            dao.insertCategory(productType);
 
             response.sendRedirect("AdminController");
         } catch (Exception e) {
@@ -143,9 +142,9 @@ public class AdminController extends HttpServlet {
             int id = Integer.parseInt(request.getParameter("id"));
             String name = request.getParameter("typeName");
 
-            ProductTypes productType = new ProductTypes(id, name);
-            ProductTypeDAO dao = new ProductTypeDAO();
-            dao.update(productType);
+            Category productType = new Category(id, name);
+            CategoryDAO dao = new CategoryDAO();
+            dao.updateCategory(productType);
 
             response.sendRedirect("AdminController");
         } catch (Exception e) {
@@ -157,8 +156,8 @@ public class AdminController extends HttpServlet {
             throws ServletException, IOException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            ProductTypeDAO dao = new ProductTypeDAO();
-            dao.delete(id);
+            CategoryDAO dao = new CategoryDAO();
+            dao.deleteCategory(id);
 
             response.sendRedirect("AdminController");
         } catch (Exception e) {
@@ -169,11 +168,22 @@ public class AdminController extends HttpServlet {
     private void addProduct(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
+            String proId = request.getParameter("productId");
+            int cateId = Integer.parseInt(request.getParameter("categoryId"));
+            int brandId = Integer.parseInt(request.getParameter("brandId"));
             String name = request.getParameter("productName");
             String description = request.getParameter("productDescription");
-            double price = Double.parseDouble(request.getParameter("productPrice"));
+            BigDecimal price = new BigDecimal(request.getParameter("productPrice"));
             int quantity = Integer.parseInt(request.getParameter("productQuantity"));
-            int typeId = Integer.parseInt(request.getParameter("productType"));
+            int warranty = Integer.parseInt(request.getParameter("warrantyMonths"));
+            String model = request.getParameter("productModel");
+            String color = request.getParameter("productColor");
+            BigDecimal weight = new BigDecimal(request.getParameter("productWeight"));
+            String dimensions = request.getParameter("productDimensions");
+            String origin = request.getParameter("productOrigin");
+            String material = request.getParameter("productMaterial");
+            String connectivity = request.getParameter("productConnectivity");
+            int status = Integer.parseInt(request.getParameter("productStatus"));
 
             // Handle file upload
             Part filePart = request.getPart("productImage");
@@ -189,15 +199,26 @@ public class AdminController extends HttpServlet {
             }
 
             Product product = new Product();
+            product.setProId(proId);
+            product.setCateId(cateId);
+            product.setBrandId(brandId);
             product.setProName(name);
             product.setProDescription(description);
             product.setProPrice(price);
-            product.setProQuantity(quantity);
-            product.setProTypeId(typeId);
-            product.setProImage(fileName != null ? UPLOAD_DIR + "/" + fileName : null);
+            product.setProStockQuantity(quantity);
+            product.setProWarrantyMonths(warranty);
+            product.setProModel(model);
+            product.setProColor(color);
+            product.setProWeight(weight);
+            product.setProDimensions(dimensions);
+            product.setProOrigin(origin);
+            product.setProMaterial(material);
+            product.setProConnectivity(connectivity);
+            product.setProImageMain(fileName != null ? UPLOAD_DIR + "/" + fileName : null);
+            product.setStatus(status);
 
             ProductDAO dao = new ProductDAO();
-            dao.create(product);
+            dao.insertProduct(product);
 
             response.sendRedirect("AdminController");
         } catch (Exception e) {
@@ -208,12 +229,22 @@ public class AdminController extends HttpServlet {
     private void updateProduct(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            int id = Integer.parseInt(request.getParameter("id"));
+            String proId = request.getParameter("productId");
+            int cateId = Integer.parseInt(request.getParameter("categoryId"));
+            int brandId = Integer.parseInt(request.getParameter("brandId"));
             String name = request.getParameter("productName");
             String description = request.getParameter("productDescription");
-            double price = Double.parseDouble(request.getParameter("productPrice"));
+            BigDecimal price = new BigDecimal(request.getParameter("productPrice"));
             int quantity = Integer.parseInt(request.getParameter("productQuantity"));
-            int typeId = Integer.parseInt(request.getParameter("productType"));
+            int warranty = Integer.parseInt(request.getParameter("warrantyMonths"));
+            String model = request.getParameter("productModel");
+            String color = request.getParameter("productColor");
+            BigDecimal weight = new BigDecimal(request.getParameter("productWeight"));
+            String dimensions = request.getParameter("productDimensions");
+            String origin = request.getParameter("productOrigin");
+            String material = request.getParameter("productMaterial");
+            String connectivity = request.getParameter("productConnectivity");
+            int status = Integer.parseInt(request.getParameter("productStatus"));
 
             // Handle file upload
             Part filePart = request.getPart("productImage");
@@ -229,22 +260,28 @@ public class AdminController extends HttpServlet {
             }
 
             Product product = new Product();
-            product.setProId(id);
+            product.setProId(proId);
+            product.setCateId(cateId);
+            product.setBrandId(brandId);
             product.setProName(name);
             product.setProDescription(description);
             product.setProPrice(price);
-            product.setProQuantity(quantity);
-            product.setProTypeId(typeId);
-            
-            
+            product.setProStockQuantity(quantity);
+            product.setProWarrantyMonths(warranty);
+            product.setProModel(model);
+            product.setProColor(color);
+            product.setProWeight(weight);
+            product.setProDimensions(dimensions);
+            product.setProOrigin(origin);
+            product.setProMaterial(material);
+            product.setProConnectivity(connectivity);
+            if (fileName != null) {
+                product.setProImageMain(UPLOAD_DIR + "/" + fileName);
+            }
+            product.setStatus(status);
 
             ProductDAO dao = new ProductDAO();
-            
-            if (fileName != null) {
-                product.setProImage(fileName);
-            }
-            
-            dao.update(product);
+            dao.updateProduct(product);
 
             response.sendRedirect("AdminController");
         } catch (Exception e) {
@@ -255,9 +292,9 @@ public class AdminController extends HttpServlet {
     private void deleteProduct(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            int id = Integer.parseInt(request.getParameter("id"));
+            String id = request.getParameter("id");
             ProductDAO dao = new ProductDAO();
-            dao.delete(id);
+            dao.deleteProduct(id);
 
             response.sendRedirect("AdminController");
         } catch (Exception e) {
@@ -271,16 +308,39 @@ public class AdminController extends HttpServlet {
             String username = request.getParameter("username");
             String password = request.getParameter("password");
             String fullname = request.getParameter("fullname");
+            String gender = request.getParameter("gender");
+            String image = request.getParameter("image");
+            String gmail = request.getParameter("gmail");
+            String phone = request.getParameter("phone");
             String role = request.getParameter("role");
 
-            User user = new User();
-            user.setUsername(username);
-            user.setPassword(password);
-            user.setFullname(fullname);
-            user.setRole(role);
+            if ("customer".equalsIgnoreCase(role)) {
+                Customer customer = new Customer();
+                customer.setUsername(username);
+                customer.setCusPassword(password);
+                customer.setCusFullName(fullname);
+                customer.setCusGender(gender);
+                customer.setCusImage(image);
+                customer.setCusGmail(gmail);
+                customer.setCusPhone(phone);
 
-            UserDAO dao = new UserDAO();
-            dao.create(user);
+                CustomerDAO customerDAO = new CustomerDAO();
+                customerDAO.insertCustomer(customer);
+
+            } else if ("staff".equalsIgnoreCase(role)) {
+                Staff staff = new Staff();
+                staff.setStaffName(username);
+                staff.setStaffPassword(password);
+                staff.setStaffFullName(fullname);
+                staff.setStaffGender(gender);
+                staff.setStaffImage(image);
+                staff.setStaffGmail(gmail);
+                staff.setStaffPhone(phone);
+                staff.setStaffPosition("staff"); // hoặc request.getParameter("position") nếu có input riêng
+
+                StaffDAO staffDAO = new StaffDAO();
+                staffDAO.create(staff);
+            }
 
             response.sendRedirect("AdminController");
         } catch (Exception e) {
@@ -291,21 +351,36 @@ public class AdminController extends HttpServlet {
     private void updateUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            int id = Integer.parseInt(request.getParameter("id"));
+            String id = request.getParameter("id"); // dùng String vì ID có thể là VARCHAR
             String username = request.getParameter("username");
             String password = request.getParameter("password");
             String fullname = request.getParameter("fullname");
+            String gender = request.getParameter("gender");
             String role = request.getParameter("role");
 
-            User user = new User();
-            user.setId(id);
-            user.setUsername(username);
-            user.setPassword(password);
-            user.setFullname(fullname);
-            user.setRole(role);
+            if ("customer".equalsIgnoreCase(role)) {
+                Customer customer = new Customer();
+                customer.setCusId(id);
+                customer.setUsername(username);
+                customer.setCusPassword(password);
+                customer.setCusFullName(fullname);
+                customer.setCusGender(gender);
+                // Có thể thêm các field khác nếu cần
 
-            UserDAO dao = new UserDAO();
-            dao.update(user);
+                CustomerDAO customerDAO = new CustomerDAO();
+                customerDAO.updateCustomer(customer);
+            } else if ("staff".equalsIgnoreCase(role)) {
+                Staff staff = new Staff();
+                staff.setStaffId(id);
+                staff.setStaffName(username); // hoặc staffFullName tuỳ cách bạn dùng
+                staff.setStaffPassword(password);
+                staff.setStaffFullName(fullname);
+                staff.setStaffGender(gender);
+                // Có thể thêm các field khác nếu cần
+
+                StaffDAO staffDAO = new StaffDAO();
+                staffDAO.update(staff);
+            }
 
             response.sendRedirect("AdminController");
         } catch (Exception e) {
@@ -316,9 +391,16 @@ public class AdminController extends HttpServlet {
     private void deleteUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            UserDAO dao = new UserDAO();
-            dao.delete(id);
+            String id = request.getParameter("id"); // String vì ID có thể là VARCHAR
+            String role = request.getParameter("role"); // Truyền từ view hoặc query string
+
+            if ("customer".equalsIgnoreCase(role)) {
+                CustomerDAO customerDAO = new CustomerDAO();
+                customerDAO.deleteCustomer(id);
+            } else if ("staff".equalsIgnoreCase(role)) {
+                StaffDAO staffDAO = new StaffDAO();
+                staffDAO.delete(id);
+            }
 
             response.sendRedirect("AdminController");
         } catch (Exception e) {
@@ -337,132 +419,116 @@ public class AdminController extends HttpServlet {
         return "";
     }
 
-    private void getOrderDetails(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int orderId = Integer.parseInt(request.getParameter("id"));
-            OrderDAO orderDAO = new OrderDAO();
-            OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
-            UserDAO userDAO = new UserDAO();
-            ProductDAO productDAO = new ProductDAO();
-
-            Order order = orderDAO.getById(orderId);
-            User customer = userDAO.getById(order.getUserId());
-            List<OrderDetail> orderDetails = orderDetailDAO.getByOrderId(orderId);
-
-            // Create a response object with all the necessary information
-            OrderDetailsResponse responseObj = new OrderDetailsResponse();
-            responseObj.order = order;
-            responseObj.customerName = customer.getFullname();
-            responseObj.orderItems = new ArrayList<>();
-
-            for (OrderDetail detail : orderDetails) {
-                Product product = productDAO.getById(detail.getProductId());
-                OrderItem item = new OrderItem();
-                item.productName = product.getProName();
-                item.quantity = detail.getQuantity();
-                item.unitPrice = detail.getUnitPrice();
-                item.totalPrice = detail.getTotalPrice();
-                responseObj.orderItems.add(item);
-            }
-
-            // Convert to JSON and send response
-            response.setContentType("application/json");
-            PrintWriter out = response.getWriter();
-            out.print(new Gson().toJson(responseObj));
-            out.flush();
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("Error fetching order details: " + e.getMessage());
-        }
-    }
-
-    private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String idParam = request.getParameter("id");
-            System.out.println("Received order ID parameter: " + idParam);
-
-            if (idParam == null || idParam.trim().isEmpty()) {
-                System.out.println("Order ID is missing or empty.");
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write("Order ID is missing or invalid.");
-                return;
-            }
-
-            int orderId = Integer.parseInt(idParam);
-            String newStatus = request.getParameter("status");
-            System.out.println("Parsed orderId: " + orderId + ", newStatus: " + newStatus);
-
-            OrderDAO orderDAO = new OrderDAO();
-            Order order = orderDAO.getById(orderId);
-
-            if (order == null) {
-                System.out.println("Order not found for ID: " + orderId);
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write("Order not found.");
-                return;
-            }
-
-            System.out.println("Current order status: " + order.getStatus());
-
-            // Validate status transition
-            if (order.getStatus().equals("completed") && newStatus.equals("pending")) {
-                System.out.println("Invalid transition: completed -> pending");
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write("Cannot change a completed order back to pending");
-                return;
-            }
-
-            if (order.getStatus().equals("cancelled") && !newStatus.equals("cancelled")) {
-                System.out.println("Invalid transition: cancelled -> " + newStatus);
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write("Cannot change a cancelled order's status");
-                return;
-            }
-
-            orderDAO.updateOrderStatus(orderId, newStatus);
-            System.out.println("Order status updated successfully for Order ID: " + orderId + " to status: " + newStatus);
-            response.setStatus(HttpServletResponse.SC_OK);
-        } catch (Exception e) {
-            System.out.println("Error updating order status: " + e.getMessage());
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("Error updating order status: " + e.getMessage());
-        }
-    }
-
-    private void viewOrderDetails(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int orderId = Integer.parseInt(request.getParameter("id"));
-            OrderDAO orderDAO = new OrderDAO();
-            OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
-            UserDAO userDAO = new UserDAO();
-            ProductDAO productDAO = new ProductDAO();
-
-            Order order = orderDAO.getById(orderId);
-            User customer = userDAO.getById(order.getUserId());
-            List<OrderDetail> orderDetails = orderDetailDAO.getByOrderId(orderId);
-
-            request.setAttribute("order", order);
-            request.setAttribute("customer", customer);
-            request.setAttribute("orderDetails", orderDetails);
-
-            request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
-        } catch (Exception e) {
-            request.setAttribute("ERROR", "Error loading order details: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
-        }
-    }
-
+    /**
+     * private void getOrderDetails(HttpServletRequest request,
+     * HttpServletResponse response) throws ServletException, IOException { try
+     * { int orderId = Integer.parseInt(request.getParameter("id")); OrderDAO
+     * orderDAO = new OrderDAO(); OrderDetailDAO orderDetailDAO = new
+     * OrderDetailDAO(); CustomerDAO cusDAO = new CustomerDAO(); ProductDAO
+     * productDAO = new ProductDAO();
+     *
+     * Order order = orderDAO.getById(orderId);
+     *
+     * String str = String.valueOf(order.getUserId());
+     *
+     * Customer customer = cusDAO.getCustomerById(str); List<OrderDetail>
+     * orderDetails = orderDetailDAO.getByOrderId(orderId);
+     *
+     * // Create a response object with all the necessary information
+     * OrderDetailsResponse responseObj = new OrderDetailsResponse();
+     * responseObj.order = order; responseObj.customerName =
+     * customer.getFullname(); responseObj.orderItems = new ArrayList<>();
+     *
+     * for (OrderDetail detail : orderDetails) { Product product =
+     * productDAO.getById(detail.getProductId()); OrderItem item = new
+     * OrderItem(); item.productName = product.getProName(); item.quantity =
+     * detail.getQuantity(); item.unitPrice = detail.getUnitPrice();
+     * item.totalPrice = detail.getTotalPrice();
+     * responseObj.orderItems.add(item); }
+     *
+     * // Convert to JSON and send response
+     * response.setContentType("application/json"); PrintWriter out =
+     * response.getWriter(); out.print(new Gson().toJson(responseObj));
+     * out.flush(); } catch (Exception e) {
+     * response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+     * response.getWriter().write("Error fetching order details: " +
+     * e.getMessage()); } }
+     *
+     * private void updateOrderStatus(HttpServletRequest request,
+     * HttpServletResponse response) throws ServletException, IOException { try
+     * { String idParam = request.getParameter("id");
+     * System.out.println("Received order ID parameter: " + idParam);
+     *
+     * if (idParam == null || idParam.trim().isEmpty()) {
+     * System.out.println("Order ID is missing or empty.");
+     * response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+     * response.getWriter().write("Order ID is missing or invalid."); return; }
+     *
+     * int orderId = Integer.parseInt(idParam); String newStatus =
+     * request.getParameter("status"); System.out.println("Parsed orderId: " +
+     * orderId + ", newStatus: " + newStatus);
+     *
+     * OrderDAO orderDAO = new OrderDAO(); Order order =
+     * orderDAO.getById(orderId);
+     *
+     * if (order == null) { System.out.println("Order not found for ID: " +
+     * orderId); response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+     * response.getWriter().write("Order not found."); return; }
+     *
+     * System.out.println("Current order status: " + order.getStatus());
+     *
+     * // Validate status transition if (order.getStatus().equals("completed")
+     * && newStatus.equals("pending")) { System.out.println("Invalid transition:
+     * completed -> pending");
+     * response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+     * response.getWriter().write("Cannot change a completed order back to
+     * pending"); return; }
+     *
+     * if (order.getStatus().equals("cancelled") &&
+     * !newStatus.equals("cancelled")) { System.out.println("Invalid transition:
+     * cancelled -> " + newStatus);
+     * response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+     * response.getWriter().write("Cannot change a cancelled order's status");
+     * return; }
+     *
+     * orderDAO.updateOrderStatus(orderId, newStatus); System.out.println("Order
+     * status updated successfully for Order ID: " + orderId + " to status: " +
+     * newStatus); response.setStatus(HttpServletResponse.SC_OK); } catch
+     * (Exception e) { System.out.println("Error updating order status: " +
+     * e.getMessage());
+     * response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+     * response.getWriter().write("Error updating order status: " +
+     * e.getMessage()); } }
+     *
+     * private void viewOrderDetails(HttpServletRequest request,
+     * HttpServletResponse response) throws ServletException, IOException { try
+     * { int orderId = Integer.parseInt(request.getParameter("id")); OrderDAO
+     * orderDAO = new OrderDAO(); OrderDetailDAO orderDetailDAO = new
+     * OrderDetailDAO(); UserDAO userDAO = new UserDAO(); ProductDAO productDAO
+     * = new ProductDAO();
+     *
+     * Order order = orderDAO.getById(orderId); User customer =
+     * userDAO.getById(order.getUserId()); List<OrderDetail> orderDetails =
+     * orderDetailDAO.getByOrderId(orderId);
+     *
+     * request.setAttribute("order", order); request.setAttribute("customer",
+     * customer); request.setAttribute("orderDetails", orderDetails);
+     *
+     * request.getRequestDispatcher("orderDetails.jsp").forward(request,
+     * response); } catch (Exception e) { request.setAttribute("ERROR", "Error
+     * loading order details: " + e.getMessage());
+     * request.getRequestDispatcher("error.jsp").forward(request, response); } }
+     */
     // Helper classes for JSON response
     private static class OrderDetailsResponse {
+
         Order order;
         String customerName;
         List<OrderItem> orderItems;
     }
 
     private static class OrderItem {
+
         String productName;
         int quantity;
         double unitPrice;
@@ -480,4 +546,4 @@ public class AdminController extends HttpServlet {
             throws ServletException, IOException {
         processRequest(request, response);
     }
-} 
+}

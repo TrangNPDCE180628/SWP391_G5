@@ -18,7 +18,7 @@ function editProduct(productId) {
     const price = row.getAttribute('data-product-price') || '';
     const quantity = row.getAttribute('data-product-quantity') || '';
     const type = row.getAttribute('data-product-type-id') || '';
-    const image = row.getAttribute('data-product-image') || '';
+    const image = row.getAttribute('data-product-image') || ''; 
 
     // Set giá trị vào form
     document.getElementById('editProductId').value = productId;
