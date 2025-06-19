@@ -15,7 +15,7 @@ public class DBContext {
                 + "databaseName=TechStore;"
                 + "encrypt=true;"
                 + "trustServerCertificate=true";
-        conn = DriverManager.getConnection(url, "sa", "123");
+        conn = DriverManager.getConnection(url, "sa", "1");
         return conn;
     }
 }
