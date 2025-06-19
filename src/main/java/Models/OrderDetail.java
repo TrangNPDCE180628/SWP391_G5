@@ -10,6 +10,7 @@ public class OrderDetail {
     private int voucherId; // NEW: Added to match DB schema
     private String productName; // NEW: For display purposes in order details
 
+
     public OrderDetail() {
     }
 
@@ -18,6 +19,7 @@ public class OrderDetail {
         this.id = id;
         this.orderId = orderId;
         this.proId = proId;
+
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.totalPrice = totalPrice;
@@ -47,6 +49,7 @@ public class OrderDetail {
     // UPDATED: Changed to setProId
     public void setProductId(String proId) {
         this.proId = proId;
+
     }
 
     public int getQuantity() {
@@ -91,3 +94,4 @@ public class OrderDetail {
         this.productName = productName;
     }
 }
+

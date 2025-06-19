@@ -13,6 +13,7 @@ public class Order {
     private double finalAmount; // NEW: Added to match DB schema
     private String paymentMethod; // NEW: Added to match DB schema
     private String shippingAddress; // NEW: Added to match DB schema
+
     private List<OrderDetail> orderDetails;
 
     public Order() {
@@ -30,6 +31,7 @@ public class Order {
         this.finalAmount = finalAmount;
         this.paymentMethod = paymentMethod;
         this.shippingAddress = shippingAddress;
+
     }
 
     public int getId() {
@@ -48,6 +50,7 @@ public class Order {
     // UPDATED: Changed from setUserId to setCusId
     public void setCusId(String cusId) {
         this.cusId = cusId;
+
     }
 
     public Timestamp getOrderDate() {
@@ -65,6 +68,7 @@ public class Order {
     public void setStatus(String status) {
         this.status = status;
     }
+
 
     // UPDATED: Renamed to getTotalAmount
     public double getTotalAmount() {
@@ -110,6 +114,7 @@ public class Order {
 
     public void setShippingAddress(String shippingAddress) {
         this.shippingAddress = shippingAddress;
+
     }
 
     public List<OrderDetail> getOrderDetails() {
@@ -120,3 +125,4 @@ public class Order {
         this.orderDetails = orderDetails;
     }
 }
+

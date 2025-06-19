@@ -22,6 +22,7 @@ public class OrderDetailDAO {
             } else {
                 stmt.setInt(5, orderDetail.getVoucherId());
             }
+
             stmt.executeUpdate();
 
             ResultSet rs = stmt.getGeneratedKeys();
@@ -34,6 +35,7 @@ public class OrderDetailDAO {
     // UPDATED: Read by ID updated
     public OrderDetail getById(int id) throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM OrderDetail WHERE orderDetailId = ?";
+
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -49,6 +51,7 @@ public class OrderDetailDAO {
                 );
                 detail.setVoucherId(rs.getInt("voucherId"));
                 return detail;
+
             }
             return null;
         }
@@ -57,6 +60,7 @@ public class OrderDetailDAO {
     // UPDATED: Read all updated
     public List<OrderDetail> getAll() throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM OrderDetail";
+
         List<OrderDetail> orderDetails = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
              Statement stmt = conn.createStatement();
@@ -72,6 +76,7 @@ public class OrderDetailDAO {
                 );
                 detail.setVoucherId(rs.getInt("voucherId"));
                 orderDetails.add(detail);
+
             }
             return orderDetails;
         }
@@ -80,6 +85,7 @@ public class OrderDetailDAO {
     // UPDATED: Read by order ID updated
     public List<OrderDetail> getByOrderId(int orderId) throws SQLException, ClassNotFoundException {
         String sql = "SELECT od.*, p.proName FROM OrderDetail od JOIN Product p ON od.proId = p.proId WHERE od.orderId = ?";
+
         List<OrderDetail> orderDetails = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -96,6 +102,7 @@ public class OrderDetailDAO {
                 );
                 detail.setVoucherId(rs.getInt("voucherId"));
                 orderDetails.add(detail);
+
             }
             return orderDetails;
         }
@@ -115,14 +122,17 @@ public class OrderDetailDAO {
             } else {
                 stmt.setInt(5, orderDetail.getVoucherId());
             }
+
             stmt.setInt(6, orderDetail.getId());
             stmt.executeUpdate();
         }
     }
 
+
     // Delete (unchanged)
     public void delete(int id) throws SQLException, ClassNotFoundException {
         String sql = "DELETE FROM OrderDetail WHERE orderDetailId = ?";
+
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -133,6 +143,7 @@ public class OrderDetailDAO {
     // Delete by order ID (unchanged)
     public void deleteByOrderId(int orderId) throws SQLException, ClassNotFoundException {
         String sql = "DELETE FROM OrderDetail WHERE orderId = ?";
+
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, orderId);
@@ -155,3 +166,4 @@ public class OrderDetailDAO {
         }
     }
 }
+

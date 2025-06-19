@@ -20,6 +20,7 @@ public class OrderDAO {
             stmt.setString(5, order.getStatus());
             stmt.setString(6, order.getPaymentMethod());
             stmt.setString(7, order.getShippingAddress());
+
             stmt.executeUpdate();
 
             ResultSet rs = stmt.getGeneratedKeys();
@@ -32,6 +33,7 @@ public class OrderDAO {
     // UPDATED: Read by ID updated to include new fields
     public Order getById(int id) throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM [Order] WHERE orderId = ?";
+
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -47,6 +49,7 @@ public class OrderDAO {
                         rs.getDouble("finalAmount"),
                         rs.getString("paymentMethod"),
                         rs.getString("shippingAddress")
+
                 );
             }
             return null;
@@ -56,6 +59,7 @@ public class OrderDAO {
     // UPDATED: Read all updated to include new fields
     public List<Order> getAll() throws SQLException, ClassNotFoundException {
         String sql = "SELECT o.*, c.cusFullName FROM [Order] o JOIN Customer c ON o.cusId = c.cusId";
+
         List<Order> orders = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
              Statement stmt = conn.createStatement();
@@ -99,6 +103,7 @@ public class OrderDAO {
                         rs.getString("shippingAddress")
                 );
                 orders.add(order);
+
             }
             return orders;
         }
@@ -123,6 +128,7 @@ public class OrderDAO {
                         rs.getDouble("finalAmount"),
                         rs.getString("paymentMethod"),
                         rs.getString("shippingAddress")
+
                 ));
             }
             return orders;
@@ -142,6 +148,7 @@ public class OrderDAO {
             stmt.setString(6, order.getPaymentMethod());
             stmt.setString(7, order.getShippingAddress());
             stmt.setInt(8, order.getId());
+
             stmt.executeUpdate();
         }
     }
@@ -149,6 +156,7 @@ public class OrderDAO {
     // Delete (unchanged)
     public void delete(int id) throws SQLException, ClassNotFoundException {
         String sql = "DELETE FROM [Order] WHERE orderId = ?";
+
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -163,6 +171,7 @@ public class OrderDAO {
             throw new SQLException("Invalid status: " + status);
         }
         String sql = "UPDATE [Order] SET orderStatus = ? WHERE orderId = ?";
+
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, status);
