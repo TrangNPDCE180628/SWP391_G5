@@ -12,6 +12,8 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <link href="css/admindashboard.css" rel="stylesheet" />
         <script src="${pageContext.request.contextPath}/js/ScriptAdminDashboard.js"></script>
+        <!-- Add Chart.js for charts -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
         <style>
             .action-buttons .btn {
                 margin-right: 5px;
@@ -27,6 +29,49 @@
             .action-buttons .btn-danger {
                 background-color: #dc3545;
                 border-color: #dc3545;
+            }
+            .status-badge-pending {
+                background-color: #ffc107;
+                color: black;
+            }
+            .status-badge-done {
+                background-color: #28a745;
+                color: white;
+            }
+            .status-badge-cancel {
+                background-color: #dc3545;
+                color: white;
+            }
+            /* Revenue Dashboard Styles */
+            .kpi-card {
+                background: #fff;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .kpi-card h5 {
+                font-size: 1.1rem;
+                color: #6c757d;
+                margin-bottom: 10px;
+            }
+            .kpi-card .value {
+                font-size: 1.8rem;
+                font-weight: bold;
+                color: #343a40;
+            }
+            .chart-container {
+                background: #fff;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                margin-bottom: 20px;
+            }
+            .recent-transactions table {
+                background: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
         </style>
     </head>
@@ -82,6 +127,11 @@
                             <li class="nav-item">
                                 <a href="#productSpecs" class="nav-link" data-bs-toggle="tab">
                                     <i class="fas fa-microchip me-2"></i>Product Specs
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#revenue" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fas fa-chart-line me-2"></i>Revenue
                                 </a>
                             </li>
                         </ul>
@@ -611,6 +661,261 @@
                             </div>
                         </div>
 
+                        <!-- Orders Tab -->
+                        <div class="tab-pane fade" id="orders">
+                            <h2>Orders Management</h2>
+                            <div class="mb-3 d-flex align-items-center">
+                                <form action="AdminController" method="GET" class="d-flex">
+                                    <input type="hidden" name="action" value="filterOrdersByStatus">
+                                    <select name="status" class="form-select me-2" style="width: 200px;" onchange="this.form.submit()">
+                                        <option value="All" ${selectedStatus == 'All' ? 'selected' : ''}>All</option>
+                                        <option value="Pending" ${selectedStatus == 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="Done" ${selectedStatus == 'Done' ? 'selected' : ''}>Done</option>
+                                        <option value="Cancel" ${selectedStatus == 'Cancel' ? 'selected' : ''}>Cancel</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                </form>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Customer ID</th>
+                                            <th>Order Date</th>
+                                            <th>Total Amount</th>
+                                            <th>Discount</th>
+                                            <th>Final Amount</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach items="${orders}" var="order">
+                                            <tr>
+                                                <td>${order.id}</td>
+                                                <td>${order.cusId}</td>
+                                                <td><fmt:formatDate value="${order.orderDate}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
+                                                <td>$${order.totalAmount}</td>
+                                                <td>$${order.discountAmount}</td>
+                                                <td>$${order.finalAmount}</td>
+                                                <td>
+                                                    <span class="badge status-badge-${order.status}">
+                                                        ${order.status}
+                                                    </span>
+                                                </td>
+                                                <td class="action-buttons">
+                                                    <a href="AdminController?action=viewOrderDetails&id=${order.id}" class="btn btn-sm btn-info">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                    <div class="dropdown d-inline-block">
+                                                        <button class="btn btn-sm btn-warning dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                            <i class="fas fa-edit"></i> Update Status
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li><a class="dropdown-item" href="AdminController?action=updateOrderStatus&id=${order.id}&status=Pending¤tFilter=${selectedStatus}">Pending</a></li>
+                                                            <li><a class="dropdown-item" href="AdminController?action=updateOrderStatus&id=${order.id}&status=Done¤tFilter=${selectedStatus}">Done</a></li>
+                                                            <li><a class="dropdown-item" href="AdminController?action=updateOrderStatus&id=${order.id}&status=Cancel¤tFilter=${selectedStatus}">Cancel</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Revenue Tab -->
+                        <div class="tab-pane fade" id="revenue">
+                            <h2>Revenue Dashboard</h2>
+                            <!-- Header / Time Filters -->
+                            <div class="mb-3 d-flex align-items-center">
+                                <form action="AdminController" method="GET" class="d-flex">
+                                    <input type="hidden" name="action" value="filterRevenue">
+                                    <select name="timeRange" class="form-select me-2" style="width: 150px;">
+                                        <option value="day">Day</option>
+                                        <option value="week">Week</option>
+                                        <option value="month" selected>Month</option>
+                                        <option value="quarter">Quarter</option>
+                                        <option value="year">Year</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                    <input type="date" name="startDate" class="form-control me-2" style="width: 150px;">
+                                    <input type="date" name="endDate" class="form-control me-2" style="width: 150px;">
+                                    <select name="category" class="form-select me-2" style="width: 200px;">
+                                        <option value="all">All Categories</option>
+                                        <c:forEach items="${productTypes}" var="cate">
+                                            <option value="${cate.cateId}">${cate.cateName}</option>
+                                        </c:forEach>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                </form>
+                            </div>
+
+                            <!-- Key Metrics / KPIs -->
+                            <div class="row">
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>Total Revenue</h5>
+                                        <div class="value">$${revenueMetrics.totalRevenue}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>Total Orders</h5>
+                                        <div class="value">${revenueMetrics.totalOrders}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>Products Sold</h5>
+                                        <div class="value">${revenueMetrics.totalProductsSold}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>New Customers</h5>
+                                        <div class="value">${revenueMetrics.newCustomers}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>Return Rate</h5>
+                                        <div class="value">${revenueMetrics.returnRate}%</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>Net Profit</h5>
+                                        <div class="value">$${revenueMetrics.netProfit}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Revenue Over Time Chart -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="chart-container">
+                                        <h5>Revenue Over Time</h5>
+                                        <canvas id="revenueOverTimeChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Revenue by Category/Product -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h5>Revenue by Category</h5>
+                                        <canvas id="revenueByCategoryChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h5>Top 5 Products</h5>
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Product</th>
+                                                    <th>Revenue</th>
+                                                    <th>Units Sold</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach items="${topProducts}" var="product">
+                                                    <tr>
+                                                        <td>${product.proName}</td>
+                                                        <td>$${product.revenue}</td>
+                                                        <td>${product.unitsSold}</td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Revenue by Customer -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h5>Customer Type</h5>
+                                        <canvas id="customerTypeChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h5>Top 5 Customers</h5>
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Customer</th>
+                                                    <th>Total Spent</th>
+                                                    <th>Orders</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach items="${topCustomers}" var="customer">
+                                                    <tr>
+                                                        <td>${customer.cusFullName}</td>
+                                                        <td>$${customer.totalSpent}</td>
+                                                        <td>${customer.orderCount}</td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order Status -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="chart-container">
+                                        <h5>Order Status</h5>
+                                        <canvas id="orderStatusChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Transactions -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="recent-transactions">
+                                        <h5>Recent Transactions</h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Order ID</th>
+                                                        <th>Customer</th>
+                                                        <th>Date</th>
+                                                        <th>Amount</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:forEach items="${recentOrders}" var="order">
+                                                        <tr>
+                                                            <td>${order.id}</td>
+                                                            <td>${order.cusId}</td>
+                                                            <td><fmt:formatDate value="${order.orderDate}" pattern="yyyy-MM-dd HH:mm"/></td>
+                                                            <td>$${order.finalAmount}</td>
+                                                            <td>
+                                                                <span class="badge status-badge-${order.status}">
+                                                                    ${order.status}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
 
                     </div>
@@ -1035,9 +1340,142 @@
             </div>
         </div>
 
-        
+
         <script>const contextPath = '${pageContext.request.contextPath}';</script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Activate the Orders tab if specified
+            <c:if test="${activeTab == 'orders'}">
+            document.querySelector('a[href="#orders"]').click();
+            </c:if>
+            // Activate the Revenue tab if specified
+            <c:if test="${activeTab == 'revenue'}">
+            document.querySelector('a[href="#revenue"]').click();
+            </c:if>
 
+            // Initialize Charts with Error Handling
+            // Revenue Over Time Chart
+            let revenueOverTimeLabels = [];
+            let revenueOverTimeData = [];
+            let revenueOverTimePreviousData = [];
+
+            try {
+                revenueOverTimeLabels = JSON.parse('<c:out value="${revenueOverTime.labels}" escapeXml="true"/>');
+                revenueOverTimeData = JSON.parse('<c:out value="${revenueOverTime.data}" escapeXml="true"/>');
+                revenueOverTimePreviousData = JSON.parse('<c:out value="${revenueOverTime.previousData}" escapeXml="true"/>');
+            } catch (e) {
+                console.error('Error parsing revenue over time data:', e);
+                revenueOverTimeLabels = ['No Data'];
+                revenueOverTimeData = [0];
+                revenueOverTimePreviousData = [0];
+            }
+
+            const revenueOverTimeCtx = document.getElementById('revenueOverTimeChart').getContext('2d');
+            new Chart(revenueOverTimeCtx, {
+                type: 'line',
+                data: {
+                    labels: revenueOverTimeLabels,
+                    datasets: [{
+                            label: 'Revenue',
+                            data: revenueOverTimeData,
+                            borderColor: '#28a745',
+                            fill: false
+                        }, {
+                            label: 'Previous Period',
+                            data: revenueOverTimePreviousData,
+                            borderColor: '#ffc107',
+                            fill: false,
+                            borderDash: [5, 5]
+                        }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {display: true, text: 'Revenue ($)'}
+                        }
+                    }
+                }
+            });
+
+            // Revenue by Category Chart
+            let revenueByCategoryLabels = [];
+            let revenueByCategoryData = [];
+
+            try {
+                revenueByCategoryLabels = JSON.parse('<c:out value="${revenueByCategory.labels}" escapeXml="true"/>');
+                revenueByCategoryData = JSON.parse('<c:out value="${revenueByCategory.data}" escapeXml="true"/>');
+            } catch (e) {
+                console.error('Error parsing revenue by category data:', e);
+                revenueByCategoryLabels = ['No Data'];
+                revenueByCategoryData = [0];
+            }
+
+            const revenueByCategoryCtx = document.getElementById('revenueByCategoryChart').getContext('2d');
+            new Chart(revenueByCategoryCtx, {
+                type: 'pie',
+                data: {
+                    labels: revenueByCategoryLabels,
+                    datasets: [{
+                            data: revenueByCategoryData,
+                            backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d']
+                        }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+
+            // Customer Type Chart
+            let customerTypeData = [];
+
+            try {
+                customerTypeData = JSON.parse('<c:out value="${customerType.data}" escapeXml="true"/>');
+            } catch (e) {
+                console.error('Error parsing customer type data:', e);
+                customerTypeData = [0, 0];
+            }
+
+            const customerTypeCtx = document.getElementById('customerTypeChart').getContext('2d');
+            new Chart(customerTypeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['New Customers', 'Returning Customers'],
+                    datasets: [{
+                            data: customerTypeData,
+                            backgroundColor: ['#28a745', '#17a2b8']
+                        }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+
+            // Order Status Chart
+            let orderStatusData = [];
+
+            try {
+                orderStatusData = JSON.parse('<c:out value="${orderStatus.data}" escapeXml="true"/>');
+            } catch (e) {
+                console.error('Error parsing order status data:', e);
+                orderStatusData = [0, 0, 0];
+            }
+
+            const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
+            new Chart(orderStatusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending', 'Done', 'Cancel'],
+                    datasets: [{
+                            data: orderStatusData,
+                            backgroundColor: ['#ffc107', '#28a745', '#dc3545']
+                        }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        </script>
     </body>
 </html>

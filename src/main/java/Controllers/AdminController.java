@@ -7,6 +7,7 @@ import DAOs.OrderDAO;
 import DAOs.ProductDAO;
 import DAOs.StaffDAO;
 import DAOs.DiscountDAO;
+import DAOs.OrderDetailDAO;
 import DAOs.VoucherDAO;
 import DAOs.ProductSpecDAO;
 
@@ -17,6 +18,7 @@ import Models.Order;
 import Models.Product;
 import Models.Staff;
 import Models.Discount;
+import Models.OrderDetail;
 import Models.Voucher;
 import Models.User;
 import Models.ProductSpecification;
@@ -138,6 +140,17 @@ public class AdminController extends HttpServlet {
                     getProductSpec(request, response);
                     break;
 
+                /* Manage Orders */
+                case "viewOrderDetails":
+                    viewOrderDetails(request, response);
+                    break;
+                case "updateOrderStatus":
+                    updateOrderStatus(request, response);
+                    break;
+                case "filterOrdersByStatus":
+                    filterOrdersByStatus(request, response);
+                    break;
+
                 default:
                     loadAdminPage(request, response);
             }
@@ -159,6 +172,7 @@ public class AdminController extends HttpServlet {
             DiscountDAO discountDAO = new DiscountDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
             ProductSpecDAO productSpecDAO = new ProductSpecDAO();
+            OrderDAO orderDAO = new OrderDAO();
 
             List<Category> productTypes = productTypeDAO.getAllCategories();
             List<Product> products = productDAO.getAllProducts();
@@ -167,6 +181,7 @@ public class AdminController extends HttpServlet {
             List<Discount> discounts = discountDAO.getAll();
             List<Voucher> vouchers = voucherDAO.getAll();
             List<ProductSpecification> productSpecs = productSpecDAO.getAll();
+            List<Order> orders = orderDAO.getAll();
 
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("products", products);
@@ -175,6 +190,7 @@ public class AdminController extends HttpServlet {
             request.setAttribute("discounts", discounts);
             request.setAttribute("vouchers", vouchers);
             request.setAttribute("productSpecs", productSpecs);
+            request.setAttribute("orders", orders);
 
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
@@ -801,6 +817,97 @@ public class AdminController extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("Error fetching product specification");
         }
+    }
+
+    private void viewOrderDetails(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException, ClassNotFoundException {
+        int orderId = Integer.parseInt(request.getParameter("id"));
+        OrderDAO orderDAO = new OrderDAO();
+        OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
+        CustomerDAO customerDAO = new CustomerDAO();
+
+        Order order = orderDAO.getById(orderId);
+        if (order == null) {
+            request.setAttribute("ERROR", "Order not found.");
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+            return;
+        }
+
+        List<OrderDetail> orderDetails = orderDetailDAO.getByOrderId(orderId);
+        Customer customer = customerDAO.getCustomerById(order.getCusId());
+
+        request.setAttribute("order", order);
+        request.setAttribute("orderDetails", orderDetails);
+        request.setAttribute("customer", customer);
+        request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
+    }
+
+    private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException, ClassNotFoundException {
+        int orderId = Integer.parseInt(request.getParameter("id"));
+        String status = request.getParameter("status");
+        String currentFilter = request.getParameter("currentFilter");
+
+        // Kiểm tra trạng thái hợp lệ
+        if (!status.equals("Pending") && !status.equals("Done") && !status.equals("Cancel")) {
+            request.setAttribute("ERROR", "Invalid status.");
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+            return;
+        }
+
+        // Cập nhật trạng thái đơn hàng
+        OrderDAO orderDAO = new OrderDAO();
+        orderDAO.updateOrderStatus(orderId, status.toLowerCase());
+
+        // Chuyển hướng đến filterOrdersByStatus với bộ lọc hiện tại
+        String redirectUrl = "AdminController?action=filterOrdersByStatus&status="
+                + (currentFilter != null ? currentFilter : "All");
+        response.sendRedirect(redirectUrl);
+    }
+
+    private void filterOrdersByStatus(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException, ClassNotFoundException {
+        String status = request.getParameter("status");
+
+        OrderDAO orderDAO = new OrderDAO();
+        List<Order> orders;
+
+        if (status == null || status.isEmpty() || status.equalsIgnoreCase("All")) {
+            orders = orderDAO.getAll();
+            status = "All";
+        } else {
+            // Chuẩn hóa trạng thái để khớp với database (done, pending, cancel)
+            String normalizedStatus = status.toLowerCase();
+            if (!normalizedStatus.equals("done") && !normalizedStatus.equals("pending") && !normalizedStatus.equals("cancel")) {
+                request.setAttribute("ERROR", "Invalid status.");
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+                return;
+            }
+            orders = orderDAO.getByStatus(normalizedStatus);
+        }
+
+        // Tải lại các dữ liệu khác để duy trì trạng thái trang admin
+        CategoryDAO productTypeDAO = new CategoryDAO();
+        ProductDAO productDAO = new ProductDAO();
+        CustomerDAO cusDAO = new CustomerDAO();
+        StaffDAO staffDAO = new StaffDAO();
+        DiscountDAO discountDAO = new DiscountDAO();
+        VoucherDAO voucherDAO = new VoucherDAO();
+        ProductSpecDAO productSpecDAO = new ProductSpecDAO();
+
+        request.setAttribute("productTypes", productTypeDAO.getAllCategories());
+        request.setAttribute("products", productDAO.getAllProducts());
+        request.setAttribute("users", cusDAO.getAllCustomers());
+        request.setAttribute("staffs", staffDAO.getAll());
+        request.setAttribute("discounts", discountDAO.getAll());
+        request.setAttribute("vouchers", voucherDAO.getAll());
+        request.setAttribute("productSpecs", productSpecDAO.getAll());
+        request.setAttribute("orders", orders);
+        request.setAttribute("selectedStatus", status);
+        request.setAttribute("activeTab", "orders");
+
+        // Chuyển tiếp đến admin.jsp với tab orders được kích hoạt
+        request.getRequestDispatcher("admin.jsp").forward(request, response);
     }
 
     // Helper classes for JSON response
