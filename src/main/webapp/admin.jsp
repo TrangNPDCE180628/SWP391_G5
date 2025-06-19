@@ -79,6 +79,11 @@
                                     <i class="fas fa-percent me-2"></i>Discounts
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="#productSpecs" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fas fa-microchip me-2"></i>Product Specs
+                                </a>
+                            </li>
                         </ul>
                         <hr>
                         <div class="dropdown">
@@ -541,6 +546,72 @@
                                 </table>
                             </div>
                         </div>
+                        <!-- Product Specifications Tab -->
+                        <div class="tab-pane fade" id="productSpecs">
+                            <h2>Product Specification Management</h2>
+                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addSpecModal">
+                                <i class="fas fa-plus"></i> Add New Specification
+                            </button>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Spec ID</th>
+                                            <th>Product ID</th>
+                                            <th>CPU</th>
+                                            <th>RAM</th>
+                                            <th>Storage</th>
+                                            <th>Screen</th>
+                                            <th>OS</th>
+                                            <th>Battery</th>
+                                            <th>Camera</th>
+                                            <th>Graphic</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach items="${productSpecs}" var="spec">
+                                            <tr 
+                                                data-spec-id="${spec.specId}"
+                                                data-product-id="${spec.productId}"
+                                                data-cpu="${spec.cpu}"
+                                                data-ram="${spec.ram}"
+                                                data-storage="${spec.storage}"
+                                                data-screen="${spec.screen}"
+                                                data-os="${spec.os}"
+                                                data-battery="${spec.battery}"
+                                                data-camera="${spec.camera}"
+                                                data-graphic="${spec.graphic}">
+                                                <td>${spec.specId}</td>
+                                                <td>${spec.productId}</td>
+                                                <td>${spec.cpu}</td>
+                                                <td>${spec.ram}</td>
+                                                <td>${spec.storage}</td>
+                                                <td>${spec.screen}</td>
+                                                <td>${spec.os}</td>
+                                                <td>${spec.battery}</td>
+                                                <td>${spec.camera}</td>
+                                                <td>${spec.graphic}</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-warning" onclick="editSpec(this)">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    <form action="AdminController" method="post" style="display:inline;">
+                                                        <input type="hidden" name="action" value="deleteProductSpec">
+                                                        <input type="hidden" name="specId" value="${spec.specId}">
+                                                        <button type="submit" class="btn btn-sm btn-danger">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
 
                     </div>
                 </div>
@@ -907,7 +978,64 @@
                 </div>
             </div>
         </div>
+        <!-- Edit Specification Modal -->
+        <div class="modal fade" id="addSpecModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <form id="specForm" method="post" action="AdminController" class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add / Edit Specification</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body row g-3 px-3">
+                        <input type="hidden" name="action" id="specFormAction" value="addProductSpec">
+                        <input type="hidden" name="specId" id="specId">
 
+                        <div class="col-md-6">
+                            <label for="productId" class="form-label">Product ID</label>
+                            <input type="text" class="form-control" name="productId" id="productId" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cpu" class="form-label">CPU</label>
+                            <input type="text" class="form-control" name="cpu" id="cpu">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ram" class="form-label">RAM</label>
+                            <input type="text" class="form-control" name="ram" id="ram">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="storage" class="form-label">Storage</label>
+                            <input type="text" class="form-control" name="storage" id="storage">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="screen" class="form-label">Screen</label>
+                            <input type="text" class="form-control" name="screen" id="screen">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="os" class="form-label">OS</label>
+                            <input type="text" class="form-control" name="os" id="os">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="battery" class="form-label">Battery</label>
+                            <input type="text" class="form-control" name="battery" id="battery">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="camera" class="form-label">Camera</label>
+                            <input type="text" class="form-control" name="camera" id="camera">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="graphic" class="form-label">Graphic</label>
+                            <input type="text" class="form-control" name="graphic" id="graphic">
+                        </div>
+                    </div>
+                    <div class="modal-footer px-3">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        
         <script>const contextPath = '${pageContext.request.contextPath}';</script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 

@@ -365,3 +365,20 @@ function deleteVoucher(id) {
     }
 }
 
+function editSpec(button) {
+    const row = button.closest('tr');
+    document.getElementById("specFormAction").value = "updateProductSpec";
+    document.getElementById("specId").value = row.dataset.specId;
+    document.getElementById("productId").value = row.dataset.productId;
+    document.getElementById("cpu").value = row.dataset.cpu;
+    document.getElementById("ram").value = row.dataset.ram;
+    document.getElementById("storage").value = row.dataset.storage;
+    document.getElementById("screen").value = row.dataset.screen;
+    document.getElementById("os").value = row.dataset.os;
+    document.getElementById("battery").value = row.dataset.battery;
+    document.getElementById("camera").value = row.dataset.camera;
+    document.getElementById("graphic").value = row.dataset.graphic;
+
+    new bootstrap.Modal(document.getElementById("addSpecModal")).show();
+}
+

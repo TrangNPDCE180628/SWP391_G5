@@ -8,6 +8,7 @@ import DAOs.ProductDAO;
 import DAOs.StaffDAO;
 import DAOs.DiscountDAO;
 import DAOs.VoucherDAO;
+import DAOs.ProductSpecDAO;
 
 import Models.Admin;
 import Models.Category;
@@ -16,10 +17,9 @@ import Models.Order;
 import Models.Product;
 import Models.Staff;
 import Models.Discount;
-//import java.util.Date;
-//import java.text.SimpleDateFormat;
 import Models.Voucher;
 import Models.User;
+import Models.ProductSpecification;
 
 import com.google.gson.Gson;
 
@@ -30,6 +30,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
+import javax.servlet.http.HttpSession;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -38,7 +40,6 @@ import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
-import javax.servlet.http.HttpSession;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
@@ -62,6 +63,8 @@ public class AdminController extends HttpServlet {
             }
 
             switch (action) {
+
+                /* Manage Profile*/
                 case "editProfile":
                     editProfile(request, response);
                     break;
@@ -74,6 +77,8 @@ public class AdminController extends HttpServlet {
                 case "deleteProductType":
                     deleteProductType(request, response);
                     break;
+
+                /*Manage Product*/
                 case "addProduct":
                     addProduct(request, response);
                     break;
@@ -83,6 +88,8 @@ public class AdminController extends HttpServlet {
                 case "deleteProduct":
                     deleteProduct(request, response);
                     break;
+
+                /*Manage Customer*/
                 case "addUser":
                     addUser(request, response);
                     break;
@@ -92,6 +99,8 @@ public class AdminController extends HttpServlet {
                 case "deleteUser":
                     deleteUser(request, response);
                     break;
+
+                /*Manage Discount*/
                 case "addDiscount":
                     addDiscount(request, response);
                     break;
@@ -100,9 +109,8 @@ public class AdminController extends HttpServlet {
                     break;
                 case "deleteDiscount":
                     deleteDiscount(request, response);
-//                case "viewOrderDetails":
-//                    viewOrderDetails(request, response);
-//                    break;
+
+                /*Manage Voucher*/
                 case "addVoucher":
                     addVoucher(request, response);
                     break;
@@ -115,6 +123,21 @@ public class AdminController extends HttpServlet {
                 case "getVoucherDetails":
                     getVoucherDetails(request, response);
                     break;
+
+                /*Manage Product Specification*/
+                case "addProductSpec":
+                    addProductSpec(request, response);
+                    break;
+                case "updateProductSpec":
+                    updateProductSpec(request, response);
+                    break;
+                case "deleteProductSpec":
+                    deleteProductSpec(request, response);
+                    break;
+                case "getProductSpec":
+                    getProductSpec(request, response);
+                    break;
+
                 default:
                     loadAdminPage(request, response);
             }
@@ -135,6 +158,7 @@ public class AdminController extends HttpServlet {
             StaffDAO staffDAO = new StaffDAO();
             DiscountDAO discountDAO = new DiscountDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
+            ProductSpecDAO productSpecDAO = new ProductSpecDAO();
 
             List<Category> productTypes = productTypeDAO.getAllCategories();
             List<Product> products = productDAO.getAllProducts();
@@ -142,6 +166,7 @@ public class AdminController extends HttpServlet {
             List<Staff> staffs = staffDAO.getAll();
             List<Discount> discounts = discountDAO.getAll();
             List<Voucher> vouchers = voucherDAO.getAll();
+            List<ProductSpecification> productSpecs = productSpecDAO.getAll();
 
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("products", products);
@@ -149,6 +174,7 @@ public class AdminController extends HttpServlet {
             request.setAttribute("staffs", staffs);
             request.setAttribute("discounts", discounts);
             request.setAttribute("vouchers", vouchers);
+            request.setAttribute("productSpecs", productSpecs);
 
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
@@ -693,6 +719,87 @@ public class AdminController extends HttpServlet {
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("Error fetching voucher: " + e.getMessage());
+        }
+    }
+
+    private void addProductSpec(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String productId = request.getParameter("productId");
+            String cpu = request.getParameter("cpu");
+            String ram = request.getParameter("ram");
+            String storage = request.getParameter("storage");
+            String screen = request.getParameter("screen");
+            String os = request.getParameter("os");
+            String battery = request.getParameter("battery");
+            String camera = request.getParameter("camera");
+            String graphic = request.getParameter("graphic");
+
+            ProductSpecification spec = new ProductSpecification(0, productId, cpu, ram, storage, screen, os, battery, camera, graphic);
+            ProductSpecDAO dao = new ProductSpecDAO();
+            dao.create(spec);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException("Error adding product specification", e);
+        }
+    }
+
+    private void updateProductSpec(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int specId = Integer.parseInt(request.getParameter("specId"));
+            String productId = request.getParameter("productId");
+            String cpu = request.getParameter("cpu");
+            String ram = request.getParameter("ram");
+            String storage = request.getParameter("storage");
+            String screen = request.getParameter("screen");
+            String os = request.getParameter("os");
+            String battery = request.getParameter("battery");
+            String camera = request.getParameter("camera");
+            String graphic = request.getParameter("graphic");
+
+            ProductSpecification spec = new ProductSpecification(specId, productId, cpu, ram, storage, screen, os, battery, camera, graphic);
+            ProductSpecDAO dao = new ProductSpecDAO();
+            dao.update(spec);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException("Error updating product specification", e);
+        }
+    }
+
+    private void deleteProductSpec(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int specId = Integer.parseInt(request.getParameter("specId"));
+            ProductSpecDAO dao = new ProductSpecDAO();
+            dao.delete(specId);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException("Error deleting product specification", e);
+        }
+    }
+
+    private void getProductSpec(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String productId = request.getParameter("productId");
+            ProductSpecDAO dao = new ProductSpecDAO();
+            ProductSpecification spec = dao.getByProductId(productId);
+
+            response.setContentType("application/json");
+            PrintWriter out = response.getWriter();
+            if (spec != null) {
+                out.print(new Gson().toJson(spec));
+            } else {
+                out.print("{}");
+            }
+            out.flush();
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("Error fetching product specification");
         }
     }
 
