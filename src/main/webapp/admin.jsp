@@ -11,7 +11,7 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <link href="css/admindashboard.css" rel="stylesheet" />
-        <script src="${pageContext.request.contextPath}/js/ScriptAdminDashboard.js"></script>
+
 
     </head>
 
@@ -43,11 +43,13 @@
                                     <i class="fas fa-users me-2"></i>Customer
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a href="#staff" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-users me-2"></i>Staff Manage
-                                </a>
-                            </li>
+                            <c:if test="${LOGIN_USER.role == 'Admin'}">
+                                <li class="nav-item">
+                                    <a href="#staff" class="nav-link" data-bs-toggle="tab">
+                                        <i class="fas fa-users me-2"></i>Staff Manage
+                                    </a>
+                                </li>
+                            </c:if>
                             <li class="nav-item">
                                 <a href="#orders" class="nav-link" data-bs-toggle="tab">
                                     <i class="fas fa-shopping-cart me-2"></i>Orders
@@ -56,6 +58,11 @@
                             <li class="nav-item">
                                 <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
                                     <i class="fa-solid fa-ticket me-2"></i>Voucher
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#feedbacks" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fa-solid fa-ticket me-2"></i>FeedBack Manage
                                 </a>
                             </li>
                         </ul>
@@ -220,6 +227,7 @@
                                             <th>Name</th>
                                             <th>Price</th>
                                             <th>Category</th>
+                                            <th>Brand</th>
                                             <th>Stock</th>
                                             <th>Image</th>
                                             <th>Status</th>
@@ -254,6 +262,13 @@
                                                     <c:forEach items="${productTypes}" var="cate">
                                                         <c:if test="${cate.cateId == product.cateId}">
                                                             ${cate.cateName}
+                                                        </c:if>
+                                                    </c:forEach>
+                                                </td>
+                                                <td>
+                                                    <c:forEach items="${brands}" var="brand">
+                                                        <c:if test="${brand.brandId == product.brandId}">
+                                                            ${brand.brandName}
                                                         </c:if>
                                                     </c:forEach>
                                                 </td>
@@ -320,9 +335,7 @@
                                                          alt="Customer Image" width="80" height="100">
                                                 </td>
                                                 <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-info" onclick="viewDetail('${cus.cusId}')">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </button>
+
                                                     <button class="btn btn-sm btn-warning" onclick="editUser('${cus.cusId}')">
                                                         <i class="fas fa-edit"></i> Edit
                                                     </button>
@@ -337,60 +350,63 @@
                             </div>
                         </div>
 
-                        <!-- Staff Tab -->
-                        <div class="tab-pane fade" id="staff">
-                            <h2>Staff Management</h2>
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addStaffModal">
-                                <i class="fas fa-plus"></i> Add New Staff
-                            </button>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Username</th>
-                                            <th>Full Name</th>
-                                            <th>Image</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach items="${staffs}" var="staff">
-                                            <tr
-                                                data-staff-id="${staff.staffId}"
-                                                data-staff-name="${staff.staffName}"
-                                                data-fullname="${staff.staffFullName}"
-                                                data-password="${staff.staffPassword}"
-                                                data-gender="${staff.staffGender}"
-                                                data-gmail="${staff.staffGmail}"
-                                                data-phone="${staff.staffPhone}"
-                                                data-position="${staff.staffPosition}"
-                                                data-image="${staff.staffImage}">
+                        <!-- Staff Tab only Admin -->
 
-                                                <td>${staff.staffId}</td>
-                                                <td>${staff.staffName}</td>
-                                                <td>${staff.staffFullName}</td>
-                                                <td>
-                                                    <img src="${pageContext.request.contextPath}/images/staff/${staff.staffImage}" 
-                                                         alt="Staff Image" width="80" height="100">
-                                                </td>
-                                                <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-info" onclick="viewStaffDetail('${staff.staffId}')">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </button>
-                                                    <button class="btn btn-sm btn-warning" onclick="editStaff('${staff.staffId}')">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteStaff('${staff.staffId}')">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
-                                                </td>
+                        <c:if test="${LOGIN_USER.role == 'Admin'}">
+                            <div class="tab-pane fade" id="staff">
+                                <h2>Staff Management</h2>
+                                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+                                    <i class="fas fa-plus"></i> Add New Staff
+                                </button>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Username</th>
+                                                <th>Full Name</th>
+                                                <th>Image</th>
+                                                <th>Actions</th>
                                             </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach items="${staffs}" var="staff">
+                                                <tr
+                                                    id="staff-row-${staff.staffId}"
+                                                    data-staff-id="${staff.staffId}"
+                                                    data-staff-name="${staff.staffName}"
+                                                    data-staff-fullname="${staff.staffFullName}"
+                                                    data-staff-password="${staff.staffPassword}"
+                                                    data-staff-gender="${staff.staffGender}"
+                                                    data-staff-gmail="${staff.staffGmail}"
+                                                    data-staff-phone="${staff.staffPhone}"
+                                                    data-staff-position="${staff.staffPosition}"
+                                                    data-staff-image="${staff.staffImage}">
+                                                    <td>${staff.staffId}</td>
+                                                    <td>${staff.staffName}</td>
+                                                    <td>${staff.staffFullName}</td>
+                                                    <td>
+                                                        <img src="${pageContext.request.contextPath}/images/staff/${staff.staffImage}" 
+                                                             alt="Staff Image" width="80" height="100">
+                                                    </td>
+                                                    <td class="action-buttons">
+                                                        <button type="button" class="btn btn-sm btn-warning" onclick="editStaff('${staff.staffId}')">
+                                                            <i class="fas fa-edit"></i> Edit
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteStaff('${staff.staffId}')">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
+
+                        </c:if>
+
+
 
                         <!-- Vouchers Tab -->
                         <div class="tab-pane fade" id="vouchers">
@@ -464,15 +480,151 @@
                             </div>
                         </div>
 
+                        <!-- Feedback Tab -->
+                        <div class="tab-pane fade" id="feedbacks">
+                            <h2>Feedback Management</h2>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Feedback ID</th>
+                                            <th>Customer</th>
+                                            <th>Product</th>
+                                            <th>Content</th>
+                                            <th>Rate</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach items="${viewFeedbacks}" var="fb">
+                                            <tr
+                                                data-feedback-id="${fb.feedbackId}"
+                                                data-cus-id="${fb.cusId}"
+                                                data-pro-id="${fb.proId}"
+                                                data-content="${fb.feedbackContent}"
+                                                data-rate="${fb.rate}"
+                                                data-reply-id="${fb.replyFeedbackId}"
+                                                data-reply-content="${fb.contentReply}"
+                                                data-staff-id="${fb.staffId}"
+                                                data-reply-time="${fb.createdAt}">
+                                                <td>${fb.feedbackId}</td>
+                                                <td>${fb.cusFullName}</td>
+                                                <td>${fb.proName}</td>
+                                                <td>${fb.feedbackContent}</td>
+                                                <td>${fb.rate}★</td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${not empty fb.replyFeedbackId}">
+                                                            <span class="badge bg-success">Replied</span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span class="badge bg-warning text-dark">Pending</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td class="action-buttons">
+                                                    <c:choose>
+                                                        <c:when test="${empty fb.replyFeedbackId}">
+                                                            <button class="btn btn-sm btn-info" onclick="replyFeedback('${fb.feedbackId}')">
+                                                                <i class="fas fa-reply"></i> Reply
+                                                            </button>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <button class="btn btn-sm btn-secondary" onclick="viewReply('${fb.feedbackId}')">
+                                                                <i class="fas fa-eye"></i> View Reply
+                                                            </button>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteFeedback('${fb.feedbackId}')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- View Reply Modal -->
+        <div class="modal fade" id="replyModal" tabindex="-1" aria-labelledby="replyModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="replyModalLabel">Reply Content</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Reply By Staff ID:</strong> <span id="modalReplyStaffId"></span></p>
+                        <p><strong>Reply At:</strong> <span id="modalReplyTime"></span></p>
+                        <hr>
+                        <p id="modalReplyContent"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Reply Feedback Modal -->
+        <div class="modal fade" id="replyFeedbackModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="AdminController" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Reply to Feedback</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <!-- Hidden Fields -->
+                            <input type="hidden" name="action" value="replyFeedback">
+                            <input type="hidden" name="feedbackId" id="replyFeedbackId">
+                            <input type="hidden" name="cusId" id="replyCusId">
+
+                            <!-- Staff Selector -->
+                            <div class="mb-3">
+                                <label for="staffSelect" class="form-label">Select Staff</label>
+                                <select class="form-select" id="staffSelect" name="staffId" required>
+                                    <option value="">-- Choose Staff --</option>
+                                    <c:forEach var="staff" items="${staffs}">
+                                        <option value="${staff.staffId}">${staff.staffFullName}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+
+                            <!-- Reply Content -->
+                            <div class="mb-3">
+                                <label for="replyContent" class="form-label">Reply Content</label>
+                                <textarea class="form-control" id="replyContent" name="contentReply" rows="4" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Send Reply</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
         <!-- Edit Profile Modal -->
         <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <form action="AdminController" method="post" enctype="multipart/form-data" class="modal-content">
-                    <!-- BẮT BUỘC: Cho servlet biết action đang gọi -->
+
                     <input type="hidden" name="action" value="editProfile">
 
                     <!-- Hidden fields -->
@@ -672,8 +824,142 @@
             </div>
         </div>
 
+        <!-- Add Staff Modal -->
+        <div class="modal fade" id="addStaffModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Staff</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="AdminController" method="post" enctype="multipart/form-data">
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="addStaff">
+
+
+                            <div class="mb-3">
+                                <label for="id" class="form-label">ID</label>
+                                <input type="text" class="form-control" id="id" name="id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="fullname" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="fullname" name="fullname">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="gender" class="form-label">Gender</label>
+                                <select class="form-select" id="gender" name="gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Image</label>
+                                <input type="file" class="form-control" id="image" name="image">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="gmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="gmail" name="gmail">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="phone" name="phone">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Position</label>
+                                <input type="text" class="form-control" id="position" name="position">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Staff</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Staff Modal -->
+        <div class="modal fade" id="editStaffModal" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="AdminController" method="post" enctype="multipart/form-data" class="modal-content" >
+
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="editStaff">
+                            <!-- Hidden inputs submit -->
+                            <input type="hidden" name="staffId" id="editStaffIdHidden">
+                            <input type="hidden" name="staffName" id="editStaffNameHidden">
+                            <input type="hidden" name="currentImage" id="currentImagePath">
+
+                            <div class="mb-3">
+                                <label for="editStaffFullName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="editStaffFullName" name="staffFullName">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editStaffPassword" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="editStaffPassword" name="staffPassword">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editStaffGender" class="form-label">Gender</label>
+                                <select class="form-select" id="editStaffGender" name="staffGender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editStaffGmail" class="form-label">Gmail</label>
+                                <input type="email" class="form-control" id="editStaffGmail" name="staffGmail">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editStaffPhone" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="editStaffPhone" name="staffPhone">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editStaffPosition" class="form-label">Position</label>
+                                <input type="text" class="form-control" id="editStaffPosition" name="staffPosition">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editStaffImage" class="form-label">Image</label>
+                                <input type="file" class="form-control" id="editStaffImage" name="staffImage" accept="image/*">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Current Image</label><br>
+                                <img id="editStaffImagePreview" src="#" alt="Preview" width="100" height="120">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+
         <script>const contextPath = '${pageContext.request.contextPath}';</script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script src="${pageContext.request.contextPath}/js/ScriptAdminDashboard.js"></script>
 
     </body>
 </html>

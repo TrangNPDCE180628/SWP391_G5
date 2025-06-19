@@ -27,6 +27,7 @@ public class StaffDAO {
             stmt.setString(7, staff.getStaffGmail());
             stmt.setString(8, staff.getStaffPhone());
             stmt.setString(9, staff.getStaffPosition());
+
             stmt.executeUpdate();
         }
     }
@@ -79,22 +80,23 @@ public class StaffDAO {
 
     // UPDATE
     public void update(Staff staff) throws SQLException, ClassNotFoundException {
-        String sql = "UPDATE Staff SET staffName = ?, staffFullName = ?, staffPassword = ?, staffGender = ?, staffImage = ?, staffGmail = ?, staffPhone = ?, staffPosition = ? "
+        String sql = "UPDATE Staff SET staffFullName = ?, staffPassword = ?, staffGender = ?, staffImage = ?, staffGmail = ?, staffPhone = ?, staffPosition = ? "
                 + "WHERE staffId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, staff.getStaffName());
-            stmt.setString(2, staff.getStaffFullName());
-            stmt.setString(3, staff.getStaffPassword());
-            stmt.setString(4, staff.getStaffGender());
-            stmt.setString(5, staff.getStaffImage());
-            stmt.setString(6, staff.getStaffGmail());
-            stmt.setString(7, staff.getStaffPhone());
-            stmt.setString(8, staff.getStaffPosition());
-            stmt.setString(9, staff.getStaffId());
+            
+            stmt.setString(1, staff.getStaffFullName());
+            stmt.setString(2, staff.getStaffPassword());
+            stmt.setString(3, staff.getStaffGender());
+            stmt.setString(4, staff.getStaffImage());
+            stmt.setString(5, staff.getStaffGmail());
+            stmt.setString(6, staff.getStaffPhone());
+            stmt.setString(7, staff.getStaffPosition());
+            stmt.setString(8, staff.getStaffId());
             stmt.executeUpdate();
+            System.out.println("Rows updated: " +  stmt.executeUpdate());
         }
     }
-    
+
     // Update no pass
     public void updateProfileInfo(Staff staff) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE Staff SET staffFullName = ?, staffGender = ?, staffImage = ?, staffGmail = ?, staffPhone = ?, staffPosition = ? "

@@ -55,13 +55,14 @@ public class RegisterController extends HttpServlet {
 
         // Tạo đối tượng customer
         Customer user = new Customer();
+        user.setCusId(dao.generateNextCusId());
         user.setUsername(username);
         user.setCusPassword(password);
         user.setCusFullName(fullname);
         user.setCusGender(gender);
         user.setCusGmail(gmail);
         user.setCusPhone(phone);
-        user.setCusImage(null); // Nếu không có upload ảnh, có thể set null hoặc ảnh mặc định
+        user.setCusImage("default.png"); // Nếu không có upload ảnh, có thể set null hoặc ảnh mặc định
 
         dao.insertCustomer(user);
 
@@ -70,7 +71,7 @@ public class RegisterController extends HttpServlet {
         session.setAttribute("SUCCESS", "Registration successful! Please login.");
 
         // Redirect
-        response.sendRedirect(SUCCESS);
+        request.getRequestDispatcher(SUCCESS).forward(request, response);
 
     } catch (Exception e) {
         log("Error at RegisterController: " + e.toString());

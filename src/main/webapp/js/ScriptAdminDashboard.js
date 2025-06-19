@@ -40,6 +40,8 @@ function editProfile(role, id) {
     modal.show();
 }
 
+
+
 // Xử lý xem trước ảnh mới khi người dùng chọn ảnh mới
 document.addEventListener('DOMContentLoaded', function () {
     const imageInput = document.getElementById('editProfileImage');
@@ -144,28 +146,81 @@ function editUser(userId) {
     new bootstrap.Modal(document.getElementById('editUserModal')).show();
 }
 
-/*  function editUser(userId) {
- const row = document.querySelector(`tr[data-user-id="${userId}"]`);
- if (row) {
- // Set values directly in function call
- const username = row.getAttribute('data-username');
- const fullname = row.getAttribute('data-fullname');
- const role = row.getAttribute('data-role');
- 
- document.getElementById('editUserId').value = userId;
- document.getElementById('displayUsername').value = username;
- document.getElementById('editFullname').value = fullname;
- document.getElementById('editRole').value = role.toLowerCase();
- 
- console.log('User data:', {
- id: userId,
- username: username,
- fullname: fullname,
- role: role
- });
- }
- new bootstrap.Modal(document.getElementById('editUserModal')).show();
- }**/
+function editStaff(staffId) {
+
+    console.log("entered");
+    console.log("Editing staffId:", staffId);
+    const actionValue = document.querySelector('#editStaffModal form input[name="action"]').value;
+    console.log("Action value from modal:", actionValue);
+
+
+
+    const row = document.querySelector(`tr[data-staff-id="${staffId}"]`);
+
+
+    if (row) {
+
+        const staffName = row.getAttribute('data-staff-name') || '';
+        const fullName = row.getAttribute('data-staff-fullname') || '';
+        const password = row.getAttribute('data-staff-password') || '';
+        const gender = row.getAttribute('data-staff-gender') || '';
+        const gmail = row.getAttribute('data-staff-gmail') || '';
+        const phone = row.getAttribute('data-staff-phone') || '';
+        const position = row.getAttribute('data-staff-position') || '';
+        const image = row.getAttribute('data-staff-image') || '';
+
+
+
+        // Gửi dữ liệu thật bằng hidden input
+        document.getElementById('editStaffIdHidden').value = staffId;
+        console.log("Set hidden staffId:", document.getElementById('editStaffIdHidden').value);
+        document.getElementById('editStaffNameHidden').value = staffName;
+
+        document.getElementById('editStaffFullName').value = fullName;
+        document.getElementById('editStaffPassword').value = password;
+        const genderSelect = document.getElementById('editStaffGender');
+        Array.from(genderSelect.options).forEach(opt => {
+            opt.selected = opt.value === gender.trim();
+        });
+        console.log("Giá trị được set vào select:", gender.trim());
+
+
+        document.getElementById('editStaffGmail').value = gmail;
+        document.getElementById('editStaffPhone').value = phone;
+        document.getElementById('editStaffPosition').value = position;
+        document.getElementById('currentImagePath').value = image;
+
+
+        const imgPreview = document.getElementById('editStaffImagePreview');
+        imgPreview.src = '/images/staff/' + image;
+        imgPreview.style.display = 'block';
+
+        const fileInput = document.getElementById('editStaffImage');
+        fileInput.value = '';
+        fileInput.onchange = function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imgPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imgPreview.src = '/images/staff/' + image;
+            }
+        };
+    }
+    const modal = new bootstrap.Modal(document.getElementById('editStaffModal'));
+    modal.show();
+
+}
+function deleteStaff(staffId) {
+    if (confirm('Are you sure you want to delete this staff?')) {
+        window.location.href = '/AdminController?action=deleteStaff&id=' + staffId;
+    }
+}
+
+
 
 
 function deleteUser(id) {
@@ -278,15 +333,7 @@ function updateOrderStatus(orderId, newStatus) {
                 });
     }
 }
-function togglePasswordVisibility() {
-    const passwordInput = document.getElementById('editPassword');
-    const icon = document.getElementById('passwordToggleIcon');
-    const isPassword = passwordInput.type === 'password';
 
-    passwordInput.type = isPassword ? 'text' : 'password';
-    icon.classList.toggle('fa-eye', isPassword);
-    icon.classList.toggle('fa-eye-slash', !isPassword);
-}
 
 // Voucher functions
 function editVoucher(voucherId) {
@@ -331,4 +378,43 @@ function deleteVoucher(id) {
     if (confirm('Are you sure you want to delete this voucher?')) {
         window.location.href = '/AdminController?action=deleteVoucher&id=' + id;
     }
+}
+//view reply feedback
+function viewReply(feedbackId) {
+    const row = document.querySelector(`tr[data-feedback-id="${feedbackId}"]`);
+
+    if (!row) {
+        console.error("No matching row for feedbackId:", feedbackId);
+        return;
+    }
+
+    const content = row.getAttribute("data-reply-content") || "No reply content.";
+    const staffId = row.getAttribute("data-staff-id") || "Unknown";
+    const replyTime = row.getAttribute("data-reply-time") || "Unknown";
+
+    document.getElementById("modalReplyStaffId").textContent = staffId;
+    document.getElementById("modalReplyTime").textContent = replyTime;
+    document.getElementById("modalReplyContent").textContent = content;
+
+    const replyModal = new bootstrap.Modal(document.getElementById("replyModal"));
+    replyModal.show();
+}
+//reply feedback
+function replyFeedback(feedbackId) {
+    const row = document.querySelector(`tr[data-feedback-id="${feedbackId}"]`);
+    if (!row)
+        return;
+
+    // Lấy thông tin từ data-attribute
+    const cusId = row.getAttribute('data-cus-id');
+
+    // Gán vào form
+    document.getElementById('replyFeedbackId').value = feedbackId;
+    document.getElementById('replyCusId').value = cusId;
+    document.getElementById('staffSelect').value = ""; // Reset dropdown
+    document.getElementById('replyContent').value = ""; // Reset nội dung
+
+    // Mở modal
+    const modal = new bootstrap.Modal(document.getElementById('replyFeedbackModal'));
+    modal.show();
 }

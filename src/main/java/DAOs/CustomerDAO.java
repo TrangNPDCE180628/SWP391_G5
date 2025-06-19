@@ -124,5 +124,26 @@ public class CustomerDAO {
             }
         }
     }
-}
+    
+    public String generateNextCusId() throws SQLException, ClassNotFoundException {
+        String sql = "SELECT TOP 1 cusId FROM Customer ORDER BY cusId DESC";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
 
+            if (rs.next()) {
+                String lastId = rs.getString("cusId"); // VD: "C0012"
+                try {
+                    int num = Integer.parseInt(lastId.substring(1)); // Bỏ ký tự 'C' và parse số
+                    return String.format("C%04d", num + 1); // VD: "C0013"
+                } catch (NumberFormatException e) {
+                    // Trường hợp chuỗi không đúng định dạng
+                    throw new SQLException("Invalid cusId format: " + lastId);
+                }
+            } else {
+                return "C0001"; // Nếu chưa có dữ liệu nào
+            }
+        }
+    
+}
+}

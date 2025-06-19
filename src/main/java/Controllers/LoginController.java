@@ -3,7 +3,12 @@ package Controllers;
 
 
 import DAOs.ViewUserDAO;
-
+import DAOs.AdminDAO;
+import DAOs.CustomerDAO;
+import DAOs.StaffDAO;
+import Models.Admin;
+import Models.Staff;
+import Models.Customer;
 
 import Models.User;
 
@@ -26,11 +31,12 @@ public class LoginController extends HttpServlet {
     private static final String CS = "Customer";
     private static final String CUSTOMER_PAGE = "HomeController";
     private static final int PRODUCTS_PER_PAGE = 8;
-
+    
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         String url = ERROR;
+        
 
         try {
             String username = request.getParameter("username");
@@ -39,7 +45,7 @@ public class LoginController extends HttpServlet {
 
             ViewUserDAO viewDao = new ViewUserDAO();
             User loginUser = viewDao.getUserByUsername(username);
-
+            
             if (loginUser != null) {
                 // Check password
                 if (password.equals(loginUser.getPassword())) {
@@ -50,7 +56,7 @@ public class LoginController extends HttpServlet {
 
                     // Role-based redirection
                     String role = loginUser.getRole();
-                    if (AD.equals(role) || ST.equals(role)) {
+                    if (AD.equals(role)||ST.equals(role)) {
                         url = ADMIN_PAGE;
                     } else if (CS.equals(role)) {
                         url = CUSTOMER_PAGE;
@@ -71,6 +77,7 @@ public class LoginController extends HttpServlet {
             request.setAttribute("ERROR", "An error occurred during login. Please try again.");
         } finally {
             // Chuyển hướng lại trang theo kết quả xử lý
+            
             response.sendRedirect(url);
         }
     }
