@@ -288,6 +288,8 @@ function togglePasswordVisibility() {
     icon.classList.toggle('fa-eye-slash', !isPassword);
 }
 
+
+
 function editDiscount(id) {
     const row = document.querySelector(`tr[data-discount-id="${id}"]`);
     document.getElementById('editDiscountId').value = id;

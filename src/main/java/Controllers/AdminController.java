@@ -109,6 +109,7 @@ public class AdminController extends HttpServlet {
                     break;
                 case "deleteDiscount":
                     deleteDiscount(request, response);
+                    break;
 
                 /*Manage Voucher*/
                 case "addVoucher":
@@ -576,11 +577,11 @@ public class AdminController extends HttpServlet {
             DiscountDAO dao = new DiscountDAO();
             dao.create(discount);
 
-            response.sendRedirect("AdminController");
-        } catch (Exception e) {
-            throw new ServletException("Error adding discount: " + e.getMessage());
-        }
+            response.sendRedirect("AdminController?tab=discounts");
+    } catch (Exception e) {
+        throw new ServletException("Error adding discount: " + e.getMessage());
     }
+}
 
     private void updateDiscount(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -620,11 +621,11 @@ public class AdminController extends HttpServlet {
             DiscountDAO dao = new DiscountDAO();
             dao.delete(id);
 
-            response.sendRedirect("AdminController");
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
+            response.sendRedirect("AdminController?tab=discounts");
+    } catch (Exception e) {
+        throw new ServletException(e);
     }
+}
 
     private String getFileName(Part part) {
         String contentDisp = part.getHeader("content-disposition");
