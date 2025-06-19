@@ -7,6 +7,7 @@ import DAOs.OrderDAO;
 import DAOs.ProductDAO;
 import DAOs.StaffDAO;
 import DAOs.VoucherDAO;
+import DAOs.ProductSpecDAO;
 
 import Models.Admin;
 import Models.Category;
@@ -16,6 +17,7 @@ import Models.Product;
 import Models.Staff;
 import Models.Voucher;
 import Models.User;
+import Models.ProductSpecification;
 
 import com.google.gson.Gson;
 
@@ -59,6 +61,19 @@ public class AdminController extends HttpServlet {
             }
 
             switch (action) {
+                case "addProductSpec":
+                    addProductSpec(request, response);
+                    break;
+                case "updateProductSpec":
+                    updateProductSpec(request, response);
+                    break;
+                case "deleteProductSpec":
+                    deleteProductSpec(request, response);
+                    break;
+                case "getProductSpec":
+                    getProductSpec(request, response);
+                    break;
+
                 case "editProfile":
                     editProfile(request, response);
                     break;
@@ -132,18 +147,21 @@ public class AdminController extends HttpServlet {
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
+            ProductSpecDAO productSpecDAO = new ProductSpecDAO();
 
             List<Category> productTypes = productTypeDAO.getAllCategories();
             List<Product> products = productDAO.getAllProducts();
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
             List<Voucher> vouchers = voucherDAO.getAll();
+            List<ProductSpecification> productSpecs = productSpecDAO.getAll();
 
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("products", products);
             request.setAttribute("users", users);
             request.setAttribute("staffs", staffs);
             request.setAttribute("vouchers", vouchers);
+            request.setAttribute("productSpecs", productSpecs);
 
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
@@ -174,7 +192,7 @@ public class AdminController extends HttpServlet {
             String fullName = request.getParameter("fullName");
             String email = request.getParameter("email");
 
-            Part imagePart = request.getPart("image"); 
+            Part imagePart = request.getPart("image");
             String currentImage = request.getParameter("currentImage");
 
             String imageFileName = "";
@@ -637,6 +655,87 @@ public class AdminController extends HttpServlet {
         int quantity;
         double unitPrice;
         double totalPrice;
+    }
+
+    private void addProductSpec(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String productId = request.getParameter("productId");
+            String cpu = request.getParameter("cpu");
+            String ram = request.getParameter("ram");
+            String storage = request.getParameter("storage");
+            String screen = request.getParameter("screen");
+            String os = request.getParameter("os");
+            String battery = request.getParameter("battery");
+            String camera = request.getParameter("camera");
+            String graphic = request.getParameter("graphic");
+
+            ProductSpecification spec = new ProductSpecification(0, productId, cpu, ram, storage, screen, os, battery, camera, graphic);
+            ProductSpecDAO dao = new ProductSpecDAO();
+            dao.create(spec);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException("Error adding product specification", e);
+        }
+    }
+
+    private void updateProductSpec(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int specId = Integer.parseInt(request.getParameter("specId"));
+            String productId = request.getParameter("productId");
+            String cpu = request.getParameter("cpu");
+            String ram = request.getParameter("ram");
+            String storage = request.getParameter("storage");
+            String screen = request.getParameter("screen");
+            String os = request.getParameter("os");
+            String battery = request.getParameter("battery");
+            String camera = request.getParameter("camera");
+            String graphic = request.getParameter("graphic");
+
+            ProductSpecification spec = new ProductSpecification(specId, productId, cpu, ram, storage, screen, os, battery, camera, graphic);
+            ProductSpecDAO dao = new ProductSpecDAO();
+            dao.update(spec);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException("Error updating product specification", e);
+        }
+    }
+
+    private void deleteProductSpec(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int specId = Integer.parseInt(request.getParameter("specId"));
+            ProductSpecDAO dao = new ProductSpecDAO();
+            dao.delete(specId);
+
+            response.sendRedirect("AdminController");
+        } catch (Exception e) {
+            throw new ServletException("Error deleting product specification", e);
+        }
+    }
+
+    private void getProductSpec(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String productId = request.getParameter("productId");
+            ProductSpecDAO dao = new ProductSpecDAO();
+            ProductSpecification spec = dao.getByProductId(productId);
+
+            response.setContentType("application/json");
+            PrintWriter out = response.getWriter();
+            if (spec != null) {
+                out.print(new Gson().toJson(spec));
+            } else {
+                out.print("{}");
+            }
+            out.flush();
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("Error fetching product specification");
+        }
     }
 
     @Override
