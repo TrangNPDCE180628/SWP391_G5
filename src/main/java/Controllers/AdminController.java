@@ -4,6 +4,7 @@ import DAOs.AdminDAO;
 import DAOs.CategoryDAO;
 import DAOs.CustomerDAO;
 import DAOs.OrderDAO;
+import DAOs.OrderDetailDAO;
 import DAOs.ProductDAO;
 import DAOs.StaffDAO;
 import DAOs.DiscountDAO;
@@ -14,6 +15,7 @@ import Models.Admin;
 import Models.Category;
 import Models.Customer;
 import Models.Order;
+import Models.OrderDetail;
 import Models.Product;
 import Models.Staff;
 import Models.Discount;
@@ -63,8 +65,7 @@ public class AdminController extends HttpServlet {
             }
 
             switch (action) {
-
-                /* Manage Profile*/
+                /* Manage Profile */
                 case "editProfile":
                     editProfile(request, response);
                     break;
@@ -78,7 +79,7 @@ public class AdminController extends HttpServlet {
                     deleteProductType(request, response);
                     break;
 
-                /*Manage Product*/
+                /* Manage Product */
                 case "addProduct":
                     addProduct(request, response);
                     break;
@@ -89,7 +90,7 @@ public class AdminController extends HttpServlet {
                     deleteProduct(request, response);
                     break;
 
-                /*Manage Customer*/
+                /* Manage Customer */
                 case "addUser":
                     addUser(request, response);
                     break;
@@ -100,7 +101,7 @@ public class AdminController extends HttpServlet {
                     deleteUser(request, response);
                     break;
 
-                /*Manage Discount*/
+                /* Manage Discount */
                 case "addDiscount":
                     addDiscount(request, response);
                     break;
@@ -109,8 +110,9 @@ public class AdminController extends HttpServlet {
                     break;
                 case "deleteDiscount":
                     deleteDiscount(request, response);
+                    break;
 
-                /*Manage Voucher*/
+                /* Manage Voucher */
                 case "addVoucher":
                     addVoucher(request, response);
                     break;
@@ -124,7 +126,7 @@ public class AdminController extends HttpServlet {
                     getVoucherDetails(request, response);
                     break;
 
-                /*Manage Product Specification*/
+                /* Manage Product Specification */
                 case "addProductSpec":
                     addProductSpec(request, response);
                     break;
@@ -136,6 +138,17 @@ public class AdminController extends HttpServlet {
                     break;
                 case "getProductSpec":
                     getProductSpec(request, response);
+                    break;
+
+                /* Manage Orders */
+                case "viewOrderDetails":
+                    viewOrderDetails(request, response);
+                    break;
+                case "updateOrderStatus":
+                    updateOrderStatus(request, response);
+                    break;
+                case "filterOrdersByStatus":
+                    filterOrdersByStatus(request, response);
                     break;
 
                 default:
@@ -159,6 +172,7 @@ public class AdminController extends HttpServlet {
             DiscountDAO discountDAO = new DiscountDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
             ProductSpecDAO productSpecDAO = new ProductSpecDAO();
+            OrderDAO orderDAO = new OrderDAO();
 
             List<Category> productTypes = productTypeDAO.getAllCategories();
             List<Product> products = productDAO.getAllProducts();
@@ -167,6 +181,7 @@ public class AdminController extends HttpServlet {
             List<Discount> discounts = discountDAO.getAll();
             List<Voucher> vouchers = voucherDAO.getAll();
             List<ProductSpecification> productSpecs = productSpecDAO.getAll();
+            List<Order> orders = orderDAO.getAll();
 
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("products", products);
@@ -175,6 +190,7 @@ public class AdminController extends HttpServlet {
             request.setAttribute("discounts", discounts);
             request.setAttribute("vouchers", vouchers);
             request.setAttribute("productSpecs", productSpecs);
+            request.setAttribute("orders", orders);
 
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
@@ -195,6 +211,97 @@ public class AdminController extends HttpServlet {
         } catch (Exception e) {
             throw new ServletException(e);
         }
+    }
+
+    private void viewOrderDetails(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException, ClassNotFoundException {
+        int orderId = Integer.parseInt(request.getParameter("id"));
+        OrderDAO orderDAO = new OrderDAO();
+        OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
+        CustomerDAO customerDAO = new CustomerDAO();
+
+        Order order = orderDAO.getById(orderId);
+        if (order == null) {
+            request.setAttribute("ERROR", "Order not found.");
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+            return;
+        }
+
+        List<OrderDetail> orderDetails = orderDetailDAO.getByOrderId(orderId);
+        Customer customer = customerDAO.getCustomerById(order.getCusId());
+
+        request.setAttribute("order", order);
+        request.setAttribute("orderDetails", orderDetails);
+        request.setAttribute("customer", customer);
+        request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
+    }
+
+    private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException, ClassNotFoundException {
+        int orderId = Integer.parseInt(request.getParameter("id"));
+        String status = request.getParameter("status");
+        String currentFilter = request.getParameter("currentFilter");
+
+        // Kiểm tra trạng thái hợp lệ
+        if (!status.equals("Pending") && !status.equals("Done") && !status.equals("Cancel")) {
+            request.setAttribute("ERROR", "Invalid status.");
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+            return;
+        }
+
+        // Cập nhật trạng thái đơn hàng
+        OrderDAO orderDAO = new OrderDAO();
+        orderDAO.updateOrderStatus(orderId, status.toLowerCase());
+
+        // Chuyển hướng đến filterOrdersByStatus với bộ lọc hiện tại
+        String redirectUrl = "AdminController?action=filterOrdersByStatus&status=" + 
+                             (currentFilter != null ? currentFilter : "All");
+        response.sendRedirect(redirectUrl);
+    }
+
+    private void filterOrdersByStatus(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException, ClassNotFoundException {
+        String status = request.getParameter("status");
+
+        OrderDAO orderDAO = new OrderDAO();
+        List<Order> orders;
+
+        if (status == null || status.isEmpty() || status.equalsIgnoreCase("All")) {
+            orders = orderDAO.getAll();
+            status = "All";
+        } else {
+            // Chuẩn hóa trạng thái để khớp với database (done, pending, cancel)
+            String normalizedStatus = status.toLowerCase();
+            if (!normalizedStatus.equals("done") && !normalizedStatus.equals("pending") && !normalizedStatus.equals("cancel")) {
+                request.setAttribute("ERROR", "Invalid status.");
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+                return;
+            }
+            orders = orderDAO.getByStatus(normalizedStatus);
+        }
+
+        // Tải lại các dữ liệu khác để duy trì trạng thái trang admin
+        CategoryDAO productTypeDAO = new CategoryDAO();
+        ProductDAO productDAO = new ProductDAO();
+        CustomerDAO cusDAO = new CustomerDAO();
+        StaffDAO staffDAO = new StaffDAO();
+        DiscountDAO discountDAO = new DiscountDAO();
+        VoucherDAO voucherDAO = new VoucherDAO();
+        ProductSpecDAO productSpecDAO = new ProductSpecDAO();
+
+        request.setAttribute("productTypes", productTypeDAO.getAllCategories());
+        request.setAttribute("products", productDAO.getAllProducts());
+        request.setAttribute("users", cusDAO.getAllCustomers());
+        request.setAttribute("staffs", staffDAO.getAll());
+        request.setAttribute("discounts", discountDAO.getAll());
+        request.setAttribute("vouchers", voucherDAO.getAll());
+        request.setAttribute("productSpecs", productSpecDAO.getAll());
+        request.setAttribute("orders", orders);
+        request.setAttribute("selectedStatus", status);
+        request.setAttribute("activeTab", "orders");
+
+        // Chuyển tiếp đến admin.jsp với tab orders được kích hoạt
+        request.getRequestDispatcher("admin.jsp").forward(request, response);
     }
 
     private void editProfile(HttpServletRequest request, HttpServletResponse response)
@@ -666,7 +773,7 @@ public class AdminController extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("voucherId"));
             String codeName = request.getParameter("codeName");
-            String description = request.getParameter("voucherDescription"); // Optional, null nếu không có
+            String description = request.getParameter("voucherDescription");
             String discountType = request.getParameter("discountType");
             BigDecimal discountValue = new BigDecimal(request.getParameter("discountValue"));
             BigDecimal minOrderAmount = new BigDecimal(request.getParameter("minOrderAmount"));
@@ -805,14 +912,12 @@ public class AdminController extends HttpServlet {
 
     // Helper classes for JSON response
     private static class OrderDetailsResponse {
-
         Order order;
         String customerName;
         List<OrderItem> orderItems;
     }
 
     private static class OrderItem {
-
         String productName;
         int quantity;
         double unitPrice;
