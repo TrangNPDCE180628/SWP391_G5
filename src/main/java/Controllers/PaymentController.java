@@ -14,6 +14,7 @@ import java.io.IOException;
 
 @WebServlet(name = "PaymentController", urlPatterns = {"/PaymentController"})
 public class PaymentController extends HttpServlet {
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
@@ -29,7 +30,7 @@ public class PaymentController extends HttpServlet {
 
             OrderDAO orderDAO = new OrderDAO();
             Order order = orderDAO.getById(orderId);
-            if (order == null || order.getUserId() != user.getId()) {
+            if (order == null || !order.getCusId().equals(String.valueOf(user.getId()))) {
                 System.out.println("Order not found or user ID mismatch. Order: " + order);
                 request.setAttribute("error", "Order not found or access denied.");
                 request.getRequestDispatcher("error.jsp").forward(request, response);
@@ -77,8 +78,8 @@ public class PaymentController extends HttpServlet {
                 request.getRequestDispatcher("error.jsp").forward(request, response);
                 return;
             }
-            if (order.getUserId() != user.getId()) {
-                System.out.println("User ID mismatch. User ID: " + user.getId() + ", Order User ID: " + order.getUserId());
+            if (!order.getCusId().equals(String.valueOf(user.getId()))) {
+                System.out.println("User ID mismatch. User ID: " + user.getId() + ", Order Customer ID: " + order.getCusId());
                 request.setAttribute("error", "You do not have permission to pay for this order.");
                 request.getRequestDispatcher("error.jsp").forward(request, response);
                 return;
