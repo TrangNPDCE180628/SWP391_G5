@@ -12,6 +12,8 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <link href="css/admindashboard.css" rel="stylesheet" />
         <script src="${pageContext.request.contextPath}/js/ScriptAdminDashboard.js"></script>
+        <!-- Add Chart.js for charts -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
         <style>
             .action-buttons .btn {
                 margin-right: 5px;
@@ -27,6 +29,40 @@
             .action-buttons .btn-danger {
                 background-color: #dc3545;
                 border-color: #dc3545;
+            }
+            .status-badge-pending { background-color: #ffc107; color: black; }
+            .status-badge-done { background-color: #28a745; color: white; }
+            .status-badge-cancel { background-color: #dc3545; color: white; }
+            /* Revenue Dashboard Styles */
+            .kpi-card {
+                background: #fff;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .kpi-card h5 {
+                font-size: 1.1rem;
+                color: #6c757d;
+                margin-bottom: 10px;
+            }
+            .kpi-card .value {
+                font-size: 1.8rem;
+                font-weight: bold;
+                color: #343a40;
+            }
+            .chart-container {
+                background: #fff;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                margin-bottom: 20px;
+            }
+            .recent-transactions table {
+                background: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
         </style>
     </head>
@@ -84,6 +120,11 @@
                                     <i class="fas fa-microchip me-2"></i>Product Specs
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="#revenue" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fas fa-chart-line me-2"></i>Revenue
+                                </a>
+                            </li>
                         </ul>
                         <hr>
                         <div class="dropdown">
@@ -96,7 +137,6 @@
                                     <a class="dropdown-item" href="login.jsp">Logout</a>
                                 </li>
                             </ul>
-
                         </div>
                     </div>
                 </div>
@@ -104,16 +144,13 @@
                 <!-- Main Content -->
                 <div class="col-md-9 col-lg-10 main-content">
                     <div class="tab-content">
-
                         <!-- Profile Tab -->
                         <div class="tab-pane fade" id="profile">
                             <h2>My Profile</h2>
-
                             <button class="btn btn-primary mb-3"
                                     onclick="editProfile('${LOGIN_USER.role}', '${LOGIN_USER.id}')">
                                 <i class="fas fa-edit me-1"></i> Edit Profile
                             </button>
-
                             <div id="profileTabContent">
                                 <table class="table table-striped">
                                     <tbody>
@@ -150,7 +187,6 @@
                                                 </tr>
                                             </c:when>
                                         </c:choose>
-
                                         <tr>
                                             <th>Full Name</th>
                                             <td>
@@ -177,7 +213,6 @@
                                                 </c:choose>
                                             </td>
                                         </tr>
-
                                         <c:if test="${LOGIN_USER.role == 'Staff'}">
                                             <tr>
                                                 <th>Gender</th>
@@ -271,8 +306,7 @@
                                                 data-pro-image-main="${product.proImageMain}"
                                                 data-cate-id="${product.cateId}"
                                                 data-brand-id="${product.brandId}"
-                                                data-status="${product.status}"
-                                                >
+                                                data-status="${product.status}">
                                                 <td>${product.proId}</td>
                                                 <td>${product.proName}</td>
                                                 <td>$${product.proPrice}</td>
@@ -309,6 +343,7 @@
                                 </table>
                             </div>
                         </div>
+
                         <!-- Users Tab -->
                         <div class="tab-pane fade" id="users">
                             <h2>Customer Management</h2>
@@ -337,7 +372,6 @@
                                                 data-gmail="${cus.cusGmail}"
                                                 data-phone="${cus.cusPhone}"
                                                 data-image="${cus.cusImage}">
-
                                                 <td>${cus.cusId}</td>
                                                 <td>${cus.username}</td>
                                                 <td>${cus.cusFullName}</td>
@@ -392,7 +426,6 @@
                                                 data-phone="${staff.staffPhone}"
                                                 data-position="${staff.staffPosition}"
                                                 data-image="${staff.staffImage}">
-
                                                 <td>${staff.staffId}</td>
                                                 <td>${staff.staffName}</td>
                                                 <td>${staff.staffFullName}</td>
@@ -410,6 +443,71 @@
                                                     <button class="btn btn-sm btn-danger" onclick="deleteStaff('${staff.staffId}')">
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Orders Tab -->
+                        <div class="tab-pane fade" id="orders">
+                            <h2>Orders Management</h2>
+                            <div class="mb-3 d-flex align-items-center">
+                                <form action="AdminController" method="GET" class="d-flex">
+                                    <input type="hidden" name="action" value="filterOrdersByStatus">
+                                    <select name="status" class="form-select me-2" style="width: 200px;" onchange="this.form.submit()">
+                                        <option value="All" ${selectedStatus == 'All' ? 'selected' : ''}>All</option>
+                                        <option value="Pending" ${selectedStatus == 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="Done" ${selectedStatus == 'Done' ? 'selected' : ''}>Done</option>
+                                        <option value="Cancel" ${selectedStatus == 'Cancel' ? 'selected' : ''}>Cancel</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                </form>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Customer ID</th>
+                                            <th>Order Date</th>
+                                            <th>Total Amount</th>
+                                            <th>Discount</th>
+                                            <th>Final Amount</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach items="${orders}" var="order">
+                                            <tr>
+                                                <td>${order.id}</td>
+                                                <td>${order.cusId}</td>
+                                                <td><fmt:formatDate value="${order.orderDate}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
+                                                <td>$${order.totalAmount}</td>
+                                                <td>$${order.discountAmount}</td>
+                                                <td>$${order.finalAmount}</td>
+                                                <td>
+                                                    <span class="badge status-badge-${order.status}">
+                                                        ${order.status}
+                                                    </span>
+                                                </td>
+                                                <td class="action-buttons">
+                                                    <a href="AdminController?action=viewOrderDetails&id=${order.id}" class="btn btn-sm btn-info">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                    <div class="dropdown d-inline-block">
+                                                        <button class="btn btn-sm btn-warning dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                            <i class="fas fa-edit"></i> Update Status
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li><a class="dropdown-item" href="AdminController?action=updateOrderStatus&id=${order.id}&status=Pending¤tFilter=${selectedStatus}">Pending</a></li>
+                                                            <li><a class="dropdown-item" href="AdminController?action=updateOrderStatus&id=${order.id}&status=Done¤tFilter=${selectedStatus}">Done</a></li>
+                                                            <li><a class="dropdown-item" href="AdminController?action=updateOrderStatus&id=${order.id}&status=Cancel¤tFilter=${selectedStatus}">Cancel</a></li>
+                                                        </ul>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -502,37 +600,25 @@
                                         <tr>
                                             <th>ID</th>
                                             <th>Product ID</th>
-                                            <th>Discount Type</th>
-                                            <th>Discount Value</th>
+                                            <th>Type</th>
+                                            <th>Value</th>
                                             <th>Start Date</th>
                                             <th>End Date</th>
                                             <th>Active</th>
-                                            <th>Admin ID</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <c:forEach items="${discounts}" var="discount">
-                                            <tr data-discount-id="${discount.discountId}"
-                                                data-pro-id="${discount.proId}"
-                                                data-discount-type="${discount.discountType}"
-                                                data-discount-value="${discount.discountValue}"
-                                                data-start-date="<fmt:formatDate value='${discount.startDate}' pattern='yyyy-MM-dd' type='date'/>"
-                                                data-end-date="<fmt:formatDate value='${discount.endDate}' pattern='yyyy-MM-dd' type='date'/>"
-                                                data-active="${discount.active}"
-                                                data-admin-id="${discount.adminId}">
+                                            <tr>
                                                 <td>${discount.discountId}</td>
                                                 <td>${discount.proId}</td>
                                                 <td>${discount.discountType}</td>
                                                 <td>${discount.discountValue}</td>
-                                                <td><fmt:formatDate value="${discount.startDate}" pattern="yyyy-MM-dd" type="date"/></td>
-                                                <td><fmt:formatDate value="${discount.endDate}" pattern="yyyy-MM-dd" type="date"/></td>
+                                                <td><fmt:formatDate value="${discount.startDate}" pattern="yyyy-MM-dd" /></td>
+                                                <td><fmt:formatDate value="${discount.endDate}" pattern="yyyy-MM-dd" /></td>
                                                 <td>${discount.active ? 'Yes' : 'No'}</td>
-                                                <td>${discount.adminId}</td>
                                                 <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-info" onclick="viewDiscount('${discount.discountId}')">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </button>
                                                     <button class="btn btn-sm btn-warning" onclick="editDiscount('${discount.discountId}')">
                                                         <i class="fas fa-edit"></i> Edit
                                                     </button>
@@ -546,17 +632,18 @@
                                 </table>
                             </div>
                         </div>
-                        <!-- Product Specifications Tab -->
+
+                        <!-- Product Specs Tab -->
                         <div class="tab-pane fade" id="productSpecs">
-                            <h2>Product Specification Management</h2>
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addSpecModal">
+                            <h2>Product Specifications Management</h2>
+                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductSpecModal">
                                 <i class="fas fa-plus"></i> Add New Specification
                             </button>
                             <div class="table-responsive">
                                 <table class="table table-striped">
                                     <thead>
                                         <tr>
-                                            <th>Spec ID</th>
+                                            <th>ID</th>
                                             <th>Product ID</th>
                                             <th>CPU</th>
                                             <th>RAM</th>
@@ -571,20 +658,10 @@
                                     </thead>
                                     <tbody>
                                         <c:forEach items="${productSpecs}" var="spec">
-                                            <tr 
-                                                data-spec-id="${spec.specId}"
-                                                data-product-id="${spec.productId}"
-                                                data-cpu="${spec.cpu}"
-                                                data-ram="${spec.ram}"
-                                                data-storage="${spec.storage}"
-                                                data-screen="${spec.screen}"
-                                                data-os="${spec.os}"
-                                                data-battery="${spec.battery}"
-                                                data-camera="${spec.camera}"
-                                                data-graphic="${spec.graphic}">
-                                                <td>${spec.specId}</td>
-                                                <td>${spec.productId}</td>
-                                                <td>${spec.cpu}</td>
+                                            <tr>
+                                                <td>${spec.id}</td>
+                                                <td>${spec.proId}</td>
+                                                <td>${spec.cpu.cpuName}</td>
                                                 <td>${spec.ram}</td>
                                                 <td>${spec.storage}</td>
                                                 <td>${spec.screen}</td>
@@ -592,17 +669,13 @@
                                                 <td>${spec.battery}</td>
                                                 <td>${spec.camera}</td>
                                                 <td>${spec.graphic}</td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-warning" onclick="editSpec(this)">
+                                                <td class="action-buttons">
+                                                    <button class="btn btn-sm btn-warning" onclick="editProductSpec('${spec.specId}')">
                                                         <i class="fas fa-edit"></i> Edit
                                                     </button>
-                                                    <form action="AdminController" method="post" style="display:inline;">
-                                                        <input type="hidden" name="action" value="deleteProductSpec">
-                                                        <input type="hidden" name="specId" value="${spec.specId}">
-                                                        <button type="submit" class="btn btn-sm btn-danger">
-                                                            <i class="fas fa-trash"></i> Delete
-                                                        </button>
-                                                    </form>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteProductSpec('${spec.specId}')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -611,76 +684,419 @@
                             </div>
                         </div>
 
-
-
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Edit Profile Modal -->
-        <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <form action="AdminController" method="post" enctype="multipart/form-data" class="modal-content">
-                    <!-- BẮT BUỘC: Cho servlet biết action đang gọi -->
-                    <input type="hidden" name="action" value="editProfile">
-
-                    <!-- Hidden fields -->
-                    <input type="hidden" name="userId" id="editUserId">
-                    <input type="hidden" name="userRole" id="editUserRole">
-                    <input type="hidden" name="currentImage" id="currentProfileImagePath">
-
-                    <div class="modal-body">
-                        <div class="row">
-                            <!-- Avatar -->
-                            <div class="col-md-4 text-center">
-                                <img id="previewProfileImage" src="" alt="Preview" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                                <input type="file" class="form-control" name="image" id="editProfileImage" accept="image/*">
+                        <!-- Revenue Tab -->
+                        <div class="tab-pane fade" id="revenue">
+                            <h2>Revenue Dashboard</h2>
+                            <!-- Header / Time Filters -->
+                            <div class="mb-3 d-flex align-items-center">
+                                <form action="AdminController" method="GET" class="d-flex">
+                                    <input type="hidden" name="action" value="filterRevenue">
+                                    <select name="timeRange" class="form-select me-2" style="width: 150px;">
+                                        <option value="day">Day</option>
+                                        <option value="week">Week</option>
+                                        <option value="month" selected>Month</option>
+                                        <option value="quarter">Quarter</option>
+                                        <option value="year">Year</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                    <input type="date" name="startDate" class="form-control me-2" style="width: 150px;">
+                                    <input type="date" name="endDate" class="form-control me-2" style="width: 150px;">
+                                    <select name="category" class="form-select me-2" style="width: 200px;">
+                                        <option value="all">All Categories</option>
+                                        <c:forEach items="${productTypes}" var="cate">
+                                            <option value="${cate.cateId}">${cate.cateName}</option>
+                                        </c:forEach>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                </form>
                             </div>
 
-                            <!-- Thông tin chung -->
-                            <div class="col-md-8">
-                                <div class="mb-3">
-                                    <label for="editProfileFullName" class="form-label">Full Name</label>
-                                    <input type="text" class="form-control" name="fullName" id="editProfileFullName" required>
+                            <!-- Key Metrics / KPIs -->
+                            <div class="row">
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>Total Revenue</h5>
+                                        <div class="value">$${revenueMetrics.totalRevenue}</div>
+                                    </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label for="editProfileEmail" class="form-label">Email</label>
-                                    <input type="email" class="form-control" name="email" id="editProfileEmail" required>
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>Total Orders</h5>
+                                        <div class="value">${revenueMetrics.totalOrders}</div>
+                                    </div>
                                 </div>
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>Products Sold</h5>
+                                        <div class="value">${revenueMetrics.totalProductsSold}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>New Customers</h5>
+                                        <div class="value">${revenueMetrics.newCustomers}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>Return Rate</h5>
+                                        <div class="value">${revenueMetrics.returnRate}%</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-2">
+                                    <div class="kpi-card">
+                                        <h5>Net Profit</h5>
+                                        <div class="value">$${revenueMetrics.netProfit}</div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                <!-- Staff-only fields -->
-                                <div id="staffFields" style="display: none;">
-                                    <div class="mb-3">
-                                        <label for="editProfileGender" class="form-label">Gender</label>
-                                        <select class="form-select" name="gender" id="editProfileGender">
-                                            <option value="Male">Male</option>
-                                            <option value="Female">Female</option>
-                                            <option value="Other">Other</option>
-                                        </select>
+                            <!-- Revenue Over Time Chart -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="chart-container">
+                                        <h5>Revenue Over Time</h5>
+                                        <canvas id="revenueOverTimeChart"></canvas>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="editProfilePhone" class="form-label">Phone</label>
-                                        <input type="text" class="form-control" name="phone" id="editProfilePhone">
+                                </div>
+                            </div>
+
+                            <!-- Revenue by Category/Product -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h5>Revenue by Category</h5>
+                                        <canvas id="revenueByCategoryChart"></canvas>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="editProfilePosition" class="form-label">Position</label>
-                                        <input type="text" class="form-control" name="position" id="editProfilePosition">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h5>Top 5 Products</h5>
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Product</th>
+                                                    <th>Revenue</th>
+                                                    <th>Units Sold</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach items="${topProducts}" var="product">
+                                                    <tr>
+                                                        <td>${product.proName}</td>
+                                                        <td>$${product.revenue}</td>
+                                                        <td>${product.unitsSold}</td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Revenue by Customer -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h5>Customer Type</h5>
+                                        <canvas id="customerTypeChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h5>Top 5 Customers</h5>
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Customer</th>
+                                                    <th>Total Spent</th>
+                                                    <th>Orders</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach items="${topCustomers}" var="customer">
+                                                    <tr>
+                                                        <td>${customer.cusFullName}</td>
+                                                        <td>$${customer.totalSpent}</td>
+                                                        <td>${customer.orderCount}</td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order Status -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="chart-container">
+                                        <h5>Order Status</h5>
+                                        <canvas id="orderStatusChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Transactions -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="recent-transactions">
+                                        <h5>Recent Transactions</h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Order ID</th>
+                                                        <th>Customer</th>
+                                                        <th>Date</th>
+                                                        <th>Amount</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:forEach items="${recentOrders}" var="order">
+                                                        <tr>
+                                                            <td>${order.id}</td>
+                                                            <td>${order.cusId}</td>
+                                                            <td><fmt:formatDate value="${order.orderDate}" pattern="yyyy-MM-dd HH:mm"/></td>
+                                                            <td>$${order.finalAmount}</td>
+                                                            <td>
+                                                                <span class="badge status-badge-${order.status}">
+                                                                    ${order.status}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save me-1"></i> Save Changes
-                        </button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-1"></i> Cancel
-                        </button>
+        <!-- Modals -->
+        <!-- Add Product Type Modal -->
+        <div class="modal fade" id="addProductTypeModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Product Type</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                </form>
+                    <div class="modal-body">
+                        <form action="AdminController" method="post" id="addProductTypeForm">
+                            <input type="hidden" name="action" value="addProductType">
+                            <div class="mb-3">
+                                <label for="typeName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="typeName" name="typeName" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Product Type</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- Add Product Modal -->
+        <div class="modal fade" id="addProductModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Product</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="AdminController" method="post" enctype="multipart/form-data" id="addProductForm">
+                            <input type="hidden" name="action" value="addProduct">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="productId" class="form-label">Product ID</label>
+                                    <input type="text" class="form-control" id="productId" name="productId" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="categoryId" class="form-label">Category</label>
+                                    <select class="form-select" id="categoryId" name="categoryId" required>
+                                        <c:forEach items="${productTypes}" var="cate">
+                                            <option value="${cate.cateId}">${cate.cateName}</option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="brandId" class="form-label">Brand</label>
+                                    <input type="number" class="form-control" id="brandId" name="brandId" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productName" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="productName" name="productName" required>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label for="productDescription" class="form-label">Description</label>
+                                    <textarea class="form-control" id="productDescription" name="productDescription" rows="4"></textarea>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productPrice" class="form-label">Price</label>
+                                    <input type="number" step="0.01" class="form-control" id="productPrice" name="productPrice" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productQuantity" class="form-label">Quantity</label>
+                                    <input type="number" class="form-control" id="productQuantity" name="productQuantity" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="warrantyMonths" class="form-label">Warranty (Months)</label>
+                                    <input type="number" class="form-control" id="warrantyMonths" name="warrantyMonths">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productModel" class="form-label">Model</label>
+                                    <input type="text" class="form-control" id="productModel" name="productModel">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productColor" class="form-label">Color</label>
+                                    <input type="text" class="form-control" id="productColor" name="productColor">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productWeight" class="form-label">Weight</label>
+                                    <input type="number" step="0.01" class="form-control" id="productWeight" name="productWeight">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productDimensions" class="form-label">Dimensions</label>
+                                    <input type="text" class="form-control" id="productDimensions" name="productDimensions">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productOrigin" class="form-label">Origin</label>
+                                    <input type="text" class="form-control" id="productOrigin" name="productOrigin">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productMaterial" class="form-label">Material</label>
+                                    <input type="text" class="form-control" id="productMaterial" name="productMaterial">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productConnectivity" class="form-label">Connectivity</label>
+                                    <input type="text" class="form-control" id="productConnectivity" name="productConnectivity">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productStatus" class="form-label">Status</label>
+                                    <select class="form-select" id="productStatus" name="productStatus">
+                                        <option value="1">Available</option>
+                                        <option value="2">Out of Stock</option>
+                                        <option value="0">Unavailable</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="productImage" class="form-label">Image</label>
+                                    <input type="file" class="form-control" id="productImage" name="image">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Product</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add User Modal -->
+        <div class="modal fade" id="addUserModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Customer</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="AdminController" method="post" id="addUserForm">
+                            <input type="hidden" name="action" value="addUser">
+                            <input type="hidden" name="role" value="customer">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="fullname" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="fullname" name="fullname" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="gender" class="form-label">Gender</label>
+                                <select class="form-select" id="gender" name="gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="gmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="gmail" name="gmail">
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="phone" name="phone">
+                            </div>
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Image</label>
+                                <input type="text" class="form-control" id="image" name="image">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Customer</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Staff Modal -->
+        <div class="modal fade" id="addStaffModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Staff</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="AdminController" method="post" id="addStaffForm">
+                            <input type="hidden" name="action" value="addUser">
+                            <input type="hidden" name="role" value="staff">
+                            <div class="mb-3">
+                                <label for="staffUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="staffUsername" name="username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="staffPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="staffPassword" name="password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="staffFullname" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="staffFullname" name="fullname" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="staffGender" class="form-label">Gender</label>
+                                <select class="form-select" id="staffGender" name="gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="staffGmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="staffGmail" name="gmail">
+                            </div>
+                            <div class="mb-3">
+                                <label for="staffPhone" class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="staffPhone" name="phone">
+                            </div>
+                            <div class="mb-3">
+                                <label for="staffImage" class="form-label">Image</label>
+                                <input type="text" class="form-control" id="staffImage" name="image">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Staff</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -690,147 +1106,66 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Add New Voucher</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form action="AdminController" method="post">
-                        <div class="modal-body">
+                    <div class="modal-body">
+                        <form action="AdminController" method="post" id="addVoucherForm">
                             <input type="hidden" name="action" value="addVoucher">
-
                             <div class="mb-3">
-                                <label for="codeName" class="form-label">Voucher Code</label>
+                                <label for="codeName" class="form-label">Code</label>
                                 <input type="text" class="form-control" id="codeName" name="codeName" required>
                             </div>
-
                             <div class="mb-3">
                                 <label for="voucherDescription" class="form-label">Description</label>
                                 <textarea class="form-control" id="voucherDescription" name="voucherDescription"></textarea>
                             </div>
-
                             <div class="mb-3">
                                 <label for="discountType" class="form-label">Discount Type</label>
-                                <select class="form-select" id="discountType" name="discountType" required>
-                                    <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed Amount ($)</option>
+                                <select class="form-select" id="discountType" name="discountType">
+                                    <option value="percentage">Percentage</option>
+                                    <option value="fixed">Fixed Amount</option>
                                 </select>
                             </div>
-
                             <div class="mb-3">
                                 <label for="discountValue" class="form-label">Discount Value</label>
                                 <input type="number" step="0.01" class="form-control" id="discountValue" name="discountValue" required>
                             </div>
-
                             <div class="mb-3">
-                                <label for="minOrderAmount" class="form-label">Min Order Amount</label>
-                                <input type="number" step="0.01" class="form-control" id="minOrderAmount" name="minOrderAmount" value="0">
+                                <label for="minOrderAmount" class="form-label">Minimum Order Amount</label>
+                                <input type="number" step="0.01" class="form-control" id="minOrderAmount" name="minOrderAmount" required>
                             </div>
-
                             <div class="mb-3">
                                 <label for="startDate" class="form-label">Start Date</label>
                                 <input type="date" class="form-control" id="startDate" name="startDate" required>
                             </div>
-
                             <div class="mb-3">
                                 <label for="endDate" class="form-label">End Date</label>
                                 <input type="date" class="form-control" id="endDate" name="endDate" required>
                             </div>
-
                             <div class="mb-3">
-                                <label for="voucherActive" class="form-label">Status</label>
-                                <select class="form-select" id="voucherActive" name="voucherActive" required>
+                                <label for="voucherActive" class="form-label">Active</label>
+                                <select class="form-select" id="voucherActive" name="voucherActive">
                                     <option value="true">Active</option>
                                     <option value="false">Inactive</option>
                                 </select>
                             </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <!-- Edit Voucher Modal -->
-        <div class="modal fade" id="editVoucherModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form action="AdminController" method="post">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Edit Voucher</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-
-                        <div class="modal-body">
-                            <input type="hidden" id="editVoucherId" name="voucherId">
-                            <input type="hidden" name="action" value="updateVoucher">
-
-                            <div class="mb-3">
-                                <label for="editCodeName" class="form-label">Voucher Code</label>
-                                <input type="text" class="form-control" id="editCodeName" name="codeName" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editDescription" class="form-label">Description</label>
-                                <textarea class="form-control" id="editDescription" name="voucherDescription" rows="3"></textarea>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editDiscountType" class="form-label">Discount Type</label>
-                                <select class="form-select" id="editDiscountType" name="discountType">
-                                    <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed Amount ($)</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editDiscountValue" class="form-label">Discount Value</label>
-                                <input type="number" class="form-control" id="editDiscountValue" name="discountValue" step="0.01" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editMinOrderAmount" class="form-label">Minimum Order Amount</label>
-                                <input type="number" class="form-control" id="editMinOrderAmount" name="minOrderAmount" step="0.01" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editStartDate" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="editStartDate" name="startDate" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editEndDate" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="editEndDate" name="endDate" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editVoucherActive" class="form-label">Status</label>
-                                <select class="form-select" id="editVoucherActive" name="voucherActive" required>
-                                    <option value="true">Active</option>
-                                    <option value="false">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Update</button>
-                        </div>
-                    </form>
+                            <button type="submit" class="btn btn-primary">Add Voucher</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Modals -->
+        <!-- Add Discount Modal -->
         <div class="modal fade" id="addDiscountModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Add New Discount</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form action="AdminController" method="post">
-                        <div class="modal-body">
+                    <div class="modal-body">
+                        <form action="AdminController" method="post" id="addDiscountForm">
                             <input type="hidden" name="action" value="addDiscount">
                             <div class="mb-3">
                                 <label for="proId" class="form-label">Product ID</label>
@@ -838,9 +1173,9 @@
                             </div>
                             <div class="mb-3">
                                 <label for="discountType" class="form-label">Discount Type</label>
-                                <select class="form-select" id="discountType" name="discountType" required>
+                                <select class="form-select" id="discountType" name="discountType">
                                     <option value="percentage">Percentage</option>
-                                    <option value="fixed">Fixed</option>
+                                    <option value="fixed">Fixed Amount</option>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -857,7 +1192,7 @@
                             </div>
                             <div class="mb-3">
                                 <label for="active" class="form-label">Active</label>
-                                <select class="form-select" id="active" name="active" required>
+                                <select class="form-select" id="active" name="active">
                                     <option value="true">Yes</option>
                                     <option value="false">No</option>
                                 </select>
@@ -866,178 +1201,201 @@
                                 <label for="adminId" class="form-label">Admin ID</label>
                                 <input type="text" class="form-control" id="adminId" name="adminId" required>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="editDiscountModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit Discount</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            <button type="submit" class="btn btn-primary">Add Discount</button>
+                        </form>
                     </div>
-                    <form action="AdminController" method="post">
-                        <div class="modal-body">
-                            <input type="hidden" name="action" value="updateDiscount">
-                            <input type="hidden" name="id" id="editDiscountId">
-                            <div class="mb-3">
-                                <label for="editProId" class="form-label">Product ID</label>
-                                <input type="text" class="form-control" id="editProId" name="proId">
-                            </div>
-                            <div class="mb-3">
-                                <label for="editDiscountType" class="form-label">Discount Type</label>
-                                <select class="form-select" id="editDiscountType" name="discountType">
-                                    <option value="percentage">Percentage</option>
-                                    <option value="fixed">Fixed</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editDiscountValue" class="form-label">Discount Value</label>
-                                <input type="number" step="0.01" class="form-control" id="editDiscountValue" name="discountValue">
-                            </div>
-                            <div class="mb-3">
-                                <label for="editStartDate" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="editStartDate" name="startDate">
-                            </div>
-                            <div class="mb-3">
-                                <label for="editEndDate" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="editEndDate" name="endDate">
-                            </div>
-                            <div class="mb-3">
-                                <label for="editActive" class="form-label">Active</label>
-                                <select class="form-select" id="editActive" name="active">
-                                    <option value="true">Yes</option>
-                                    <option value="false">No</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editAdminId" class="form-label">Admin ID</label>
-                                <input type="text" class="form-control" id="editAdminId" name="adminId">
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Update</button>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
 
-        <div class="modal fade" id="viewDiscountModal" tabindex="-1">
+        <!-- Add Product Specification Modal -->
+        <div class="modal fade" id="addProductSpecModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">View Discount</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title">Add New Product Specification</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Discount ID</label>
-                            <p id="viewDiscountId" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Product ID</label>
-                            <p id="viewProId" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Discount Type</label>
-                            <p id="viewDiscountType" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Discount Value</label>
-                            <p id="viewDiscountValue" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Start Date</label>
-                            <p id="viewStartDate" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">End Date</label>
-                            <p id="viewEndDate" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Active</label>
-                            <p id="viewActive" class="form-control-plaintext"></p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Admin ID</label>
-                            <p id="viewAdminId" class="form-control-plaintext"></p>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <form action="AdminController" method="post" id="addProductSpecForm">
+                            <input type="hidden" name="action" value="addProductSpec">
+                            <div class="mb-3">
+                                <label for="productId" class="form-label">Product ID</label>
+                                <input type="text" class="form-control" id="productId" name="productId" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="cpu" class="form-label">CPU</label>
+                                <input type="text" class="form-control" id="cpu" name="cpu">
+                            </div>
+                            <div class="mb-3">
+                                <label for="ram" class="form-label">RAM</label>
+                                <input type="text" class="form-control" id="ram" name="ram">
+                            </div>
+                            <div class="mb-3">
+                                <label for="storage" class="form-label">Storage</label>
+                                <input type="text" class="form-control" id="storage" name="storage">
+                            </div>
+                            <div class="mb-3">
+                                <label for="screen" class="form-label">Screen</label>
+                                <input type="text" class="form-control" id="screen" name="screen">
+                            </div>
+                            <div class="mb-3">
+                                <label for="os" class="form-label">OS</label>
+                                <input type="text" class="form-control" id="os" name="os">
+                            </div>
+                            <div class="mb-3">
+                                <label for="battery" class="form-label">Battery</label>
+                                <input type="text" class="form-control" id="battery" name="battery">
+                            </div>
+                            <div class="mb-3">
+                                <label for="camera" class="form-label">Camera</label>
+                                <input type="text" class="form-control" id="camera" name="camera">
+                            </div>
+                            <div class="mb-3">
+                                <label for="graphic" class="form-label">Graphic</label>
+                                <input type="text" class="form-control" id="graphic" name="graphic">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Specification</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Edit Specification Modal -->
-        <div class="modal fade" id="addSpecModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <form id="specForm" method="post" action="AdminController" class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add / Edit Specification</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body row g-3 px-3">
-                        <input type="hidden" name="action" id="specFormAction" value="addProductSpec">
-                        <input type="hidden" name="specId" id="specId">
 
-                        <div class="col-md-6">
-                            <label for="productId" class="form-label">Product ID</label>
-                            <input type="text" class="form-control" name="productId" id="productId" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="cpu" class="form-label">CPU</label>
-                            <input type="text" class="form-control" name="cpu" id="cpu">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="ram" class="form-label">RAM</label>
-                            <input type="text" class="form-control" name="ram" id="ram">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="storage" class="form-label">Storage</label>
-                            <input type="text" class="form-control" name="storage" id="storage">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="screen" class="form-label">Screen</label>
-                            <input type="text" class="form-control" name="screen" id="screen">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="os" class="form-label">OS</label>
-                            <input type="text" class="form-control" name="os" id="os">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="battery" class="form-label">Battery</label>
-                            <input type="text" class="form-control" name="battery" id="battery">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="camera" class="form-label">Camera</label>
-                            <input type="text" class="form-control" name="camera" id="camera">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="graphic" class="form-label">Graphic</label>
-                            <input type="text" class="form-control" name="graphic" id="graphic">
-                        </div>
-                    </div>
-                    <div class="modal-footer px-3">
-                        <button type="submit" class="btn btn-primary">Save</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Activate the Orders tab if specified
+            <c:if test="${activeTab == 'orders'}">
+                document.querySelector('a[href="#orders"]').click();
+            </c:if>
+            // Activate the Revenue tab if specified
+            <c:if test="${activeTab == 'revenue'}">
+                document.querySelector('a[href="#revenue"]').click();
+            </c:if>
 
-        
-        <script>const contextPath = '${pageContext.request.contextPath}';</script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+            // Initialize Charts with Error Handling
+            // Revenue Over Time Chart
+            let revenueOverTimeLabels = [];
+            let revenueOverTimeData = [];
+            let revenueOverTimePreviousData = [];
 
+            try {
+                revenueOverTimeLabels = JSON.parse('<c:out value="${revenueOverTime.labels}" escapeXml="true"/>');
+                revenueOverTimeData = JSON.parse('<c:out value="${revenueOverTime.data}" escapeXml="true"/>');
+                revenueOverTimePreviousData = JSON.parse('<c:out value="${revenueOverTime.previousData}" escapeXml="true"/>');
+            } catch (e) {
+                console.error('Error parsing revenue over time data:', e);
+                revenueOverTimeLabels = ['No Data'];
+                revenueOverTimeData = [0];
+                revenueOverTimePreviousData = [0];
+            }
+
+            const revenueOverTimeCtx = document.getElementById('revenueOverTimeChart').getContext('2d');
+            new Chart(revenueOverTimeCtx, {
+                type: 'line',
+                data: {
+                    labels: revenueOverTimeLabels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: revenueOverTimeData,
+                        borderColor: '#28a745',
+                        fill: false
+                    }, {
+                        label: 'Previous Period',
+                        data: revenueOverTimePreviousData,
+                        borderColor: '#ffc107',
+                        fill: false,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Revenue ($)' }
+                        }
+                    }
+                }
+            });
+
+            // Revenue by Category Chart
+            let revenueByCategoryLabels = [];
+            let revenueByCategoryData = [];
+
+            try {
+                revenueByCategoryLabels = JSON.parse('<c:out value="${revenueByCategory.labels}" escapeXml="true"/>');
+                revenueByCategoryData = JSON.parse('<c:out value="${revenueByCategory.data}" escapeXml="true"/>');
+            } catch (e) {
+                console.error('Error parsing revenue by category data:', e);
+                revenueByCategoryLabels = ['No Data'];
+                revenueByCategoryData = [0];
+            }
+
+            const revenueByCategoryCtx = document.getElementById('revenueByCategoryChart').getContext('2d');
+            new Chart(revenueByCategoryCtx, {
+                type: 'pie',
+                data: {
+                    labels: revenueByCategoryLabels,
+                    datasets: [{
+                        data: revenueByCategoryData,
+                        backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d']
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+
+            // Customer Type Chart
+            let customerTypeData = [];
+
+            try {
+                customerTypeData = JSON.parse('<c:out value="${customerType.data}" escapeXml="true"/>');
+            } catch (e) {
+                console.error('Error parsing customer type data:', e);
+                customerTypeData = [0, 0];
+            }
+
+            const customerTypeCtx = document.getElementById('customerTypeChart').getContext('2d');
+            new Chart(customerTypeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['New Customers', 'Returning Customers'],
+                    datasets: [{
+                        data: customerTypeData,
+                        backgroundColor: ['#28a745', '#17a2b8']
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+
+            // Order Status Chart
+            let orderStatusData = [];
+
+            try {
+                orderStatusData = JSON.parse('<c:out value="${orderStatus.data}" escapeXml="true"/>');
+            } catch (e) {
+                console.error('Error parsing order status data:', e);
+                orderStatusData = [0, 0, 0];
+            }
+
+            const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
+            new Chart(orderStatusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending', 'Done', 'Cancel'],
+                    datasets: [{
+                        data: orderStatusData,
+                        backgroundColor: ['#ffc107', '#28a745', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        </script>
     </body>
 </html>
