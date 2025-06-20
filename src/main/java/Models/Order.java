@@ -20,7 +20,7 @@ public class Order {
     }
 
     // UPDATED: Constructor updated to include new fields
-    public Order(int id, String cusId, Timestamp orderDate, String status, double totalAmount,
+public Order(int id, String cusId, Timestamp orderDate, String status, double totalAmount,
             double discountAmount, double finalAmount, String paymentMethod, String shippingAddress) {
         this.id = id;
         this.cusId = cusId;
@@ -69,6 +69,7 @@ public class Order {
     // UPDATED: Getter and setter for totalAmount
     public double getTotalAmount() {
         return totalAmount;
+
     }
 
     public void setTotalAmount(double totalAmount) {
@@ -119,3 +120,4 @@ public class Order {
         this.orderDetails = orderDetails;
     }
 }
+

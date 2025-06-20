@@ -82,3 +82,4 @@ public class OrderDetail {
         this.voucherId = voucherId;
     }
 }
+

@@ -13,6 +13,7 @@ public class OrderDAO {
     public void create(Order order) throws SQLException, ClassNotFoundException {
         String sql = "INSERT INTO [Order] (cusId, orderDate, totalAmount, discountAmount, paymentMethod, shippingAddress, orderStatus) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             stmt.setString(1, order.getCusId());
             stmt.setTimestamp(2, order.getOrderDate());
             stmt.setDouble(3, order.getTotalAmount());
@@ -33,6 +34,7 @@ public class OrderDAO {
     public Order getById(int id) throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM [Order] WHERE orderId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -68,6 +70,7 @@ public class OrderDAO {
                         rs.getDouble("finalAmount"),
                         rs.getString("paymentMethod"),
                         rs.getString("shippingAddress")
+
                 ));
             }
             return orders;
@@ -126,6 +129,7 @@ public class OrderDAO {
     public void update(Order order) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE [Order] SET cusId = ?, order_date = ?, orderStatus = ?, totalAmount = ?, discountAmount = ?, paymentMethod = ?, shippingAddress = ? WHERE orderId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, order.getCusId());
             stmt.setTimestamp(2, order.getOrderDate());
             stmt.setString(3, order.getStatus());
@@ -142,6 +146,7 @@ public class OrderDAO {
     public void delete(int id) throws SQLException, ClassNotFoundException {
         String sql = "DELETE FROM [Order] WHERE orderId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, id);
             stmt.executeUpdate();
         }
@@ -151,9 +156,11 @@ public class OrderDAO {
     public void updateOrderStatus(int id, String status) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE [Order] SET orderStatus = ? WHERE orderId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, status);
             stmt.setInt(2, id);
             stmt.executeUpdate();
         }
     }
 }
+
