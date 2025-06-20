@@ -288,6 +288,40 @@ function togglePasswordVisibility() {
     icon.classList.toggle('fa-eye-slash', !isPassword);
 }
 
+
+
+function editDiscount(id) {
+    const row = document.querySelector(`tr[data-discount-id="${id}"]`);
+    document.getElementById('editDiscountId').value = id;
+    document.getElementById('editProId').value = row.dataset.proId;
+    document.getElementById('editDiscountType').value = row.dataset.discountType;
+    document.getElementById('editDiscountValue').value = row.dataset.discountValue;
+    document.getElementById('editStartDate').value = row.dataset.startDate;
+    document.getElementById('editEndDate').value = row.dataset.endDate;
+    document.getElementById('editActive').value = row.dataset.active;
+    document.getElementById('editAdminId').value = row.dataset.adminId;
+    new bootstrap.Modal(document.getElementById('editDiscountModal')).show();
+}
+
+function deleteDiscount(id) {
+    if (confirm('Are you sure you want to delete this discount?')) {
+        window.location.href = `AdminController?action=deleteDiscount&id=${id}`;
+    }
+}
+
+// NEW: Add viewDiscount function
+function viewDiscount(id) {
+    const row = document.querySelector(`tr[data-discount-id="${id}"]`);
+    document.getElementById('viewDiscountId').textContent = id;
+    document.getElementById('viewProId').textContent = row.dataset.proId;
+    document.getElementById('viewDiscountType').textContent = row.dataset.discountType;
+    document.getElementById('viewDiscountValue').textContent = row.dataset.discountValue;
+    document.getElementById('viewStartDate').textContent = row.dataset.startDate;
+    document.getElementById('viewEndDate').textContent = row.dataset.endDate;
+    document.getElementById('viewActive').textContent = row.dataset.active === 'true' ? 'Yes' : 'No';
+    document.getElementById('viewAdminId').textContent = row.dataset.adminId;
+    new bootstrap.Modal(document.getElementById('viewDiscountModal')).show();
+}
 // Voucher functions
 function editVoucher(voucherId) {
     const row = document.querySelector(`tr[data-voucher-id="${voucherId}"]`);
@@ -332,3 +366,21 @@ function deleteVoucher(id) {
         window.location.href = '/AdminController?action=deleteVoucher&id=' + id;
     }
 }
+
+function editSpec(button) {
+    const row = button.closest('tr');
+    document.getElementById("specFormAction").value = "updateProductSpec";
+    document.getElementById("specId").value = row.dataset.specId;
+    document.getElementById("productId").value = row.dataset.productId;
+    document.getElementById("cpu").value = row.dataset.cpu;
+    document.getElementById("ram").value = row.dataset.ram;
+    document.getElementById("storage").value = row.dataset.storage;
+    document.getElementById("screen").value = row.dataset.screen;
+    document.getElementById("os").value = row.dataset.os;
+    document.getElementById("battery").value = row.dataset.battery;
+    document.getElementById("camera").value = row.dataset.camera;
+    document.getElementById("graphic").value = row.dataset.graphic;
+
+    new bootstrap.Modal(document.getElementById("addSpecModal")).show();
+}
+
