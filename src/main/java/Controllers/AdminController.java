@@ -9,6 +9,7 @@ import DAOs.StaffDAO;
 import DAOs.DiscountDAO;
 import DAOs.VoucherDAO;
 import DAOs.ProductSpecDAO;
+import DAOs.ProductTypeDAO;
 
 import Models.Admin;
 import Models.Category;
@@ -20,6 +21,7 @@ import Models.Discount;
 import Models.Voucher;
 import Models.User;
 import Models.ProductSpecification;
+import Models.ProductTypes;
 
 import com.google.gson.Gson;
 
@@ -69,6 +71,17 @@ public class AdminController extends HttpServlet {
                     editProfile(request, response);
                     break;
 
+                // Product Type
+                case "addProductType":
+                    addProductType(request, response);
+                    break;
+                case "updateProductType":
+                    updateProductType(request, response);
+                    break;
+                case "deleteProductType":
+                    deleteProductType(request, response);
+                    break;
+
                 /*Manage Voucher*/
                 case "addVoucher":
                     addVoucher(request, response);
@@ -102,14 +115,17 @@ public class AdminController extends HttpServlet {
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
+            ProductTypeDAO productTypeDAO = new ProductTypeDAO();
 
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
             List<Voucher> vouchers = voucherDAO.getAll();
+            List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes();
 
             request.setAttribute("users", users);
             request.setAttribute("staffs", staffs);
             request.setAttribute("vouchers", vouchers);
+            request.setAttribute("productTypes", productTypes);
 
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
@@ -216,6 +232,51 @@ public class AdminController extends HttpServlet {
         return "";
     }
 
+    private void addProductType(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    try {
+        String name = request.getParameter("typeName");
+        if (name != null && !name.trim().isEmpty()) {
+            ProductTypeDAO dao = new ProductTypeDAO();
+            ProductTypes type = new ProductTypes();
+            type.setName(name);
+            dao.addProductType(type);
+        }
+        response.sendRedirect("AdminController?tab=productTypes");
+    } catch (Exception e) {
+        throw new ServletException(e);
+    }
+}
+
+private void updateProductType(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    try {
+        int id = Integer.parseInt(request.getParameter("typeId"));
+        String name = request.getParameter("typeName");
+        if (name != null && !name.trim().isEmpty()) {
+            ProductTypeDAO dao = new ProductTypeDAO();
+            ProductTypes type = new ProductTypes();
+            type.setId(id);
+            type.setName(name);
+            dao.updateProductType(type);
+        }
+        response.sendRedirect("AdminController?tab=productTypes");
+    } catch (Exception e) {
+        throw new ServletException(e);
+    }
+}
+
+private void deleteProductType(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    try {
+        int id = Integer.parseInt(request.getParameter("id"));
+        ProductTypeDAO dao = new ProductTypeDAO();
+        dao.deleteProductType(id);
+        response.sendRedirect("AdminController?tab=productTypes");
+    } catch (Exception e) {
+        throw new ServletException(e);
+    }
+}
     private void addVoucher(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {

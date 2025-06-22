@@ -44,6 +44,12 @@
                                     <i class="fas fa-user me-2"></i>Profile
                                 </a>
                             </li>
+                            <!-- UPDATED: Added Product Types tab -->
+                            <li class="nav-item">
+                                <a href="#productTypes" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fas fa-tags me-2"></i>Product Types
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
                                     <i class="fa-solid fa-ticket me-2"></i>Voucher
@@ -157,6 +163,41 @@
                                                 <td>${profile.staffPosition}</td>
                                             </tr>
                                         </c:if>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Product Types Tab -->
+                        <div class="tab-pane fade" id="productTypes">
+                            <h2>Product Types Management</h2>
+                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductTypeModal">
+                                <i class="fas fa-plus"></i> Add New Product Type
+                            </button>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="productTypesTableBody">
+                                        <c:forEach items="${productTypes}" var="type">
+                                            <tr data-type-id="${type.id}" data-type-name="${type.name}">
+                                                <td>${type.id}</td>
+                                                <td>${type.name}</td>
+                                                <td class="action-buttons">
+                                                    <button class="btn btn-sm btn-warning" onclick="editProductType(${type.id}, '${type.name}')">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteProductType(${type.id})">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
                                     </tbody>
                                 </table>
                             </div>
@@ -305,6 +346,60 @@
 
             </div>
         </div>
+
+        <!-- UPDATED: Add Product Type Modal -->
+        <div class="modal fade" id="addProductTypeModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Product Type</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="addProductTypeForm" action="AdminController" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="addProductType">
+                            <input type="hidden" name="tab" value="productTypes">
+                            <div class="mb-3">
+                                <label for="typeName" class="form-label">Product Type Name</label>
+                                <input type="text" class="form-control" id="typeName" name="typeName" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPDATED: Edit Product Type Modal -->
+        <div class="modal fade" id="editProductTypeModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Product Type</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="editProductTypeForm" action="AdminController" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="updateProductType">
+                            <input type="hidden" name="tab" value="productTypes">
+                            <input type="hidden" name="typeId" id="editTypeId"> 
+                            <div class="mb-3">
+                                <label for="editTypeName" class="form-label">Product Type Name</label>
+                                <input type="text" class="form-control" id="editTypeName" name="typeName" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Add Voucher Modal -->
         <div class="modal fade" id="addVoucherModal" tabindex="-1">

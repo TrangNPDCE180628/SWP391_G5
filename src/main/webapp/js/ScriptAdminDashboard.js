@@ -183,7 +183,6 @@ function deleteUser(id) {
     }
 }
 
-// Product Type functions
 function editProductType(id, name) {
     document.getElementById('editTypeId').value = id;
     document.getElementById('editTypeName').value = name;
@@ -192,7 +191,7 @@ function editProductType(id, name) {
 
 function deleteProductType(id) {
     if (confirm('Are you sure you want to delete this product type?')) {
-        window.location.href = '/AdminController?action=deleteProductType&id=' + id;
+        window.location.href = `${contextPath}/AdminController?action=deleteProductType&id=${id}&tab=productTypes`;
     }
 }
 
