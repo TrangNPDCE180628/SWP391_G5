@@ -4,7 +4,16 @@
  */
 // Lưu ý: bạn cần khai báo biến contextPath ở file JSP như sau:
 // <script>const contextPath = '${pageContext.request.contextPath}';</script>
-
+document.addEventListener("DOMContentLoaded", function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get("tab");
+    if (activeTab) {
+        const tabTrigger = document.querySelector(`a[href="#${activeTab}"]`);
+        if (tabTrigger) {
+            new bootstrap.Tab(tabTrigger).show();
+        }
+    }
+});
 function editProfile(role, id) {
     const row = document.querySelector(`tr[data-user-id="${id}"][data-user-role="${role}"]`);
     if (!row)

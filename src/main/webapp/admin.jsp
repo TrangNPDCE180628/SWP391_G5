@@ -234,7 +234,7 @@
                             </div>
                         </div>
 
-                        
+
                     </div>
                 </div>
             </div>
@@ -245,7 +245,7 @@
                 <form action="AdminController" method="post" enctype="multipart/form-data" class="modal-content">
                     <!-- BẮT BUỘC: Cho servlet biết action đang gọi -->
                     <input type="hidden" name="action" value="editProfile">
-
+                    <input type="hidden" name="tab" value="profile">
                     <!-- Hidden fields -->
                     <input type="hidden" name="userId" id="editUserId">
                     <input type="hidden" name="userRole" id="editUserRole">
@@ -317,7 +317,7 @@
                     <form action="AdminController" method="post">
                         <div class="modal-body">
                             <input type="hidden" name="action" value="addVoucher">
-
+                            <input type="hidden" name="tab" value="vouchers">
                             <div class="mb-3">
                                 <label for="codeName" class="form-label">Voucher Code</label>
                                 <input type="text" class="form-control" id="codeName" name="codeName" required>
@@ -373,7 +373,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Edit Voucher Modal -->
         <div class="modal fade" id="editVoucherModal" tabindex="-1">
             <div class="modal-dialog">
@@ -383,7 +383,8 @@
                             <h5 class="modal-title">Edit Voucher</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-
+                        <input type="hidden" name="action" value="updateVoucher">
+                        <input type="hidden" name="tab" value="vouchers">
                         <div class="modal-body">
                             <input type="hidden" id="editVoucherId" name="voucherId">
                             <input type="hidden" name="action" value="updateVoucher">
@@ -444,7 +445,7 @@
             </div>
         </div>
 
-        
+
         <script>const contextPath = '${pageContext.request.contextPath}';</script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 

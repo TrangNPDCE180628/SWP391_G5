@@ -68,7 +68,6 @@ public class AdminController extends HttpServlet {
                 case "editProfile":
                     editProfile(request, response);
                     break;
-              
 
                 /*Manage Voucher*/
                 case "addVoucher":
@@ -84,7 +83,6 @@ public class AdminController extends HttpServlet {
                     getVoucherDetails(request, response);
                     break;
 
-
                 default:
                     loadAdminPage(request, response);
             }
@@ -98,6 +96,8 @@ public class AdminController extends HttpServlet {
     private void loadAdminPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
+//            String activeTab = request.getParameter("tab");
+//            request.setAttribute("activeTab", activeTab);
             // Load common data
             CategoryDAO productTypeDAO = new CategoryDAO();
             ProductDAO productDAO = new ProductDAO();
@@ -204,7 +204,7 @@ public class AdminController extends HttpServlet {
                 }
             }
 
-            loadAdminPage(request, response);
+            response.sendRedirect("AdminController?tab=profile");
 
         } catch (Exception e) {
             log("Error in editProfile(): " + e.getMessage());
@@ -243,7 +243,7 @@ public class AdminController extends HttpServlet {
             VoucherDAO dao = new VoucherDAO();
             dao.create(voucher);
 
-            response.sendRedirect("AdminController");
+            response.sendRedirect("AdminController?tab=vouchers");
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -268,7 +268,7 @@ public class AdminController extends HttpServlet {
             VoucherDAO dao = new VoucherDAO();
             dao.update(voucher);
 
-            response.sendRedirect("AdminController");
+            response.sendRedirect("AdminController?tab=vouchers");
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -281,7 +281,7 @@ public class AdminController extends HttpServlet {
             VoucherDAO dao = new VoucherDAO();
             dao.delete(id);
 
-            response.sendRedirect("AdminController");
+            response.sendRedirect("AdminController?tab=vouchers");
         } catch (Exception e) {
             throw new ServletException(e);
         }
