@@ -23,7 +23,7 @@ public class ViewUserDAO {
 
             while (rs.next()) {
                 User user = new User();
-                user.setId(rs.getInt("userId")); // Chuyển sang kiểu phù hợp với model nếu khác
+                user.setId(rs.getString("userId")); // Chuyển sang kiểu phù hợp với model nếu khác
                 user.setUsername(rs.getString("username"));
                 user.setPassword(rs.getString("password"));
                 user.setFullName(rs.getString("fullName"));
@@ -49,7 +49,7 @@ public class ViewUserDAO {
 
             if (rs.next()) {
                 User user = new User();
-                user.setId(rs.getInt("userId"));
+                user.setId(rs.getString("userId"));
                 user.setUsername(rs.getString("username"));
                 user.setPassword(rs.getString("password"));
                 user.setFullName(rs.getString("fullName"));

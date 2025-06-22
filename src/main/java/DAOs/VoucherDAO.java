@@ -19,7 +19,7 @@ public class VoucherDAO {
 
     // Create
     public void create(Voucher voucher) throws SQLException, ClassNotFoundException {
-        String sql = "INSERT INTO Voucher (codeName, voucherDescription, discountType, discountValue, minOrderAmount, start_date, end_date, voucherActive) "
+        String sql = "INSERT INTO Voucher (codeName, voucherDescription, discountType, discountValue, minOrderAmount, startDate, endDate, voucherActive) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -68,7 +68,7 @@ public class VoucherDAO {
 
     // Update
     public void update(Voucher voucher) throws SQLException, ClassNotFoundException {
-        String sql = "UPDATE Voucher SET codeName = ?, voucherDescription = ?, discountType = ?, discountValue = ?, minOrderAmount = ?, start_date = ?, end_date = ?, voucherActive = ? "
+        String sql = "UPDATE Voucher SET codeName = ?, voucherDescription = ?, discountType = ?, discountValue = ?, minOrderAmount = ?, startDate = ?, endDate = ?, voucherActive = ? "
                 + "WHERE voucherId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -132,8 +132,8 @@ public class VoucherDAO {
                 rs.getString("discountType"),
                 rs.getBigDecimal("discountValue"),
                 rs.getBigDecimal("minOrderAmount"),
-                rs.getDate("start_date"),
-                rs.getDate("end_date"),
+                rs.getDate("startDate"),
+                rs.getDate("endDate"),
                 rs.getBoolean("voucherActive")
         );
     }

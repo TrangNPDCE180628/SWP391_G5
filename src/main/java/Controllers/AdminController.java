@@ -96,28 +96,19 @@ public class AdminController extends HttpServlet {
     private void loadAdminPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-//            String activeTab = request.getParameter("tab");
-//            request.setAttribute("activeTab", activeTab);
+            String activeTab = request.getParameter("tab");
+            request.setAttribute("activeTab", activeTab);
             // Load common data
-            CategoryDAO productTypeDAO = new CategoryDAO();
-            ProductDAO productDAO = new ProductDAO();
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
-            DiscountDAO discountDAO = new DiscountDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
 
-            List<Category> productTypes = productTypeDAO.getAllCategories();
-            List<Product> products = productDAO.getAllProducts();
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
-            List<Discount> discounts = discountDAO.getAll();
             List<Voucher> vouchers = voucherDAO.getAll();
 
-            request.setAttribute("productTypes", productTypes);
-            request.setAttribute("products", products);
             request.setAttribute("users", users);
             request.setAttribute("staffs", staffs);
-            request.setAttribute("discounts", discounts);
             request.setAttribute("vouchers", vouchers);
 
             // Load profile info
