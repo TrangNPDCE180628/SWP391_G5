@@ -1,9 +1,12 @@
 package Controllers;
 
-
-
 import DAOs.ViewUserDAO;
-
+import DAOs.AdminDAO;
+import DAOs.CustomerDAO;
+import DAOs.StaffDAO;
+import Models.Admin;
+import Models.Staff;
+import Models.Customer;
 
 import Models.User;
 
@@ -71,6 +74,7 @@ public class LoginController extends HttpServlet {
             request.setAttribute("ERROR", "An error occurred during login. Please try again.");
         } finally {
             // Chuyển hướng lại trang theo kết quả xử lý
+
             response.sendRedirect(url);
         }
     }

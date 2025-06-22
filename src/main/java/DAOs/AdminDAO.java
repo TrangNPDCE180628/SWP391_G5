@@ -52,6 +52,21 @@ public class AdminDAO {
         }
     }
 
+    //Get admin by name
+    public Admin getAdminByName(String adminName) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT * FROM Admin WHERE adminName = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, adminName);
+            try ( ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return extractAdmin(rs);
+                }
+            }
+        }
+        return null;
+    }
+
     // Helper method to map ResultSet to Admin object
     private Admin extractAdmin(ResultSet rs) throws SQLException {
         Admin admin = new Admin();
