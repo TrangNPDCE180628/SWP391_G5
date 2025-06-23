@@ -16,8 +16,7 @@ public class CustomerDAO {
     // CREATE
     public void insertCustomer(Customer customer) throws SQLException, ClassNotFoundException {
         String sql = "INSERT INTO Customer (cusId, username, cusPassword, cusFullName, cusGender, cusImage, cusGmail, cusPhone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, customer.getCusId());
             stmt.setString(2, customer.getUsername());
@@ -37,9 +36,7 @@ public class CustomerDAO {
         List<Customer> customers = new ArrayList<>();
         String sql = "SELECT * FROM Customer";
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql);  ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 Customer customer = new Customer();
@@ -61,11 +58,10 @@ public class CustomerDAO {
     // READ: get by ID
     public Customer getCustomerById(String cusId) throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM Customer WHERE cusId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, cusId);
-            try (ResultSet rs = stmt.executeQuery()) {
+            try ( ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     Customer customer = new Customer();
                     customer.setCusId(rs.getString("cusId"));
@@ -86,8 +82,7 @@ public class CustomerDAO {
     // UPDATE
     public void updateCustomer(Customer customer) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE Customer SET username=?, cusPassword=?, cusFullName=?, cusGender=?, cusImage=?, cusGmail=?, cusPhone=? WHERE cusId=?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, customer.getUsername());
             stmt.setString(2, customer.getCusPassword());
@@ -105,24 +100,42 @@ public class CustomerDAO {
     // DELETE
     public void deleteCustomer(String cusId) throws SQLException, ClassNotFoundException {
         String sql = "DELETE FROM Customer WHERE cusId=?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, cusId);
             stmt.executeUpdate();
         }
     }
+
     //Check exist
     public boolean checkUsernameExists(String username) throws SQLException, ClassNotFoundException {
         String sql = "SELECT 1 FROM Customer WHERE username = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, username);
-            try (ResultSet rs = stmt.executeQuery()) {
+            try ( ResultSet rs = stmt.executeQuery()) {
                 return rs.next(); // Trả về true nếu tìm thấy username
             }
         }
     }
-}
 
+    public String generateNextCusId() throws SQLException, ClassNotFoundException {
+        String sql = "SELECT TOP 1 cusId FROM Customer ORDER BY cusId DESC";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql);  ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                String lastId = rs.getString("cusId"); // VD: "C0012"
+                try {
+                    int num = Integer.parseInt(lastId.substring(1)); // Bỏ ký tự 'C' và parse số
+                    return String.format("C%04d", num + 1); // VD: "C0013"
+                } catch (NumberFormatException e) {
+                    // Trường hợp chuỗi không đúng định dạng
+                    throw new SQLException("Invalid cusId format: " + lastId);
+                }
+            } else {
+                return "C0001"; // Nếu chưa có dữ liệu nào
+            }
+        }
+
+    }
+}

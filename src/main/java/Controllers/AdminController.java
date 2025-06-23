@@ -1,27 +1,31 @@
 package Controllers;
 
 import DAOs.AdminDAO;
-import DAOs.CategoryDAO;
 import DAOs.CustomerDAO;
+import DAOs.FeedbackDAO;
+import DAOs.FeedbackReplyViewDAO;
 import DAOs.OrderDAO;
 import DAOs.ProductDAO;
+import DAOs.ReplyFeedbackDAO;
 import DAOs.StaffDAO;
-import DAOs.DiscountDAO;
 import DAOs.VoucherDAO;
 import DAOs.ProductSpecDAO;
 import DAOs.ProductTypeDAO;
 
+
 import Models.Admin;
-import Models.Category;
 import Models.Customer;
+import Models.Feedback;
+import Models.FeedbackReplyView;
 import Models.Order;
 import Models.Product;
+import Models.ReplyFeedback;
 import Models.Staff;
-import Models.Discount;
 import Models.Voucher;
 import Models.User;
 import Models.ProductSpecification;
 import Models.ProductTypes;
+
 
 import com.google.gson.Gson;
 
@@ -96,6 +100,21 @@ public class AdminController extends HttpServlet {
                     getVoucherDetails(request, response);
                     break;
 
+                /*Manage Staff*/
+                case "addStaff":
+                    addStaff(request, response);
+                    break;
+                case "editStaff":
+                    response.sendRedirect("error.jsp");
+                    break;
+                case "deleteStaff":
+                    deleteStaff(request, response);
+                    break;
+
+                /*Manage Feedback*/
+                case "replyFeedback":
+                    replyFeedback(request, response);
+                    break;
                 default:
                     loadAdminPage(request, response);
             }
@@ -115,17 +134,26 @@ public class AdminController extends HttpServlet {
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
+
             ProductTypeDAO productTypeDAO = new ProductTypeDAO();
+            FeedbackDAO feedbackDAO = new FeedbackDAO();
+            FeedbackReplyViewDAO viewfeedbackDAO = new FeedbackReplyViewDAO();
+
 
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
             List<Voucher> vouchers = voucherDAO.getAll();
             List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes();
+            List<Feedback> feedbacks = feedbackDAO.getAllFeedbacks();
+            List<FeedbackReplyView> viewFeedbacks = viewfeedbackDAO.getAllFeedbackReplies();
 
             request.setAttribute("users", users);
             request.setAttribute("staffs", staffs);
             request.setAttribute("vouchers", vouchers);
             request.setAttribute("productTypes", productTypes);
+            request.setAttribute("feedbacks", feedbacks);
+            request.setAttribute("viewFeedbacks", viewFeedbacks);
+
 
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
@@ -359,6 +387,182 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("Error fetching voucher: " + e.getMessage());
+        }
+    }
+
+    private void addStaff(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        try {
+
+            String id = request.getParameter("id");
+            String username = request.getParameter("username");
+            String password = request.getParameter("password");
+            String fullname = request.getParameter("fullname");
+            String gender = request.getParameter("gender");
+            String gmail = request.getParameter("gmail");
+            String phone = request.getParameter("phone");
+
+            Part filePart = request.getPart("image");
+            String fileName = "";
+
+            if (filePart != null && filePart.getSize() > 0) {
+                fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+
+                // Đường dẫn lưu ảnh (tùy cấu trúc thư mục project)
+                String uploadPath = getServletContext().getRealPath("/") + "images" + File.separator + "staff";
+
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs(); // tạo thư mục nếu chưa có
+                }
+
+                // Ghi file ảnh vào thư mục
+                filePart.write(uploadPath + File.separator + fileName);
+            } else {
+                fileName = "default.jpg"; // hoặc để rỗng nếu bạn có ảnh mặc định
+            }
+
+            System.out.println(id + username + password + phone + gmail + gender);
+
+            String position = request.getParameter("position");
+            Staff staff = new Staff();
+            staff.setStaffId(id);
+            staff.setStaffName(username);
+            staff.setStaffPassword(password);
+            staff.setStaffFullName(fullname);
+            staff.setStaffGender(gender);
+            staff.setStaffImage(fileName);
+            staff.setStaffGmail(gmail);
+            staff.setStaffPhone(phone);
+            staff.setStaffPosition(position);
+            System.out.println(staff);
+
+            StaffDAO staffDAO = new StaffDAO();
+            staffDAO.create(staff);
+            response.sendRedirect("AdminController");
+
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void editStaff(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+
+            // Lấy dữ liệu từ form
+            String staffId = request.getParameter("staffId");  // hidden input
+            String staffName = request.getParameter("staffName"); // hidden input
+            String staffFullName = request.getParameter("staffFullName");
+            String staffPassword = request.getParameter("staffPassword");
+            String staffGender = request.getParameter("staffGender");
+            String staffGmail = request.getParameter("staffGmail");
+            String staffPhone = request.getParameter("staffPhone");
+            String staffPosition = request.getParameter("staffPosition");
+            String currentImage = request.getParameter("currentImage");
+
+            System.out.println("ID staff :" + staffId);
+            // Xử lý ảnh upload
+            Part filePart = request.getPart("staffImage");
+            String fileName = "";
+
+            if (filePart != null && filePart.getSize() > 0) {
+                fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+
+                // Tạo đường dẫn thư mục lưu ảnh
+                String uploadPath = getServletContext().getRealPath("/") + "images" + File.separator + "staff";
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+
+                // Ghi ảnh mới vào thư mục
+                filePart.write(uploadPath + File.separator + fileName);
+            } else {
+                // Nếu không chọn ảnh mới, giữ nguyên ảnh cũ
+                fileName = currentImage != null ? currentImage : "";
+            }
+
+            // Tạo đối tượng Staff để update
+            Staff staff = new Staff();
+            staff.setStaffId(staffId);
+            staff.setStaffName(staffName);
+            staff.setStaffFullName(staffFullName);
+            staff.setStaffPassword(staffPassword);
+            staff.setStaffGender(staffGender);
+            staff.setStaffImage(fileName); // Tên file ảnh (mới hoặc cũ)
+            staff.setStaffGmail(staffGmail);
+            staff.setStaffPhone(staffPhone);
+            staff.setStaffPosition(staffPosition);
+
+            // Gọi DAO để update
+            StaffDAO staffDAO = new StaffDAO();
+            staffDAO.update(staff);
+
+            // Chuyển hướng lại trang admin
+            loadAdminPage(request, response);
+
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void deleteStaff(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            // Lấy staffId từ request
+            String staffId = request.getParameter("id");
+
+            // Kiểm tra staffId không null hoặc rỗng
+            if (staffId != null && !staffId.trim().isEmpty()) {
+                StaffDAO staffDAO = new StaffDAO();
+                staffDAO.delete(staffId);
+            }
+
+            // Chuyển hướng về lại trang admin
+            response.sendRedirect("AdminController");
+
+        } catch (Exception e) {
+
+            request.setAttribute("error", "Error while deleting staff: " + e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
+    }
+
+    private void replyFeedback(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            // Lấy dữ liệu từ form
+            int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
+            String cusId = request.getParameter("cusId");
+            String staffId = request.getParameter("staffId");
+            String contentReply = request.getParameter("contentReply");
+
+            // Kiểm tra dữ liệu
+            if (staffId == null || staffId.trim().isEmpty() || contentReply == null || contentReply.trim().isEmpty()) {
+                request.setAttribute("ERROR", "Missing required reply data.");
+                request.getRequestDispatcher("admin.jsp").forward(request, response);
+                return;
+            }
+
+            // Gọi DAO để insert
+            ReplyFeedbackDAO dao = new ReplyFeedbackDAO();
+            ReplyFeedback reply = new ReplyFeedback();
+            reply.setFeedbackId(feedbackId);
+            reply.setCusId(cusId);
+            reply.setStaffId(staffId);
+            reply.setContentReply(contentReply);
+
+            dao.insertReplyFeedback(reply);
+
+            // Quay về trang admin và load lại dữ liệu
+            loadAdminPage(request, response);
+
+        } catch (Exception e) {
+            log("Error in replyFeedback: " + e.toString());
+            request.setAttribute("ERROR", "Failed to reply feedback.");
+            request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
 

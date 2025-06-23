@@ -286,6 +286,7 @@ function updateOrderStatus(orderId, newStatus) {
                 });
     }
 }
+
 function togglePasswordVisibility() {
     const passwordInput = document.getElementById('editPassword');
     const icon = document.getElementById('passwordToggleIcon');
@@ -296,40 +297,6 @@ function togglePasswordVisibility() {
     icon.classList.toggle('fa-eye-slash', !isPassword);
 }
 
-
-
-function editDiscount(id) {
-    const row = document.querySelector(`tr[data-discount-id="${id}"]`);
-    document.getElementById('editDiscountId').value = id;
-    document.getElementById('editProId').value = row.dataset.proId;
-    document.getElementById('editDiscountType').value = row.dataset.discountType;
-    document.getElementById('editDiscountValue').value = row.dataset.discountValue;
-    document.getElementById('editStartDate').value = row.dataset.startDate;
-    document.getElementById('editEndDate').value = row.dataset.endDate;
-    document.getElementById('editActive').value = row.dataset.active;
-    document.getElementById('editAdminId').value = row.dataset.adminId;
-    new bootstrap.Modal(document.getElementById('editDiscountModal')).show();
-}
-
-function deleteDiscount(id) {
-    if (confirm('Are you sure you want to delete this discount?')) {
-        window.location.href = `AdminController?action=deleteDiscount&id=${id}`;
-    }
-}
-
-// NEW: Add viewDiscount function
-function viewDiscount(id) {
-    const row = document.querySelector(`tr[data-discount-id="${id}"]`);
-    document.getElementById('viewDiscountId').textContent = id;
-    document.getElementById('viewProId').textContent = row.dataset.proId;
-    document.getElementById('viewDiscountType').textContent = row.dataset.discountType;
-    document.getElementById('viewDiscountValue').textContent = row.dataset.discountValue;
-    document.getElementById('viewStartDate').textContent = row.dataset.startDate;
-    document.getElementById('viewEndDate').textContent = row.dataset.endDate;
-    document.getElementById('viewActive').textContent = row.dataset.active === 'true' ? 'Yes' : 'No';
-    document.getElementById('viewAdminId').textContent = row.dataset.adminId;
-    new bootstrap.Modal(document.getElementById('viewDiscountModal')).show();
-}
 // Voucher functions
 function editVoucher(voucherId) {
     const row = document.querySelector(`tr[data-voucher-id="${voucherId}"]`);
@@ -375,20 +342,117 @@ function deleteVoucher(id) {
     }
 }
 
-function editSpec(button) {
-    const row = button.closest('tr');
-    document.getElementById("specFormAction").value = "updateProductSpec";
-    document.getElementById("specId").value = row.dataset.specId;
-    document.getElementById("productId").value = row.dataset.productId;
-    document.getElementById("cpu").value = row.dataset.cpu;
-    document.getElementById("ram").value = row.dataset.ram;
-    document.getElementById("storage").value = row.dataset.storage;
-    document.getElementById("screen").value = row.dataset.screen;
-    document.getElementById("os").value = row.dataset.os;
-    document.getElementById("battery").value = row.dataset.battery;
-    document.getElementById("camera").value = row.dataset.camera;
-    document.getElementById("graphic").value = row.dataset.graphic;
+function editStaff(staffId) {
 
-    new bootstrap.Modal(document.getElementById("addSpecModal")).show();
+    console.log("entered");
+    console.log("Editing staffId:", staffId);
+    const actionValue = document.querySelector('#editStaffModal form input[name="action"]').value;
+    console.log("Action value from modal:", actionValue);
+
+
+
+    const row = document.querySelector(`tr[data-staff-id="${staffId}"]`);
+
+
+    if (row) {
+
+        const staffName = row.getAttribute('data-staff-name') || '';
+        const fullName = row.getAttribute('data-staff-fullname') || '';
+        const password = row.getAttribute('data-staff-password') || '';
+        const gender = row.getAttribute('data-staff-gender') || '';
+        const gmail = row.getAttribute('data-staff-gmail') || '';
+        const phone = row.getAttribute('data-staff-phone') || '';
+        const position = row.getAttribute('data-staff-position') || '';
+        const image = row.getAttribute('data-staff-image') || '';
+
+
+
+        // Gửi dữ liệu thật bằng hidden input
+        document.getElementById('editStaffIdHidden').value = staffId;
+        console.log("Set hidden staffId:", document.getElementById('editStaffIdHidden').value);
+        document.getElementById('editStaffNameHidden').value = staffName;
+
+        document.getElementById('editStaffFullName').value = fullName;
+        document.getElementById('editStaffPassword').value = password;
+        const genderSelect = document.getElementById('editStaffGender');
+        Array.from(genderSelect.options).forEach(opt => {
+            opt.selected = opt.value === gender.trim();
+        });
+        console.log("Giá trị được set vào select:", gender.trim());
+
+
+        document.getElementById('editStaffGmail').value = gmail;
+        document.getElementById('editStaffPhone').value = phone;
+        document.getElementById('editStaffPosition').value = position;
+        document.getElementById('currentImagePath').value = image;
+
+
+        const imgPreview = document.getElementById('editStaffImagePreview');
+        imgPreview.src = '/images/staff/' + image;
+        imgPreview.style.display = 'block';
+
+        const fileInput = document.getElementById('editStaffImage');
+        fileInput.value = '';
+        fileInput.onchange = function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imgPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imgPreview.src = '/images/staff/' + image;
+            }
+        };
+    }
+    const modal = new bootstrap.Modal(document.getElementById('editStaffModal'));
+    modal.show();
+
+}
+function deleteStaff(staffId) {
+    if (confirm('Are you sure you want to delete this staff?')) {
+        window.location.href = '/AdminController?action=deleteStaff&id=' + staffId;
+    }
 }
 
+
+//view reply feedback
+function viewReply(feedbackId) {
+    const row = document.querySelector(`tr[data-feedback-id="${feedbackId}"]`);
+
+    if (!row) {
+        console.error("No matching row for feedbackId:", feedbackId);
+        return;
+    }
+
+    const content = row.getAttribute("data-reply-content") || "No reply content.";
+    const staffId = row.getAttribute("data-staff-id") || "Unknown";
+    const replyTime = row.getAttribute("data-reply-time") || "Unknown";
+
+    document.getElementById("modalReplyStaffId").textContent = staffId;
+    document.getElementById("modalReplyTime").textContent = replyTime;
+    document.getElementById("modalReplyContent").textContent = content;
+
+    const replyModal = new bootstrap.Modal(document.getElementById("replyModal"));
+    replyModal.show();
+}
+//reply feedback
+function replyFeedback(feedbackId) {
+    const row = document.querySelector(`tr[data-feedback-id="${feedbackId}"]`);
+    if (!row)
+        return;
+
+    // Lấy thông tin từ data-attribute
+    const cusId = row.getAttribute('data-cus-id');
+
+    // Gán vào form
+    document.getElementById('replyFeedbackId').value = feedbackId;
+    document.getElementById('replyCusId').value = cusId;
+    document.getElementById('staffSelect').value = ""; // Reset dropdown
+    document.getElementById('replyContent').value = ""; // Reset nội dung
+
+    // Mở modal
+    const modal = new bootstrap.Modal(document.getElementById('replyFeedbackModal'));
+    modal.show();
+}

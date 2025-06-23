@@ -1,8 +1,6 @@
 package Controllers;
 
-import DAOs.CategoryDAO;
 import DAOs.ProductDAO;
-import Models.Category;
 import Models.Product;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -25,7 +23,6 @@ public class HomeController extends HttpServlet {
         try {
             // Initialize DAOs
             ProductDAO productDAO = new ProductDAO();
-            CategoryDAO productTypeDAO = new CategoryDAO();
 
             // Get parameters
             String pageStr = request.getParameter("page");
@@ -36,10 +33,6 @@ public class HomeController extends HttpServlet {
             // Set default values
             int page = (pageStr != null && !pageStr.isEmpty()) ? Integer.parseInt(pageStr) : 1;
             int typeId = (typeIdStr != null && !typeIdStr.isEmpty()) ? Integer.parseInt(typeIdStr) : 0;
-
-            // Get all product types for category filter
-            List<Category> productTypes = productTypeDAO.getAllCategories();
-            request.setAttribute("productTypes", productTypes);
 
             // Get products based on filters
             List<Product> products;
