@@ -50,6 +50,7 @@ import java.util.List;
 public class AdminController extends HttpServlet {
 
     private static final String UPLOAD_DIR = "images/products";
+    private static final String UPLOAD_DIR_STAFF = "images/staff";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -400,7 +401,7 @@ public class AdminController extends HttpServlet {
 
             if (fileName != null && !fileName.trim().isEmpty()) {
                 // Có upload ảnh mới
-                String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
+                String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR_STAFF;
                 File uploadDir = new File(uploadPath);
                 if (!uploadDir.exists()) {
                     uploadDir.mkdirs();
