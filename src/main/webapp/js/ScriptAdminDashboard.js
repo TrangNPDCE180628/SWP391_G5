@@ -153,30 +153,6 @@ function editUser(userId) {
     new bootstrap.Modal(document.getElementById('editUserModal')).show();
 }
 
-/*  function editUser(userId) {
- const row = document.querySelector(`tr[data-user-id="${userId}"]`);
- if (row) {
- // Set values directly in function call
- const username = row.getAttribute('data-username');
- const fullname = row.getAttribute('data-fullname');
- const role = row.getAttribute('data-role');
- 
- document.getElementById('editUserId').value = userId;
- document.getElementById('displayUsername').value = username;
- document.getElementById('editFullname').value = fullname;
- document.getElementById('editRole').value = role.toLowerCase();
- 
- console.log('User data:', {
- id: userId,
- username: username,
- fullname: fullname,
- role: role
- });
- }
- new bootstrap.Modal(document.getElementById('editUserModal')).show();
- }**/
-
-
 function deleteUser(id) {
     if (confirm('Are you sure you want to delete this user?')) {
         window.location.href = '/AdminController?action=deleteUser&id=' + id;
@@ -443,3 +419,46 @@ function replyFeedback(feedbackId) {
     const modal = new bootstrap.Modal(document.getElementById('replyFeedbackModal'));
     modal.show();
 }
+
+function editProductAttribute(productId, attributeId) {
+    const row = document.querySelector(`tr[data-product-id="${productId}"][data-attribute-id="${attributeId}"]`);
+    if (!row) {
+        alert("Cannot find product attribute row.");
+        return;
+    }
+
+    const attributeValue = row.dataset.attributeValue || '';
+
+    document.getElementById("editProId").value = productId;
+    document.getElementById("editAttributeId").value = attributeId;
+    document.getElementById("editAttributeValue").value = attributeValue;
+
+    const editModal = new bootstrap.Modal(document.getElementById("editProductAttributeModal"));
+    editModal.show();
+}
+
+function deleteProductAttribute(productId, attributeId) {
+    if (confirm("Are you sure you want to delete this Product Attribute?")) {
+        window.location.href = `AdminController?action=deleteProductAttribute&proId=${productId}&attributeId=${attributeId}&tab=productAttributes`;
+    }
+}
+
+function viewProductAttribute(proId, attributeId) {
+    fetch(`AdminController?action=viewProductAttribute&proId=${proId}&attributeId=${attributeId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("viewProId").innerText = data.proId;
+                document.getElementById("viewProductName").innerText = data.productName;
+                document.getElementById("viewAttributeId").innerText = data.attributeId;
+                document.getElementById("viewAttributeName").innerText = data.attributeName;
+                document.getElementById("viewAttributeValue").innerText = data.value;
+
+                new bootstrap.Modal(document.getElementById('viewProductAttributeModal')).show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Failed to load product attribute details.");
+            });
+}
+
+
