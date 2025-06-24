@@ -56,9 +56,11 @@ import java.util.List;
 public class AdminController extends HttpServlet {
 
     private static final String UPLOAD_DIR = "images/products";
+    private static final String UPLOAD_DIR_STAFF = "images/staff";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
         String action = request.getParameter("action");
 
@@ -105,7 +107,7 @@ public class AdminController extends HttpServlet {
                     addStaff(request, response);
                     break;
                 case "editStaff":
-                    response.sendRedirect("error.jsp");
+                    edit1Staff(request, response);
                     break;
                 case "deleteStaff":
                     deleteStaff(request, response);
@@ -153,7 +155,6 @@ public class AdminController extends HttpServlet {
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("feedbacks", feedbacks);
             request.setAttribute("viewFeedbacks", viewFeedbacks);
-
 
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
@@ -447,61 +448,48 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
         }
     }
 
-    private void editStaff(HttpServletRequest request, HttpServletResponse response)
+    private void edit1Staff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
+            String id = request.getParameter("id");
+            String username = request.getParameter("username");
+            String password = request.getParameter("password");
+            String fullname = request.getParameter("fullname");
+            String gender = request.getParameter("gender");
+            String gmail = request.getParameter("gmail");
+            String phone = request.getParameter("phone");
+            String position = request.getParameter("position");
 
-            // Lấy dữ liệu từ form
-            String staffId = request.getParameter("staffId");  // hidden input
-            String staffName = request.getParameter("staffName"); // hidden input
-            String staffFullName = request.getParameter("staffFullName");
-            String staffPassword = request.getParameter("staffPassword");
-            String staffGender = request.getParameter("staffGender");
-            String staffGmail = request.getParameter("staffGmail");
-            String staffPhone = request.getParameter("staffPhone");
-            String staffPosition = request.getParameter("staffPosition");
-            String currentImage = request.getParameter("currentImage");
+            // Xử lý file ảnh
+            Part imagePart = request.getPart("image");
+            String fileName = Paths.get(imagePart.getSubmittedFileName()).getFileName().toString();
 
-            System.out.println("ID staff :" + staffId);
-            // Xử lý ảnh upload
-            Part filePart = request.getPart("staffImage");
-            String fileName = "";
+            String imageFileName = null;
 
-            if (filePart != null && filePart.getSize() > 0) {
-                fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-
-                // Tạo đường dẫn thư mục lưu ảnh
-                String uploadPath = getServletContext().getRealPath("/") + "images" + File.separator + "staff";
+            if (fileName != null && !fileName.trim().isEmpty()) {
+                // Có upload ảnh mới
+                String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR_STAFF;
                 File uploadDir = new File(uploadPath);
                 if (!uploadDir.exists()) {
                     uploadDir.mkdirs();
                 }
-
-                // Ghi ảnh mới vào thư mục
-                filePart.write(uploadPath + File.separator + fileName);
+                imagePart.write(uploadPath + File.separator + fileName);
+                imageFileName = fileName;
             } else {
-                // Nếu không chọn ảnh mới, giữ nguyên ảnh cũ
-                fileName = currentImage != null ? currentImage : "";
+                // Không có ảnh mới => giữ ảnh cũ từ database
+                StaffDAO dao = new StaffDAO();
+                Staff existing = dao.getById(id);
+                imageFileName = existing.getStaffImage();
             }
 
-            // Tạo đối tượng Staff để update
-            Staff staff = new Staff();
-            staff.setStaffId(staffId);
-            staff.setStaffName(staffName);
-            staff.setStaffFullName(staffFullName);
-            staff.setStaffPassword(staffPassword);
-            staff.setStaffGender(staffGender);
-            staff.setStaffImage(fileName); // Tên file ảnh (mới hoặc cũ)
-            staff.setStaffGmail(staffGmail);
-            staff.setStaffPhone(staffPhone);
-            staff.setStaffPosition(staffPosition);
+            // Cập nhật dữ liệu
+            Staff updatedStaff = new Staff(id, username, fullname, password,
+                    gender, imageFileName, gmail, phone, position);
 
-            // Gọi DAO để update
-            StaffDAO staffDAO = new StaffDAO();
-            staffDAO.update(staff);
-
-            // Chuyển hướng lại trang admin
-            loadAdminPage(request, response);
+            StaffDAO dao = new StaffDAO();
+            dao.update(updatedStaff);
+            
+             response.sendRedirect("AdminController?tab=staff");
 
         } catch (Exception e) {
             throw new ServletException(e);

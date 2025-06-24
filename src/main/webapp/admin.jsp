@@ -805,66 +805,76 @@
         </div>
 
         <!-- Edit Staff Modal -->
-        <div class="modal fade" id="editStaffModal" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="true">
+        <div class="modal fade" id="editStaffModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <form action="AdminController" method="post" enctype="multipart/form-data" class="modal-content" >
-
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Staff</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="AdminController" method="post" enctype="multipart/form-data">
                         <div class="modal-body">
                             <input type="hidden" name="action" value="editStaff">
-                            <!-- Hidden inputs submit -->
-                            <input type="hidden" name="staffId" id="editStaffIdHidden">
-                            <input type="hidden" name="staffName" id="editStaffNameHidden">
-                            <input type="hidden" name="currentImage" id="currentImagePath">
+                            <input type="hidden" id="edit-id-hidden" name="id">
+
 
                             <div class="mb-3">
-                                <label for="editStaffFullName" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="editStaffFullName" name="staffFullName">
+                                <label for="edit-username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="edit-username" name="username" readonly>
                             </div>
+
                             <div class="mb-3">
-                                <label for="editStaffPassword" class="form-label">Password</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="editStaffPassword" name="staffPassword">
-                                </div>
+                                <label for="edit-password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="edit-password" name="password" required>
                             </div>
+
                             <div class="mb-3">
-                                <label for="editStaffGender" class="form-label">Gender</label>
-                                <select class="form-select" id="editStaffGender" name="staffGender">
+                                <label for="edit-fullname" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="edit-fullname" name="fullname">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="edit-gender" class="form-label">Gender</label>
+                                <select class="form-select" id="edit-gender" name="gender">
                                     <option value="Male">Male</option>
                                     <option value="Female">Female</option>
                                 </select>
                             </div>
+
                             <div class="mb-3">
-                                <label for="editStaffGmail" class="form-label">Gmail</label>
-                                <input type="email" class="form-control" id="editStaffGmail" name="staffGmail">
-                            </div>
-                            <div class="mb-3">
-                                <label for="editStaffPhone" class="form-label">Phone</label>
-                                <input type="tel" class="form-control" id="editStaffPhone" name="staffPhone">
-                            </div>
-                            <div class="mb-3">
-                                <label for="editStaffPosition" class="form-label">Position</label>
-                                <input type="text" class="form-control" id="editStaffPosition" name="staffPosition">
-                            </div>
-                            <div class="mb-3">
-                                <label for="editStaffImage" class="form-label">Image</label>
-                                <input type="file" class="form-control" id="editStaffImage" name="staffImage" accept="image/*">
+                                <label for="edit-image" class="form-label">Image</label>
+                                <input type="file" class="form-control" id="edit-image" name="image">
+                                <div class="mt-2">
+                                    <img id="editStaffImagePreview" src="#" alt="Current Image"
+                                         style="max-height: 120px; display: none; border: 1px solid #ccc; padding: 3px;">
+                                </div>
+
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Current Image</label><br>
-                                <img id="editStaffImagePreview" src="#" alt="Preview" width="100" height="120">
+                                <label for="edit-gmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="edit-gmail" name="gmail">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="edit-phone" class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="edit-phone" name="phone">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="edit-position" class="form-label">Position</label>
+                                <input type="text" class="form-control" id="edit-position" name="position">
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Update</button>
+                            <button type="submit" class="btn btn-primary">Update Staff</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-
+       
         <script>const contextPath = '${pageContext.request.contextPath}';</script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 

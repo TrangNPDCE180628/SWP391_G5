@@ -343,72 +343,59 @@ function deleteVoucher(id) {
 }
 
 function editStaff(staffId) {
+    const row = document.querySelector(`#staff-row-${staffId}`);
+    if (!row)
+        return;
 
-    console.log("entered");
-    console.log("Editing staffId:", staffId);
-    const actionValue = document.querySelector('#editStaffModal form input[name="action"]').value;
-    console.log("Action value from modal:", actionValue);
+    // Lấy dữ liệu từ các data-* attributes
+    const staffName = row.dataset.staffName || '';
+    const staffFullName = row.dataset.staffFullname || '';
+    const staffPassword = row.dataset.staffPassword || '';
+    const staffGender = row.dataset.staffGender || '';
+    const staffGmail = row.dataset.staffGmail || '';
+    const staffPhone = row.dataset.staffPhone || '';
+    const staffPosition = row.dataset.staffPosition || '';
+    const staffImage = row.dataset.staffImage || '';
 
-
-
-    const row = document.querySelector(`tr[data-staff-id="${staffId}"]`);
-
-
-    if (row) {
-
-        const staffName = row.getAttribute('data-staff-name') || '';
-        const fullName = row.getAttribute('data-staff-fullname') || '';
-        const password = row.getAttribute('data-staff-password') || '';
-        const gender = row.getAttribute('data-staff-gender') || '';
-        const gmail = row.getAttribute('data-staff-gmail') || '';
-        const phone = row.getAttribute('data-staff-phone') || '';
-        const position = row.getAttribute('data-staff-position') || '';
-        const image = row.getAttribute('data-staff-image') || '';
-
-
-
-        // Gửi dữ liệu thật bằng hidden input
-        document.getElementById('editStaffIdHidden').value = staffId;
-        console.log("Set hidden staffId:", document.getElementById('editStaffIdHidden').value);
-        document.getElementById('editStaffNameHidden').value = staffName;
-
-        document.getElementById('editStaffFullName').value = fullName;
-        document.getElementById('editStaffPassword').value = password;
-        const genderSelect = document.getElementById('editStaffGender');
-        Array.from(genderSelect.options).forEach(opt => {
-            opt.selected = opt.value === gender.trim();
-        });
-        console.log("Giá trị được set vào select:", gender.trim());
+    // Gán dữ liệu vào form trong modal
+    document.getElementById('edit-id-hidden').value = staffId;
+    document.getElementById('edit-username').value = staffName;
+    document.getElementById('edit-password').value = staffPassword;
+    document.getElementById('edit-fullname').value = staffFullName;
+    document.getElementById('edit-gender').value = staffGender;
+    document.getElementById('edit-gmail').value = staffGmail;
+    document.getElementById('edit-phone').value = staffPhone;
+    document.getElementById('edit-position').value = staffPosition;
 
 
-        document.getElementById('editStaffGmail').value = gmail;
-        document.getElementById('editStaffPhone').value = phone;
-        document.getElementById('editStaffPosition').value = position;
-        document.getElementById('currentImagePath').value = image;
+    // Preview ảnh cũ
+    const preview = document.getElementById('editStaffImagePreview');
+    if (preview) {
+        preview.src = `${contextPath}/images/staff/${staffImage}`;
+        preview.style.display = 'block';
+    }
 
-
-        const imgPreview = document.getElementById('editStaffImagePreview');
-        imgPreview.src = '/images/staff/' + image;
-        imgPreview.style.display = 'block';
-
-        const fileInput = document.getElementById('editStaffImage');
+    // Cập nhật khi chọn ảnh mới
+    const fileInput = document.getElementById('edit-image');
+    if (fileInput) {
         fileInput.value = '';
         fileInput.onchange = function () {
             const file = this.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    imgPreview.src = e.target.result;
+                    preview.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             } else {
-                imgPreview.src = '/images/staff/' + image;
+                preview.src = `${contextPath}/images/staff/${staffImage}`;
             }
         };
     }
+
+    // Hiển thị modal
     const modal = new bootstrap.Modal(document.getElementById('editStaffModal'));
     modal.show();
-
 }
 function deleteStaff(staffId) {
     if (confirm('Are you sure you want to delete this staff?')) {
