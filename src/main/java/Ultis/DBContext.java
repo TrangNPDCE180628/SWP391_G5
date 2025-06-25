@@ -12,10 +12,10 @@ public class DBContext {
         Connection conn = null;
         Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         String url = "jdbc:sqlserver://localhost:1433;"
-                + "databaseName=TechStore;"
+                + "databaseName=TechStore1;"
                 + "encrypt=true;"
                 + "trustServerCertificate=true";
-        conn = DriverManager.getConnection(url, "sa", "123");
+        conn = DriverManager.getConnection(url, "sa", "1");
         return conn;
     }
 }
