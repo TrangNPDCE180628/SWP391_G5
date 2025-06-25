@@ -1,18 +1,17 @@
 package Models;
 
 public class OrderDetail {
-    private String id;
-    private String orderId;
-    private String productId;
+    private int id;
+    private int orderId;
+    private int productId;
     private int quantity;
     private double unitPrice;
     private double totalPrice;
-    private String productName;
 
     public OrderDetail() {
     }
 
-    public OrderDetail(String id, String orderId, String productId, int quantity, double unitPrice, double totalPrice) {
+    public OrderDetail(int id, int orderId, int productId, int quantity, double unitPrice, double totalPrice) {
         this.id = id;
         this.orderId = orderId;
         this.productId = productId;
@@ -21,27 +20,27 @@ public class OrderDetail {
         this.totalPrice = totalPrice;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
-    public String getOrderId() {
+    public int getOrderId() {
         return orderId;
     }
 
-    public void setOrderId(String orderId) {
+    public void setOrderId(int orderId) {
         this.orderId = orderId;
     }
 
-    public String getProductId() {
+    public int getProductId() {
         return productId;
     }
 
-    public void setProductId(String productId) {
+    public void setProductId(int productId) {
         this.productId = productId;
     }
 
@@ -68,12 +67,4 @@ public class OrderDetail {
     public void setTotalPrice(double totalPrice) {
         this.totalPrice = totalPrice;
     }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName;
-    }
-}
+} 
