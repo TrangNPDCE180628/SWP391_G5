@@ -19,7 +19,7 @@ public class ProductListServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             ProductDAO productDAO = new ProductDAO();
-            List<Product> products = productDAO.getAll();
+            List<Product> products = productDAO.getAllProducts();
             request.setAttribute("products", products);
             request.getRequestDispatcher("product-list.jsp").forward(request, response);
         } catch (Exception e) {
@@ -27,4 +27,4 @@ public class ProductListServlet extends HttpServlet {
             request.getRequestDispatcher("product-list.jsp").forward(request, response);
         }
     }
-} 
+}
