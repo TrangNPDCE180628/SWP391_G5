@@ -5,6 +5,7 @@ import DAOs.CustomerDAO;
 import DAOs.FeedbackDAO;
 import DAOs.FeedbackReplyViewDAO;
 import DAOs.OrderDAO;
+import DAOs.OrderDetailDAO;
 import DAOs.ProductDAO;
 import DAOs.ReplyFeedbackDAO;
 import DAOs.StaffDAO;
@@ -12,12 +13,12 @@ import DAOs.VoucherDAO;
 import DAOs.ProductSpecDAO;
 import DAOs.ProductTypeDAO;
 
-
 import Models.Admin;
 import Models.Customer;
 import Models.Feedback;
 import Models.FeedbackReplyView;
 import Models.Order;
+import Models.OrderDetail;
 import Models.Product;
 import Models.ReplyFeedback;
 import Models.Staff;
@@ -25,7 +26,6 @@ import Models.Voucher;
 import Models.User;
 import Models.ProductSpecification;
 import Models.ProductTypes;
-
 
 import com.google.gson.Gson;
 
@@ -45,6 +45,8 @@ import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
@@ -69,13 +71,23 @@ public class AdminController extends HttpServlet {
             }
 
             switch (action) {
-
-                /* Manage Profile*/
+                case "loadOrders":
+                    loadOrdersPage(request, response);
+                    break;
+                case "updateOrderStatus":
+                    updateOrderStatus(request, response);
+                    break;
+                case "deleteOrder":
+                    deleteOrder(request, response);
+                    break;
+                case "viewOrderDetails":
+                    viewOrderDetails(request, response);
+                    break;
+                /* Manage Profile */
                 case "editProfile":
                     editProfile(request, response);
                     break;
-
-                // Product Type
+                /* Product Type */
                 case "addProductType":
                     addProductType(request, response);
                     break;
@@ -85,12 +97,11 @@ public class AdminController extends HttpServlet {
                 case "deleteProductType":
                     deleteProductType(request, response);
                     break;
-
-                /*Manage Voucher*/
+                /* Manage Voucher */
                 case "addVoucher":
                     addVoucher(request, response);
                     break;
-                case "updateVoucher":
+                case "updateVoucherURE":
                     updateVoucher(request, response);
                     break;
                 case "deleteVoucher":
@@ -99,25 +110,37 @@ public class AdminController extends HttpServlet {
                 case "getVoucherDetails":
                     getVoucherDetails(request, response);
                     break;
-
-                /*Manage Staff*/
+                /* Manage Staff */
                 case "addStaff":
                     addStaff(request, response);
                     break;
                 case "editStaff":
-                    response.sendRedirect("error.jsp");
+                    editStaff(request, response);
                     break;
                 case "deleteStaff":
                     deleteStaff(request, response);
                     break;
-
-                /*Manage Feedback*/
+                /* Manage Feedback */
                 case "replyFeedback":
                     replyFeedback(request, response);
                     break;
+
+                // ✅ FIXED: FILTER ORDER BY STATUS
+                case "filterOrdersByStatus":
+                    String statusFilter = request.getParameter("status");
+                    List<Order> filteredOrders = filterOrdersByStatus(statusFilter);
+
+                    // ✅ Dùng cùng tên với loadOrdersPage
+                    request.setAttribute("orderList", filteredOrders);
+                    request.setAttribute("statusFilter", statusFilter);
+                    request.setAttribute("activeTab", "orders");
+                    request.getRequestDispatcher("admin.jsp").forward(request, response);
+                    break;
+
                 default:
                     loadAdminPage(request, response);
             }
+
         } catch (Exception e) {
             log("Error at AdminController: " + e.toString());
             request.setAttribute("ERROR", "An error occurred: " + e.getMessage());
@@ -134,11 +157,10 @@ public class AdminController extends HttpServlet {
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
-
             ProductTypeDAO productTypeDAO = new ProductTypeDAO();
             FeedbackDAO feedbackDAO = new FeedbackDAO();
             FeedbackReplyViewDAO viewfeedbackDAO = new FeedbackReplyViewDAO();
-
+            OrderDAO orderDAO = new OrderDAO();
 
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
@@ -146,6 +168,13 @@ public class AdminController extends HttpServlet {
             List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes();
             List<Feedback> feedbacks = feedbackDAO.getAllFeedbacks();
             List<FeedbackReplyView> viewFeedbacks = viewfeedbackDAO.getAllFeedbackReplies();
+            List<Order> orders = orderDAO.getAll();
+
+            // Fetch customer names for each order
+            for (Order order : orders) {
+                Customer customer = cusDAO.getCustomerById(order.getUserId());
+                order.setCustomerName(customer != null ? customer.getCusFullName() : "Unknown");
+            }
 
             request.setAttribute("users", users);
             request.setAttribute("staffs", staffs);
@@ -153,7 +182,7 @@ public class AdminController extends HttpServlet {
             request.setAttribute("productTypes", productTypes);
             request.setAttribute("feedbacks", feedbacks);
             request.setAttribute("viewFeedbacks", viewFeedbacks);
-
+            request.setAttribute("orders", orders);
 
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
@@ -174,6 +203,105 @@ public class AdminController extends HttpServlet {
         } catch (Exception e) {
             throw new ServletException(e);
         }
+    }
+
+    private void loadOrdersPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String statusFilter = request.getParameter("statusFilter"); // <-- Lấy filter từ query
+            List<Order> orders = filterOrdersByStatus(statusFilter);   // <-- Gọi hàm lọc đã có
+            request.setAttribute("orderList", orders);
+            request.setAttribute("statusFilter", statusFilter);        // <-- Gửi lại filter
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+            log("Error loading orders: " + e.toString());
+            request.setAttribute("ERROR", "Failed to load orders: " + e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
+    }
+
+    /**
+     * Filters orders by the given status, or returns all if status is
+     * invalid/null.
+     */
+    private List<Order> filterOrdersByStatus(String statusFilter)
+            throws SQLException, ClassNotFoundException {
+        OrderDAO orderDAO = new OrderDAO();
+
+        if (statusFilter != null && !statusFilter.trim().isEmpty()) {
+            String trimmed = statusFilter.trim();
+            if (trimmed.equals("Done") || trimmed.equals("Pending") || trimmed.equals("Cancel")) {
+                return orderDAO.getByStatus(trimmed);
+            } else if (trimmed.equals("All")) {
+                return orderDAO.getAll(); // Trả về toàn bộ khi chọn All
+            }
+        }
+
+        return orderDAO.getAll(); // Trả về toàn bộ nếu null hoặc rỗng
+    }
+
+    private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException, ClassNotFoundException {
+        String orderId = request.getParameter("orderId");
+        String status = request.getParameter("status");
+
+        // Validate status
+        if (status != null && (status.equals("Done") || status.equals("Pending") || status.equals("Cancel"))) {
+            OrderDAO orderDAO = new OrderDAO();
+            orderDAO.updateOrderStatus(orderId, status);
+        }
+
+        response.sendRedirect("AdminController?action=loadOrders&tab=orders");
+    }
+
+    private void deleteOrder(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException, ClassNotFoundException {
+        String orderId = request.getParameter("orderId");
+        OrderDAO orderDAO = new OrderDAO();
+        OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
+
+        // Delete order details first due to foreign key constraint
+        orderDetailDAO.deleteByOrderId(orderId);
+        orderDAO.delete(orderId);
+
+        response.sendRedirect("AdminController?action=loadOrders&tab=orders");
+    }
+
+    private void viewOrderDetails(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException, ClassNotFoundException {
+        String orderId = request.getParameter("orderId");
+        if (orderId == null || orderId.trim().isEmpty()) {
+            request.setAttribute("ERROR", "Invalid Order ID");
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+            return;
+        }
+
+        OrderDAO orderDAO = new OrderDAO();
+        OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
+        CustomerDAO customerDAO = new CustomerDAO();
+        ProductDAO productDAO = new ProductDAO();
+
+        Order order = orderDAO.getById(orderId);
+        if (order == null) {
+            request.setAttribute("ERROR", "Order not found");
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+            return;
+        }
+
+        List<OrderDetail> orderDetails = orderDetailDAO.getByOrderId(orderId);
+        Customer customer = customerDAO.getCustomerById(order.getUserId());
+
+        // Fetch product names for each order detail
+        for (OrderDetail detail : orderDetails) {
+            Product product = productDAO.getProductById(detail.getProductId());
+            detail.setProductName(product != null ? product.getProName() : "Unknown");
+        }
+
+        // Set attributes for JSP
+        request.setAttribute("order", order);
+        request.setAttribute("customer", customer != null ? customer : new Customer()); // Avoid null customer
+        request.setAttribute("orderDetails", orderDetails != null ? orderDetails : new ArrayList<>());
+        request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
     }
 
     private void editProfile(HttpServletRequest request, HttpServletResponse response)
@@ -213,7 +341,6 @@ public class AdminController extends HttpServlet {
                     loginUser.setImage(imageFileName);
                     session.setAttribute("LOGIN_USER", loginUser);
                 }
-
             } else if ("Staff".equals(role)) {
                 String gender = request.getParameter("gender");
                 String phone = request.getParameter("phone");
@@ -240,7 +367,6 @@ public class AdminController extends HttpServlet {
             }
 
             response.sendRedirect("AdminController?tab=profile");
-
         } catch (Exception e) {
             log("Error in editProfile(): " + e.getMessage());
             e.printStackTrace();
@@ -261,50 +387,51 @@ public class AdminController extends HttpServlet {
     }
 
     private void addProductType(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-    try {
-        String name = request.getParameter("typeName");
-        if (name != null && !name.trim().isEmpty()) {
-            ProductTypeDAO dao = new ProductTypeDAO();
-            ProductTypes type = new ProductTypes();
-            type.setName(name);
-            dao.addProductType(type);
+            throws ServletException, IOException {
+        try {
+            String name = request.getParameter("typeName");
+            if (name != null && !name.trim().isEmpty()) {
+                ProductTypeDAO dao = new ProductTypeDAO();
+                ProductTypes type = new ProductTypes();
+                type.setName(name);
+                dao.addProductType(type);
+            }
+            response.sendRedirect("AdminController?tab=productTypes");
+        } catch (Exception e) {
+            throw new ServletException(e);
         }
-        response.sendRedirect("AdminController?tab=productTypes");
-    } catch (Exception e) {
-        throw new ServletException(e);
     }
-}
 
-private void updateProductType(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-    try {
-        int id = Integer.parseInt(request.getParameter("typeId"));
-        String name = request.getParameter("typeName");
-        if (name != null && !name.trim().isEmpty()) {
-            ProductTypeDAO dao = new ProductTypeDAO();
-            ProductTypes type = new ProductTypes();
-            type.setId(id);
-            type.setName(name);
-            dao.updateProductType(type);
+    private void updateProductType(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("typeId"));
+            String name = request.getParameter("typeName");
+            if (name != null && !name.trim().isEmpty()) {
+                ProductTypeDAO dao = new ProductTypeDAO();
+                ProductTypes type = new ProductTypes();
+                type.setId(id);
+                type.setName(name);
+                dao.updateProductType(type);
+            }
+            response.sendRedirect("AdminController?tab=productTypes");
+        } catch (Exception e) {
+            throw new ServletException(e);
         }
-        response.sendRedirect("AdminController?tab=productTypes");
-    } catch (Exception e) {
-        throw new ServletException(e);
     }
-}
 
-private void deleteProductType(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-    try {
-        int id = Integer.parseInt(request.getParameter("id"));
-        ProductTypeDAO dao = new ProductTypeDAO();
-        dao.deleteProductType(id);
-        response.sendRedirect("AdminController?tab=productTypes");
-    } catch (Exception e) {
-        throw new ServletException(e);
+    private void deleteProductType(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            ProductTypeDAO dao = new ProductTypeDAO();
+            dao.deleteProductType(id);
+            response.sendRedirect("AdminController?tab=productTypes");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
     }
-}
+
     private void addVoucher(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -334,7 +461,7 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
         try {
             int id = Integer.parseInt(request.getParameter("voucherId"));
             String codeName = request.getParameter("codeName");
-            String description = request.getParameter("voucherDescription"); // Optional, null nếu không có
+            String description = request.getParameter("voucherDescription");
             String discountType = request.getParameter("discountType");
             BigDecimal discountValue = new BigDecimal(request.getParameter("discountValue"));
             BigDecimal minOrderAmount = new BigDecimal(request.getParameter("minOrderAmount"));
@@ -392,9 +519,7 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
 
     private void addStaff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         try {
-
             String id = request.getParameter("id");
             String username = request.getParameter("username");
             String password = request.getParameter("password");
@@ -408,22 +533,15 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
 
             if (filePart != null && filePart.getSize() > 0) {
                 fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-
-                // Đường dẫn lưu ảnh (tùy cấu trúc thư mục project)
                 String uploadPath = getServletContext().getRealPath("/") + "images" + File.separator + "staff";
-
                 File uploadDir = new File(uploadPath);
                 if (!uploadDir.exists()) {
-                    uploadDir.mkdirs(); // tạo thư mục nếu chưa có
+                    uploadDir.mkdirs();
                 }
-
-                // Ghi file ảnh vào thư mục
                 filePart.write(uploadPath + File.separator + fileName);
             } else {
-                fileName = "default.jpg"; // hoặc để rỗng nếu bạn có ảnh mặc định
+                fileName = "default.jpg";
             }
-
-            System.out.println(id + username + password + phone + gmail + gender);
 
             String position = request.getParameter("position");
             Staff staff = new Staff();
@@ -436,12 +554,10 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
             staff.setStaffGmail(gmail);
             staff.setStaffPhone(phone);
             staff.setStaffPosition(position);
-            System.out.println(staff);
 
             StaffDAO staffDAO = new StaffDAO();
             staffDAO.create(staff);
             response.sendRedirect("AdminController");
-
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -450,10 +566,8 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
     private void editStaff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-
-            // Lấy dữ liệu từ form
-            String staffId = request.getParameter("staffId");  // hidden input
-            String staffName = request.getParameter("staffName"); // hidden input
+            String staffId = request.getParameter("staffId");
+            String staffName = request.getParameter("staffName");
             String staffFullName = request.getParameter("staffFullName");
             String staffPassword = request.getParameter("staffPassword");
             String staffGender = request.getParameter("staffGender");
@@ -462,47 +576,36 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
             String staffPosition = request.getParameter("staffPosition");
             String currentImage = request.getParameter("currentImage");
 
-            System.out.println("ID staff :" + staffId);
-            // Xử lý ảnh upload
             Part filePart = request.getPart("staffImage");
             String fileName = "";
 
             if (filePart != null && filePart.getSize() > 0) {
                 fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-
-                // Tạo đường dẫn thư mục lưu ảnh
                 String uploadPath = getServletContext().getRealPath("/") + "images" + File.separator + "staff";
                 File uploadDir = new File(uploadPath);
                 if (!uploadDir.exists()) {
                     uploadDir.mkdirs();
                 }
-
-                // Ghi ảnh mới vào thư mục
                 filePart.write(uploadPath + File.separator + fileName);
             } else {
-                // Nếu không chọn ảnh mới, giữ nguyên ảnh cũ
                 fileName = currentImage != null ? currentImage : "";
             }
 
-            // Tạo đối tượng Staff để update
             Staff staff = new Staff();
             staff.setStaffId(staffId);
             staff.setStaffName(staffName);
             staff.setStaffFullName(staffFullName);
             staff.setStaffPassword(staffPassword);
             staff.setStaffGender(staffGender);
-            staff.setStaffImage(fileName); // Tên file ảnh (mới hoặc cũ)
+            staff.setStaffImage(fileName);
             staff.setStaffGmail(staffGmail);
             staff.setStaffPhone(staffPhone);
             staff.setStaffPosition(staffPosition);
 
-            // Gọi DAO để update
             StaffDAO staffDAO = new StaffDAO();
             staffDAO.update(staff);
 
-            // Chuyển hướng lại trang admin
             loadAdminPage(request, response);
-
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -511,20 +614,13 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
     private void deleteStaff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Lấy staffId từ request
             String staffId = request.getParameter("id");
-
-            // Kiểm tra staffId không null hoặc rỗng
             if (staffId != null && !staffId.trim().isEmpty()) {
                 StaffDAO staffDAO = new StaffDAO();
                 staffDAO.delete(staffId);
             }
-
-            // Chuyển hướng về lại trang admin
             response.sendRedirect("AdminController");
-
         } catch (Exception e) {
-
             request.setAttribute("error", "Error while deleting staff: " + e.getMessage());
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
@@ -533,20 +629,17 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
     private void replyFeedback(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Lấy dữ liệu từ form
             int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
             String cusId = request.getParameter("cusId");
             String staffId = request.getParameter("staffId");
             String contentReply = request.getParameter("contentReply");
 
-            // Kiểm tra dữ liệu
             if (staffId == null || staffId.trim().isEmpty() || contentReply == null || contentReply.trim().isEmpty()) {
                 request.setAttribute("ERROR", "Missing required reply data.");
                 request.getRequestDispatcher("admin.jsp").forward(request, response);
                 return;
             }
 
-            // Gọi DAO để insert
             ReplyFeedbackDAO dao = new ReplyFeedbackDAO();
             ReplyFeedback reply = new ReplyFeedback();
             reply.setFeedbackId(feedbackId);
@@ -556,30 +649,12 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
 
             dao.insertReplyFeedback(reply);
 
-            // Quay về trang admin và load lại dữ liệu
             loadAdminPage(request, response);
-
         } catch (Exception e) {
             log("Error in replyFeedback: " + e.toString());
             request.setAttribute("ERROR", "Failed to reply feedback.");
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
-    }
-
-    // Helper classes for JSON response
-    private static class OrderDetailsResponse {
-
-        Order order;
-        String customerName;
-        List<OrderItem> orderItems;
-    }
-
-    private static class OrderItem {
-
-        String productName;
-        int quantity;
-        double unitPrice;
-        double totalPrice;
     }
 
     @Override
