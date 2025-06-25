@@ -3,7 +3,6 @@ package Models;
 import java.math.BigDecimal;
 import java.sql.Date;
 
-
 public class Product {
 
     private String proId;
@@ -23,7 +22,6 @@ public class Product {
         this.proDescription = proDescription;
         this.proPrice = proPrice;
         this.proImage = proImageMain;
-
     }
 
     public String getProId() {
@@ -98,16 +96,16 @@ public class Product {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
-    public void setProImageUrl(String proImageUrl) {
-        this.proImageUrl = proImageUrl;
+    public void setTypeId(int typeId) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
-    public int getProTypeId() {
-        return proTypeId;
+    public void setUpdatedAt(Date valueOf) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
-    public void setProTypeId(int proTypeId) {
-        this.proTypeId = proTypeId;
+    public void setStatus(boolean b) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
 }

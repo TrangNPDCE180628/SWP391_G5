@@ -14,14 +14,12 @@ public class ProductDAO {
     public void insertProduct(Product product) throws SQLException, ClassNotFoundException {
         String sql = "INSERT INTO Product (proId, proTypeId, proName, proDescription, proPrice, proImageUrl) VALUES (?, ?, ?, ?, ?, ?)";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
-
             stmt.setString(1, product.getProId());
             stmt.setInt(2, product.getProTypeId());
             stmt.setString(3, product.getProName());
             stmt.setString(4, product.getProDescription());
             stmt.setBigDecimal(5, product.getProPrice());
             stmt.setString(6, product.getProImageMain());
-
             stmt.executeUpdate();
         }
     }
@@ -30,9 +28,7 @@ public class ProductDAO {
     public List<Product> getAllProducts() throws SQLException, ClassNotFoundException {
         List<Product> list = new ArrayList<>();
         String sql = "SELECT * FROM Product";
-
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql);  ResultSet rs = stmt.executeQuery()) {
-
             while (rs.next()) {
                 Product p = new Product();
                 p.setProId(rs.getString("proId"));
@@ -41,8 +37,7 @@ public class ProductDAO {
                 p.setProDescription(rs.getString("proDescription"));
                 p.setProPrice(rs.getBigDecimal("proPrice"));
                 p.setProImageMain(rs.getString("proImageMain"));
-                
-              list.add(p);
+                list.add(p);
             }
         }
         return list;
@@ -51,12 +46,9 @@ public class ProductDAO {
     // READ BY ID
     public Product getProductById(String id) throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM Product WHERE proId = ?";
-
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
-
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
-
             if (rs.next()) {
                 Product p = new Product();
                 p.setProId(rs.getString("proId"));
@@ -65,7 +57,6 @@ public class ProductDAO {
                 p.setProDescription(rs.getString("proDescription"));
                 p.setProPrice(rs.getBigDecimal("proPrice"));
                 p.setProImageMain(rs.getString("proImageUrl"));
-
                 return p;
             }
         }
