@@ -17,10 +17,10 @@ public class ProductDetailServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            int productId = Integer.parseInt(request.getParameter("id"));
+            String productId = request.getParameter("id");
             ProductDAO productDAO = new ProductDAO();
-            Product product = productDAO.getById(productId);
-            
+            Product product = productDAO.getProductById(productId);
+
             if (product != null) {
                 request.setAttribute("product", product);
                 request.getRequestDispatcher("product-detail.jsp").forward(request, response);
@@ -31,4 +31,4 @@ public class ProductDetailServlet extends HttpServlet {
             response.sendRedirect("product-list");
         }
     }
-} 
+}

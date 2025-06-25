@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.SQLException;
 
 @WebServlet(name = "DeleteProductServlet", urlPatterns = {"/delete-product"})
 public class DeleteProductServlet extends HttpServlet {
@@ -15,13 +16,13 @@ public class DeleteProductServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            int productId = Integer.parseInt(request.getParameter("id"));
+            String productId = request.getParameter("productId");
             ProductDAO productDAO = new ProductDAO();
-            productDAO.delete(productId);
+            productDAO.deleteProduct(productId);
             response.sendRedirect("product-list");
         } catch (Exception e) {
             request.setAttribute("error", "Error: " + e.getMessage());
             request.getRequestDispatcher("product-list").forward(request, response);
         }
     }
-} 
+}
