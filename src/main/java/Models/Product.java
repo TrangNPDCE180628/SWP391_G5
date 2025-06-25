@@ -1,26 +1,29 @@
 package Models;
 
 import java.math.BigDecimal;
+import java.sql.Date;
+
 
 public class Product {
 
     private String proId;
+    private int proTypeId;
     private String proName;
     private String proDescription;
     private BigDecimal proPrice;
-    private String proImageUrl;
-    private int proTypeId;
+    private String proImage;
 
     public Product() {
     }
 
-    public Product(String proId, String proName, String proDescription, BigDecimal proPrice, String proImageUrl, int proTypeId) {
+    public Product(String proId, int proTypeId, String proName, String proDescription, BigDecimal proPrice, String proImageMain) {
         this.proId = proId;
+        this.proTypeId = proTypeId;
         this.proName = proName;
         this.proDescription = proDescription;
         this.proPrice = proPrice;
-        this.proImageUrl = proImageUrl;
-        this.proTypeId = proTypeId;
+        this.proImage = proImageMain;
+
     }
 
     public String getProId() {
@@ -29,6 +32,14 @@ public class Product {
 
     public void setProId(String proId) {
         this.proId = proId;
+    }
+
+    public int getProTypeId() {
+        return proTypeId;
+    }
+
+    public void setProTypeId(int cateId) {
+        this.proTypeId = cateId;
     }
 
     public String getProName() {
@@ -55,8 +66,36 @@ public class Product {
         this.proPrice = proPrice;
     }
 
-    public String getProImageUrl() {
-        return proImageUrl;
+    public String getProImageMain() {
+        return proImage;
+    }
+
+    public void setProImageMain(String proImageMain) {
+        this.proImage = proImageMain;
+    }
+
+    public void setProductId(int productId) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    public void setProductName(String productName) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    public void setDescription(String description) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    public void setPrice(double price) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    public void setQuantity(int quantity) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    public void setImage(String image) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     public void setProImageUrl(String proImageUrl) {
