@@ -1,31 +1,29 @@
 package Controllers;
 
 import DAOs.AdminDAO;
-import DAOs.AttributeDAO;
 import DAOs.CustomerDAO;
 import DAOs.FeedbackDAO;
 import DAOs.FeedbackReplyViewDAO;
 import DAOs.OrderDAO;
+import DAOs.AttributeDAO;
 import DAOs.ProductAttributeDAO;
-import DAOs.ProductDAO;
 import DAOs.ReplyFeedbackDAO;
 import DAOs.StaffDAO;
 import DAOs.VoucherDAO;
-import DAOs.ProductTypeDAO;
+import DAOs.ViewProductAttributeDAO;
 
 import Models.Admin;
-import Models.Attribute;
 import Models.Customer;
 import Models.Feedback;
 import Models.FeedbackReplyView;
 import Models.Order;
-import Models.Product;
+import Models.Attribute;
 import Models.ProductAttribute;
 import Models.ReplyFeedback;
 import Models.Staff;
 import Models.Voucher;
 import Models.User;
-import Models.ProductTypes;
+import Models.ViewProductAttribute;
 
 import com.google.gson.Gson;
 
@@ -37,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import javax.servlet.http.HttpSession;
+import Ultis.DBContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,21 +45,20 @@ import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
+import java.sql.Connection;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
-        maxFileSize = 1024 * 1024 * 10, // 10 MB
-        maxRequestSize = 1024 * 1024 * 100 // 100 MB
+        fileSizeThreshold = 1024 * 1024 * 1,
+        maxFileSize = 1024 * 1024 * 10,
+        maxRequestSize = 1024 * 1024 * 100
 )
 public class AdminController extends HttpServlet {
 
     private static final String UPLOAD_DIR = "images/products";
-    private static final String UPLOAD_DIR_STAFF = "images/staff";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
         String action = request.getParameter("action");
 
@@ -71,24 +69,9 @@ public class AdminController extends HttpServlet {
             }
 
             switch (action) {
-
-                /* Manage Profile*/
                 case "editProfile":
                     editProfile(request, response);
                     break;
-
-                // Product Type
-                case "addProductType":
-                    addProductType(request, response);
-                    break;
-                case "updateProductType":
-                    updateProductType(request, response);
-                    break;
-                case "deleteProductType":
-                    deleteProductType(request, response);
-                    break;
-
-                /*Manage Voucher*/
                 case "addVoucher":
                     addVoucher(request, response);
                     break;
@@ -101,24 +84,18 @@ public class AdminController extends HttpServlet {
                 case "getVoucherDetails":
                     getVoucherDetails(request, response);
                     break;
-
-                /*Manage Staff*/
                 case "addStaff":
                     addStaff(request, response);
                     break;
                 case "editStaff":
-                    edit1Staff(request, response);
+                    editStaff(request, response);
                     break;
                 case "deleteStaff":
                     deleteStaff(request, response);
                     break;
-
-                /*Manage Feedback*/
                 case "replyFeedback":
                     replyFeedback(request, response);
                     break;
-
-                /*Manage Feedback*/
                 case "addAttribute":
                     addAttribute(request, response);
                     return;
@@ -152,14 +129,21 @@ public class AdminController extends HttpServlet {
                     response.getWriter().write(json);
                     return; // Kết thúc ở đây vì không cần forward
                 }
+                case "filterProductAttribute":
+                    filterProductAttribute(request, response);
+                    return;
 
                 default:
                     loadAdminPage(request, response);
             }
         } catch (Exception e) {
             log("Error at AdminController: " + e.toString());
-            request.setAttribute("ERROR", "An error occurred: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "An error occurred: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            } else {
+                log("Response was already committed. Cannot forward to error.jsp");
+            }
         }
     }
 
@@ -172,7 +156,6 @@ public class AdminController extends HttpServlet {
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
-            ProductTypeDAO productTypeDAO = new ProductTypeDAO();
             FeedbackDAO feedbackDAO = new FeedbackDAO();
             FeedbackReplyViewDAO viewfeedbackDAO = new FeedbackReplyViewDAO();
             AttributeDAO attributeDAO = new AttributeDAO();
@@ -181,21 +164,25 @@ public class AdminController extends HttpServlet {
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
             List<Voucher> vouchers = voucherDAO.getAll();
-            List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes();
             List<Feedback> feedbacks = feedbackDAO.getAllFeedbacks();
             List<FeedbackReplyView> viewFeedbacks = viewfeedbackDAO.getAllFeedbackReplies();
             List<Attribute> attributes = attributeDAO.getAll();
             List<ProductAttribute> productAttributes = paDAO.getAll();
 
+// === NEW: Load từ VIEW ===
+            Connection conn = DBContext.getConnection();
+            ViewProductAttributeDAO viewProductAttributeDAO = new ViewProductAttributeDAO(conn);
+            List<ViewProductAttribute> viewProductAttributes = viewProductAttributeDAO.getAll();
+            request.setAttribute("viewProductAttributes", viewProductAttributes);
+
             request.setAttribute("users", users);
             request.setAttribute("staffs", staffs);
             request.setAttribute("vouchers", vouchers);
-            request.setAttribute("productTypes", productTypes);
             request.setAttribute("feedbacks", feedbacks);
             request.setAttribute("viewFeedbacks", viewFeedbacks);
             request.setAttribute("attributes", attributes);
             request.setAttribute("productAttributes", productAttributes);
-            
+
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
             if (loginUser != null) {
@@ -281,12 +268,15 @@ public class AdminController extends HttpServlet {
             }
 
             response.sendRedirect("AdminController?tab=profile");
-
         } catch (Exception e) {
             log("Error in editProfile(): " + e.getMessage());
             e.printStackTrace();
-            request.setAttribute("ERROR", "Lỗi cập nhật hồ sơ: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Lỗi cập nhật hồ sơ: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            } else {
+                log("Response already committed while editing profile");
+            }
         }
     }
 
@@ -299,52 +289,6 @@ public class AdminController extends HttpServlet {
             }
         }
         return "";
-    }
-
-    private void addProductType(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String name = request.getParameter("typeName");
-            if (name != null && !name.trim().isEmpty()) {
-                ProductTypeDAO dao = new ProductTypeDAO();
-                ProductTypes type = new ProductTypes();
-                type.setName(name);
-                dao.addProductType(type);
-            }
-            response.sendRedirect("AdminController?tab=productTypes");
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
-    }
-
-    private void updateProductType(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("typeId"));
-            String name = request.getParameter("typeName");
-            if (name != null && !name.trim().isEmpty()) {
-                ProductTypeDAO dao = new ProductTypeDAO();
-                ProductTypes type = new ProductTypes();
-                type.setId(id);
-                type.setName(name);
-                dao.updateProductType(type);
-            }
-            response.sendRedirect("AdminController?tab=productTypes");
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
-    }
-
-    private void deleteProductType(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            ProductTypeDAO dao = new ProductTypeDAO();
-            dao.deleteProductType(id);
-            response.sendRedirect("AdminController?tab=productTypes");
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
     }
 
     private void addVoucher(HttpServletRequest request, HttpServletResponse response)
@@ -418,7 +362,9 @@ public class AdminController extends HttpServlet {
 
             if (voucher == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write("Voucher not found");
+                if (!response.isCommitted()) {
+                    response.getWriter().write("Voucher not found");
+                }
                 return;
             }
 
@@ -428,7 +374,9 @@ public class AdminController extends HttpServlet {
             out.flush();
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("Error fetching voucher: " + e.getMessage());
+            if (!response.isCommitted()) {
+                response.getWriter().write("Error fetching voucher: " + e.getMessage());
+            }
         }
     }
 
@@ -489,48 +437,61 @@ public class AdminController extends HttpServlet {
         }
     }
 
-    private void edit1Staff(HttpServletRequest request, HttpServletResponse response)
+    private void editStaff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            String id = request.getParameter("id");
-            String username = request.getParameter("username");
-            String password = request.getParameter("password");
-            String fullname = request.getParameter("fullname");
-            String gender = request.getParameter("gender");
-            String gmail = request.getParameter("gmail");
-            String phone = request.getParameter("phone");
-            String position = request.getParameter("position");
 
-            // Xử lý file ảnh
-            Part imagePart = request.getPart("image");
-            String fileName = Paths.get(imagePart.getSubmittedFileName()).getFileName().toString();
+            // Lấy dữ liệu từ form
+            String staffId = request.getParameter("staffId");  // hidden input
+            String staffName = request.getParameter("staffName"); // hidden input
+            String staffFullName = request.getParameter("staffFullName");
+            String staffPassword = request.getParameter("staffPassword");
+            String staffGender = request.getParameter("staffGender");
+            String staffGmail = request.getParameter("staffGmail");
+            String staffPhone = request.getParameter("staffPhone");
+            String staffPosition = request.getParameter("staffPosition");
+            String currentImage = request.getParameter("currentImage");
 
-            String imageFileName = null;
+            System.out.println("ID staff :" + staffId);
+            // Xử lý ảnh upload
+            Part filePart = request.getPart("staffImage");
+            String fileName = "";
 
-            if (fileName != null && !fileName.trim().isEmpty()) {
-                // Có upload ảnh mới
-                String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR_STAFF;
+            if (filePart != null && filePart.getSize() > 0) {
+                fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+
+                // Tạo đường dẫn thư mục lưu ảnh
+                String uploadPath = getServletContext().getRealPath("/") + "images" + File.separator + "staff";
                 File uploadDir = new File(uploadPath);
                 if (!uploadDir.exists()) {
                     uploadDir.mkdirs();
                 }
-                imagePart.write(uploadPath + File.separator + fileName);
-                imageFileName = fileName;
+
+                // Ghi ảnh mới vào thư mục
+                filePart.write(uploadPath + File.separator + fileName);
             } else {
-                // Không có ảnh mới => giữ ảnh cũ từ database
-                StaffDAO dao = new StaffDAO();
-                Staff existing = dao.getById(id);
-                imageFileName = existing.getStaffImage();
+                // Nếu không chọn ảnh mới, giữ nguyên ảnh cũ
+                fileName = currentImage != null ? currentImage : "";
             }
 
-            // Cập nhật dữ liệu
-            Staff updatedStaff = new Staff(id, username, fullname, password,
-                    gender, imageFileName, gmail, phone, position);
+            // Tạo đối tượng Staff để update
+            Staff staff = new Staff();
+            staff.setStaffId(staffId);
+            staff.setStaffName(staffName);
+            staff.setStaffFullName(staffFullName);
+            staff.setStaffPassword(staffPassword);
+            staff.setStaffGender(staffGender);
+            staff.setStaffImage(fileName); // Tên file ảnh (mới hoặc cũ)
+            staff.setStaffGmail(staffGmail);
+            staff.setStaffPhone(staffPhone);
+            staff.setStaffPosition(staffPosition);
 
-            StaffDAO dao = new StaffDAO();
-            dao.update(updatedStaff);
+            // Gọi DAO để update
+            StaffDAO staffDAO = new StaffDAO();
+            staffDAO.update(staff);
 
-            response.sendRedirect("AdminController?tab=staff");
+            // Chuyển hướng lại trang admin
+            loadAdminPage(request, response);
 
         } catch (Exception e) {
             throw new ServletException(e);
@@ -540,42 +501,36 @@ public class AdminController extends HttpServlet {
     private void deleteStaff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Lấy staffId từ request
             String staffId = request.getParameter("id");
-
-            // Kiểm tra staffId không null hoặc rỗng
             if (staffId != null && !staffId.trim().isEmpty()) {
                 StaffDAO staffDAO = new StaffDAO();
                 staffDAO.delete(staffId);
             }
-
-            // Chuyển hướng về lại trang admin
             response.sendRedirect("AdminController");
-
         } catch (Exception e) {
-
-            request.setAttribute("error", "Error while deleting staff: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            if (!response.isCommitted()) {
+                request.setAttribute("error", "Error while deleting staff: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            } else {
+                log("Response already committed while deleting staff");
+            }
         }
     }
 
     private void replyFeedback(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Lấy dữ liệu từ form
             int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
             String cusId = request.getParameter("cusId");
             String staffId = request.getParameter("staffId");
             String contentReply = request.getParameter("contentReply");
 
-            // Kiểm tra dữ liệu
             if (staffId == null || staffId.trim().isEmpty() || contentReply == null || contentReply.trim().isEmpty()) {
                 request.setAttribute("ERROR", "Missing required reply data.");
                 request.getRequestDispatcher("admin.jsp").forward(request, response);
                 return;
             }
 
-            // Gọi DAO để insert
             ReplyFeedbackDAO dao = new ReplyFeedbackDAO();
             ReplyFeedback reply = new ReplyFeedback();
             reply.setFeedbackId(feedbackId);
@@ -584,15 +539,32 @@ public class AdminController extends HttpServlet {
             reply.setContentReply(contentReply);
 
             dao.insertReplyFeedback(reply);
-
-            // Quay về trang admin và load lại dữ liệu
             loadAdminPage(request, response);
-
         } catch (Exception e) {
             log("Error in replyFeedback: " + e.toString());
-            request.setAttribute("ERROR", "Failed to reply feedback.");
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Failed to reply feedback.");
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            } else {
+                log("Response already committed while replying feedback");
+            }
         }
+    }
+
+    // Helper classes for JSON response
+    private static class OrderDetailsResponse {
+
+        Order order;
+        String customerName;
+        List<OrderItem> orderItems;
+    }
+
+    private static class OrderItem {
+
+        String productName;
+        int quantity;
+        double unitPrice;
+        double totalPrice;
     }
 
     // == ATTRIBUTE ==
@@ -673,38 +645,39 @@ public class AdminController extends HttpServlet {
         }
     }
 
-    private void filterProductAttribute(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String filterProductId = request.getParameter("filterProductId");
-            String filterAttributeName = request.getParameter("filterAttributeName");
-            String filterValue = request.getParameter("filterValue");
+   private void filterProductAttribute(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    try {
+        String proId = request.getParameter("filterProductId");
+        String attributeName = request.getParameter("filterAttributeName");
+        String value = request.getParameter("filterAttributeValue");
+        String sortField = request.getParameter("sortField");
+        String sortOrder = request.getParameter("sortOrder");
 
-            ProductAttributeDAO paDAO = new ProductAttributeDAO();
+        Connection conn = DBContext.getConnection();
+        ViewProductAttributeDAO viewDAO = new ViewProductAttributeDAO(conn);
+        List<ViewProductAttribute> filteredViewList = viewDAO.filterAndSort(proId, attributeName, value, sortField, sortOrder);
 
-            List<ProductAttribute> productAttributes = paDAO.getAll();
+        request.setAttribute("viewProductAttributes", filteredViewList);
+        request.setAttribute("activeTab", "attributes");
 
-            if (filterProductId != null && !filterProductId.trim().isEmpty()) {
-                productAttributes.removeIf(pa -> !pa.getProId().toLowerCase().contains(filterProductId.toLowerCase()));
-            }
-            if (filterAttributeName != null && !filterAttributeName.trim().isEmpty()) {
-                productAttributes.removeIf(pa -> pa.getAttributeName() == null || !pa.getAttributeName().toLowerCase().contains(filterAttributeName.toLowerCase()));
-            }
-            if (filterValue != null && !filterValue.trim().isEmpty()) {
-                productAttributes.removeIf(pa -> pa.getValue() == null || !pa.getValue().toLowerCase().contains(filterValue.toLowerCase()));
-            }
+        // Đặt lại param để giữ giá trị đã chọn
+        request.setAttribute("sortField", sortField);
+        request.setAttribute("sortOrder", sortOrder);
+        request.setAttribute("filterProductId", proId);
+        request.setAttribute("filterAttributeName", attributeName);
+        request.setAttribute("filterAttributeValue", value);
 
-            request.setAttribute("productAttributes", productAttributes);
-            request.setAttribute("activeTab", "attributes");
-            request.getRequestDispatcher("admin.jsp").forward(request, response);
-        } catch (Exception e) {
-            log("Error in filterProductAttribute: " + e.getMessage());
-            if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Unable to filter attributes: " + e.getMessage());
-                request.getRequestDispatcher("error.jsp").forward(request, response);
-            }
+        request.getRequestDispatcher("admin.jsp").forward(request, response);
+    } catch (Exception e) {
+        log("Error in filterProductAttribute: " + e.getMessage());
+        if (!response.isCommitted()) {
+            request.setAttribute("ERROR", "Unable to filter and sort attributes: " + e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
+}
+
 
     private void viewProductAttribute(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -723,22 +696,6 @@ public class AdminController extends HttpServlet {
             request.setAttribute("ERROR", "Không thể xem chi tiết thuộc tính sản phẩm.");
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
-    }
-
-    // Helper classes for JSON response
-    private static class OrderDetailsResponse {
-
-        Order order;
-        String customerName;
-        List<OrderItem> orderItems;
-    }
-
-    private static class OrderItem {
-
-        String productName;
-        int quantity;
-        double unitPrice;
-        double totalPrice;
     }
 
     @Override

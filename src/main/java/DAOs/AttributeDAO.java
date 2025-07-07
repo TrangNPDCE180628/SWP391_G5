@@ -22,7 +22,7 @@ public class AttributeDAO {
 
     public void create(Attribute att) throws SQLException, ClassNotFoundException {
         String sql = "INSERT INTO Attribute (attributeName, unit, proTypeId) VALUES (?, ?, ?)";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, att.getAttributeName());
             stmt.setString(2, att.getUnit());
             stmt.setInt(3, att.getProTypeId());
@@ -33,13 +33,13 @@ public class AttributeDAO {
     public List<Attribute> getAll() throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM Attribute";
         List<Attribute> list = new ArrayList<>();
-        try ( Connection conn = DBContext.getConnection();  Statement stmt = conn.createStatement();  ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = DBContext.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 list.add(new Attribute(
-                        rs.getInt("attributeId"),
-                        rs.getString("attributeName"),
-                        rs.getString("unit"),
-                        rs.getInt("proTypeId")
+                    rs.getInt("attributeId"),
+                    rs.getString("attributeName"),
+                    rs.getString("unit"),
+                    rs.getInt("proTypeId")
                 ));
             }
         }
@@ -48,7 +48,7 @@ public class AttributeDAO {
 
     public void update(Attribute att) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE Attribute SET attributeName = ?, unit = ?, proTypeId = ? WHERE attributeId = ?";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, att.getAttributeName());
             stmt.setString(2, att.getUnit());
             stmt.setInt(3, att.getProTypeId());
@@ -59,9 +59,10 @@ public class AttributeDAO {
 
     public void delete(int attributeId) throws SQLException, ClassNotFoundException {
         String sql = "DELETE FROM Attribute WHERE attributeId = ?";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, attributeId);
             stmt.executeUpdate();
         }
     }
 }
+

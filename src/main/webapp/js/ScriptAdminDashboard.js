@@ -443,22 +443,22 @@ function deleteProductAttribute(productId, attributeId) {
     }
 }
 
-function viewProductAttribute(proId, attributeId) {
-    fetch(`AdminController?action=viewProductAttribute&proId=${proId}&attributeId=${attributeId}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("viewProId").innerText = data.proId;
-                document.getElementById("viewProductName").innerText = data.productName;
-                document.getElementById("viewAttributeId").innerText = data.attributeId;
-                document.getElementById("viewAttributeName").innerText = data.attributeName;
-                document.getElementById("viewAttributeValue").innerText = data.value;
+function viewProductAttribute(productId, attributeId) {
+    const row = document.querySelector(`tr[data-product-id="${productId}"][data-attribute-id="${attributeId}"]`);
+    if (!row) {
+        alert("Cannot find row for viewing.");
+        return;
+    }
 
-                new bootstrap.Modal(document.getElementById('viewProductAttributeModal')).show();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert("Failed to load product attribute details.");
-            });
+    document.getElementById("viewProId").innerText = row.dataset.productId || '';
+    document.getElementById("viewProductName").innerText = row.dataset.productName || '';
+    document.getElementById("viewProductType").innerText = row.dataset.productType || '';
+    document.getElementById("viewAttributeId").innerText = row.dataset.attributeId || '';
+    document.getElementById("viewAttributeName").innerText = row.dataset.attributeName || '';
+    document.getElementById("viewAttributeValue").innerText = row.dataset.attributeValue || '';
+    document.getElementById("viewUnit").innerText = row.dataset.unit || '';
+
+    new bootstrap.Modal(document.getElementById('viewProductAttributeModal')).show();
 }
 
 

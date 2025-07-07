@@ -6,11 +6,11 @@ public class ProductAttribute {
     private int attributeId;
     private String value;
 
-    // Additional fields for display
-    private String attributeName;
-    private String productName;
-    private String attributeValue;  // Duplicate of value for JSP use
-    private String productId;       // Duplicate of proId for JSP use
+    // Thêm thông tin để hiển thị
+    private String attributeName;  // ví dụ: "RAM"
+    private String productName;    // ví dụ: "iPhone 14"
+    private String unit;
+    private String productType;
 
     public ProductAttribute() {
     }
@@ -19,8 +19,6 @@ public class ProductAttribute {
         this.proId = proId;
         this.attributeId = attributeId;
         this.value = value;
-        this.attributeValue = value;
-        this.productId = proId;
     }
 
     public String getProId() {
@@ -29,7 +27,6 @@ public class ProductAttribute {
 
     public void setProId(String proId) {
         this.proId = proId;
-        this.productId = proId;
     }
 
     public int getAttributeId() {
@@ -46,7 +43,6 @@ public class ProductAttribute {
 
     public void setValue(String value) {
         this.value = value;
-        this.attributeValue = value;
     }
 
     public String getAttributeName() {
@@ -65,19 +61,19 @@ public class ProductAttribute {
         this.productName = productName;
     }
 
-    public String getAttributeValue() {
-        return attributeValue;
+    public String getUnit() {
+        return unit;
     }
 
-    public void setAttributeValue(String attributeValue) {
-        this.attributeValue = attributeValue;
+    public void setUnit(String unit) {
+        this.unit = unit;
     }
 
-    public String getProductId() {
-        return productId;
+    public String getProductType() {
+        return productType;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setProductType(String productType) {
+        this.productType = productType;
     }
 }
