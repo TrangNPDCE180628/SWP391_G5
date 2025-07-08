@@ -161,4 +161,42 @@ public class ProductDAO {
         }
         return 0;
     }
+// [THÊM MỚI]: Lấy sản phẩm theo danh mục với phân trang
+    public List<Product> getByCategoryId(int typeId, int page, int productsPerPage) throws SQLException, ClassNotFoundException {
+        int offset = (page - 1) * productsPerPage;
+        String sql = "SELECT * FROM Product WHERE proTypeId = ? ORDER BY proId OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        List<Product> products = new ArrayList<>();
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, typeId);
+            stmt.setInt(2, offset);
+            stmt.setInt(3, productsPerPage);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Product product = new Product();
+                product.setProId(rs.getString("proId"));
+                product.setProTypeId(rs.getInt("proTypeId"));
+                product.setProName(rs.getString("proName"));
+                product.setProDescription(rs.getString("proDescription"));
+                product.setProPrice(rs.getBigDecimal("proPrice"));
+                product.setProImageMain(rs.getString("proImageUrl"));
+                products.add(product);
+            }
+        }
+        return products;
+    }
+
+    // [THÊM MỚI]: Đếm tổng số sản phẩm theo danh mục
+    public int countByCategoryId(int typeId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT COUNT(*) FROM Product WHERE proTypeId = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, typeId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
 }
