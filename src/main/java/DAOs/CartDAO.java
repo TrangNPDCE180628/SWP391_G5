@@ -9,6 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CartDAO {
+// Thêm sản phẩm vào giỏ: nếu đã có thì cộng thêm số lượng
+
+    public void addToCart(String cusId, String proId, int quantity) throws SQLException, ClassNotFoundException {
+        Cart existing = getCartItem(cusId, proId);
+        if (existing != null) {
+            int newQuantity = existing.getQuantity() + quantity;
+            updateQuantity(existing.getCartId(), newQuantity);
+        } else {
+            insertCart(cusId, proId, quantity);
+        }
+    }
 
     // Thêm sản phẩm vào giỏ
     public void insertCart(String cusId, String proId, int quantity) throws SQLException, ClassNotFoundException {

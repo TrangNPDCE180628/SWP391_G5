@@ -1,5 +1,6 @@
 package Controllers;
 
+import DAOs.CartDAO;
 import DAOs.OrderDAO;
 import DAOs.OrderDetailDAO;
 import DAOs.ProductDAO;
@@ -15,8 +16,11 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebServlet(name = "CartController", urlPatterns = {"/CartController"})
 public class CartController extends HttpServlet {
@@ -33,6 +37,11 @@ public class CartController extends HttpServlet {
             }
 
             switch (action) {
+                case "view":
+                    loadCartFromDatabase(request);
+                    request.getRequestDispatcher("cart.jsp").forward(request, response);
+                    break;
+
                 case "add":
                     addToCart(request, response);
                     break;
@@ -41,9 +50,6 @@ public class CartController extends HttpServlet {
                     break;
                 case "remove":
                     removeFromCart(request, response);
-                    break;
-                case "makePayment":
-                    makePayment(request, response);
                     break;
                 default:
                     response.sendRedirect("cart.jsp");
@@ -55,59 +61,65 @@ public class CartController extends HttpServlet {
         }
     }
 
+    private void loadCartFromDatabase(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        String cusId = (String) session.getAttribute("cusId");
+
+        try {
+            CartDAO cartDAO = new CartDAO();
+            List<ViewCartCustomer> cartItems = cartDAO.getViewCartByCusId(cusId);
+            LinkedHashMap<String, ViewCartCustomer> cartMap = new LinkedHashMap<>();
+
+            for (ViewCartCustomer item : cartItems) {
+                cartMap.put(item.getProId(), item);
+            }
+
+            session.setAttribute("cart", cartMap);
+            session.setAttribute("cartSize", cartMap.size());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            session.setAttribute("error", "Không thể tải giỏ hàng từ cơ sở dữ liệu.");
+        }
+    }
+
     private void addToCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
-        LinkedHashMap<String, ViewCartCustomer> cart
-                = (LinkedHashMap<String, ViewCartCustomer>) session.getAttribute("cart");
-
-        if (cart == null) {
-            cart = new LinkedHashMap<>();
-        }
 
         String productId = request.getParameter("productId");
         String cusId = (String) session.getAttribute("cusId");
 
         try {
-            if (cart.containsKey(productId)) {
-                session.setAttribute("error", "Sản phẩm đã có trong giỏ. Vui lòng chỉnh sửa số lượng tại giỏ hàng.");
-                response.sendRedirect("HomeController");
+            if (cusId == null) {
+                session.setAttribute("error", "Bạn cần đăng nhập để thêm sản phẩm vào giỏ.");
+                response.sendRedirect("login.jsp");
                 return;
             }
 
             ProductDAO productDAO = new ProductDAO();
             StockDAO stockDAO = new StockDAO();
+            CartDAO cartDAO = new CartDAO();
 
-            Product product = productDAO.getProductById(productId);
+            Product product = productDAO.getById(productId);
             int stockQuantity = stockDAO.getStockByProductId(productId);
 
-            if (product == null) {
-                session.setAttribute("error", "Không tìm thấy sản phẩm.");
+            if (product == null || stockQuantity <= 0) {
+                session.setAttribute("error", "Sản phẩm không hợp lệ hoặc đã hết hàng.");
                 response.sendRedirect("HomeController");
                 return;
             }
 
-            if (stockQuantity <= 0) {
-                session.setAttribute("error", "Sản phẩm đã hết hàng.");
-                response.sendRedirect("HomeController");
-                return;
-            }
+            // ❗❗ Thêm vào DB (dùng addToCart để tránh trùng lỗi)
+            cartDAO.addToCart(cusId, productId, 1);
 
-            ViewCartCustomer item = new ViewCartCustomer(
-                    0,
-                    cusId,
-                    productId,
-                    product.getProName(),
-                    product.getProPrice().doubleValue(),
-                    product.getProImageMain(),
-                    1
-            );
+            // 🔄 Load lại toàn bộ cart từ DB
+            List<ViewCartCustomer> cartList = cartDAO.getViewCartByCusId(cusId);
 
-            // Đưa sản phẩm mới vào đầu giỏ hàng (LinkedHashMap preserve order)
+            // Cập nhật session
             LinkedHashMap<String, ViewCartCustomer> updatedCart = new LinkedHashMap<>();
-            updatedCart.put(productId, item);
-            for (Map.Entry<String, ViewCartCustomer> entry : cart.entrySet()) {
-                updatedCart.put(entry.getKey(), entry.getValue());
+            for (ViewCartCustomer item : cartList) {
+                updatedCart.put(item.getProId(), item);
             }
 
             session.setAttribute("cart", updatedCart);
@@ -117,7 +129,7 @@ public class CartController extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Thêm sản phẩm vào giỏ thất bại.");
+            session.setAttribute("error", "Lỗi khi thêm vào giỏ.");
             response.sendRedirect("HomeController");
         }
     }
@@ -125,35 +137,51 @@ public class CartController extends HttpServlet {
     private void updateCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
-        Map<String, ViewCartCustomer> cart = (Map<String, ViewCartCustomer>) session.getAttribute("cart");
+        String productId = request.getParameter("productId");
+        String cusId = (String) session.getAttribute("cusId");
 
-        if (cart != null) {
-            try {
-                String productId = request.getParameter("productId");
-                int change = Integer.parseInt(request.getParameter("change"));
+        try {
+            if (cusId == null) {
+                session.setAttribute("error", "Bạn cần đăng nhập để thao tác.");
+                response.sendRedirect("login.jsp");
+                return;
+            }
 
-                ViewCartCustomer item = cart.get(productId);
-                if (item != null) {
-                    StockDAO stockDAO = new StockDAO();
-                    int stockQuantity = stockDAO.getStockByProductId(productId);
-                    int newQuantity = item.getQuantity() + change;
+            int change = Integer.parseInt(request.getParameter("change"));
 
-                    if (newQuantity > 0 && newQuantity <= stockQuantity) {
-                        item.setQuantity(newQuantity);
-                    } else if (newQuantity <= 0) {
-                        cart.remove(productId);
-                    } else {
-                        session.setAttribute("error", "Vượt quá số lượng tồn kho.");
-                    }
+            CartDAO cartDAO = new CartDAO();
+            ViewCartCustomer item = cartDAO.getViewCartByCusId(cusId).stream()
+                    .filter(c -> c.getProId().equals(productId))
+                    .findFirst()
+                    .orElse(null);
 
-                    session.setAttribute("cart", cart);
-                    session.setAttribute("cartSize", cart.size());
+            if (item != null) {
+                int newQuantity = item.getQuantity() + change;
+                StockDAO stockDAO = new StockDAO();
+                int stock = stockDAO.getStockByProductId(productId);
+
+                if (newQuantity > 0 && newQuantity <= stock) {
+                    cartDAO.updateQuantity(item.getCartId(), newQuantity);
+                } else if (newQuantity <= 0) {
+                    cartDAO.deleteCartItem(item.getCartId());
+                } else {
+                    session.setAttribute("error", "Số lượng vượt quá tồn kho.");
                 }
 
-            } catch (Exception e) {
-                e.printStackTrace();
-                session.setAttribute("error", "Cập nhật giỏ hàng thất bại.");
+                // ❗Reload cart sau khi update/delete
+                List<ViewCartCustomer> updatedCartList = cartDAO.getViewCartByCusId(cusId);
+                LinkedHashMap<String, ViewCartCustomer> updatedCart = new LinkedHashMap<>();
+                for (ViewCartCustomer vc : updatedCartList) {
+                    updatedCart.put(vc.getProId(), vc);
+                }
+
+                session.setAttribute("cart", updatedCart);
+                session.setAttribute("cartSize", updatedCart.size());
             }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            session.setAttribute("error", "Cập nhật giỏ hàng thất bại.");
         }
 
         response.sendRedirect("cart.jsp");
@@ -167,7 +195,12 @@ public class CartController extends HttpServlet {
         if (cart != null) {
             try {
                 String productId = request.getParameter("productId");
-                if (cart.remove(productId) != null) {
+                ViewCartCustomer item = cart.get(productId);
+
+                if (item != null) {
+                    CartDAO cartDAO = new CartDAO();
+                    cartDAO.deleteCartItem(item.getCartId());
+                    cart.remove(productId);
                     session.setAttribute("message", "Đã xóa sản phẩm khỏi giỏ.");
                 }
 
@@ -182,81 +215,19 @@ public class CartController extends HttpServlet {
         response.sendRedirect("cart.jsp");
     }
 
-    private void makePayment(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        HttpSession session = request.getSession();
-        String voucherCode = request.getParameter("voucherCode");
-        String cusId = (String) session.getAttribute("cusId");
-
-        Map<String, ViewCartCustomer> cart = (Map<String, ViewCartCustomer>) session.getAttribute("cart");
-
-        if (cart == null || cart.isEmpty()) {
-            session.setAttribute("error", "Your cart is empty.");
-            response.sendRedirect("cart.jsp");
-            return;
-        }
-
-        try {
-            double subtotal = cart.values().stream()
-                    .mapToDouble(ViewCartCustomer::getTotalPrice).sum();
-
-            double discount = 0;
-            if (voucherCode != null && !voucherCode.isEmpty()) {
-                VoucherDAO voucherDAO = new VoucherDAO();
-                Voucher matched = voucherDAO.getAll().stream()
-                        .filter(v -> v.getCodeName().equalsIgnoreCase(voucherCode) && v.isVoucherActive())
-                        .findFirst().orElse(null);
-
-                if (matched != null && subtotal >= matched.getMinOrderAmount().doubleValue()) {
-                    if (matched.getDiscountType().equalsIgnoreCase("percentage")) {
-                        discount = subtotal * matched.getDiscountValue().doubleValue() / 100.0;
-                    } else if (matched.getDiscountType().equalsIgnoreCase("fixed")) {
-                        discount = matched.getDiscountValue().doubleValue();
-                    }
-                } else {
-                    session.setAttribute("warning", "Voucher không hợp lệ hoặc không đủ điều kiện.");
-                }
-            }
-
-            double totalPrice = subtotal - discount;
-
-            OrderDAO orderDAO = new OrderDAO();
-            Order order = new Order();
-            order.setUserId(Integer.parseInt(cusId));
-            order.setOrderDate(new Timestamp(System.currentTimeMillis()));
-            order.setStatus("Pending");
-            order.setTotalPrice(totalPrice);
-            orderDAO.create(order);
-
-            OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
-            StockDAO stockDAO = new StockDAO();
-
-            for (ViewCartCustomer item : cart.values()) {
-                OrderDetail detail = new OrderDetail();
-                detail.setOrderId(order.getId());
-                detail.setProductId(Integer.parseInt(item.getProId()));
-                detail.setQuantity(item.getQuantity());
-                detail.setUnitPrice(item.getProPrice());
-                detail.setTotalPrice(item.getTotalPrice());
-                orderDetailDAO.create(detail);
-                stockDAO.decreaseStockAfterOrder(item.getProId(), item.getQuantity());
-            }
-
-            session.removeAttribute("cart");
-            session.setAttribute("cartSize", 0);
-            session.setAttribute("message", "Thanh toán thành công. Mã đơn hàng: #" + order.getId());
-            response.sendRedirect("order_success.jsp");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            session.setAttribute("error", "Đã xảy ra lỗi khi thanh toán.");
-            response.sendRedirect("cart.jsp");
-        }
-    }
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        VoucherDAO voucherDAO = new VoucherDAO();
+        List<Voucher> vouchers = null;
+        try {
+            vouchers = voucherDAO.getAll();
+        } catch (SQLException ex) {
+            Logger.getLogger(CartController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(CartController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        request.getSession().setAttribute("vouchers", vouchers);
         processRequest(request, response);
     }
 

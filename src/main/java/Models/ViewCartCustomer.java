@@ -1,6 +1,10 @@
 package Models;
 
-public class ViewCartCustomer {
+import java.io.Serializable;
+
+public class ViewCartCustomer implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int cartId;
     private String cusId;

@@ -50,6 +50,7 @@ public class LoginController extends HttpServlet {
 
                     HttpSession session = request.getSession();
                     session.setAttribute("LOGIN_USER", loginUser);
+                    session.setAttribute("cusId", loginUser.getId()); // hoặc getCusId() nếu tên khác
 
                     // Role-based redirection
                     String role = loginUser.getRole();

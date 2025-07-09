@@ -1,31 +1,32 @@
 package Models;
 
 public class OrderDetail {
-    private int id;
+
+    private int orderDetailId;
     private int orderId;
-    private int productId;
+    private String proId;
     private int quantity;
     private double unitPrice;
-    private double totalPrice;
+    private Integer voucherId;
 
     public OrderDetail() {
     }
 
-    public OrderDetail(int id, int orderId, int productId, int quantity, double unitPrice, double totalPrice) {
-        this.id = id;
+    public OrderDetail(int orderDetailId, int orderId, String proId, int quantity, double unitPrice, Integer voucherId) {
+        this.orderDetailId = orderDetailId;
         this.orderId = orderId;
-        this.productId = productId;
+        this.proId = proId;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
-        this.totalPrice = totalPrice;
+        this.voucherId = voucherId;
     }
 
-    public int getId() {
-        return id;
+    public int getOrderDetailId() {
+        return orderDetailId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setOrderDetailId(int orderDetailId) {
+        this.orderDetailId = orderDetailId;
     }
 
     public int getOrderId() {
@@ -36,12 +37,12 @@ public class OrderDetail {
         this.orderId = orderId;
     }
 
-    public int getProductId() {
-        return productId;
+    public String getProId() {
+        return proId;
     }
 
-    public void setProductId(int productId) {
-        this.productId = productId;
+    public void setProId(String proId) {
+        this.proId = proId;
     }
 
     public int getQuantity() {
@@ -61,10 +62,14 @@ public class OrderDetail {
     }
 
     public double getTotalPrice() {
-        return totalPrice;
+        return quantity * unitPrice;
     }
 
-    public void setTotalPrice(double totalPrice) {
-        this.totalPrice = totalPrice;
+    public Integer getVoucherId() {
+        return voucherId;
     }
-} 
+
+    public void setVoucherId(Integer voucherId) {
+        this.voucherId = voucherId;
+    }
+}

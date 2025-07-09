@@ -1,128 +1,367 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ page session="true" %>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>🛒 Giỏ hàng</title>
+        <title>Your Cart</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
         <style>
+            html, body {
+                height: 100%;
+            }
+            .page-wrapper {
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+            }
+            .content {
+                flex: 1;
+            }
             body {
                 background-color: #f8f9fa;
             }
-
             .table th, .table td {
                 vertical-align: middle;
                 text-align: center;
             }
-
             img.product-img {
                 width: 60px;
                 height: 60px;
                 object-fit: cover;
             }
+            .navbar {
+                background-color: #fff;
+                box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            }
+            .navbar-brand {
+                font-weight: 600;
+                color: #333;
+            }
+            .search-form {
+                width: 300px;
+            }
         </style>
     </head>
     <body>
-        <div class="container mt-4">
-            <h2 class="mb-4"><i class="bi bi-cart4"></i> Giỏ hàng của bạn</h2>
-
-            <!-- Thông báo lỗi -->
-            <c:if test="${not empty sessionScope.error}">
-                <div class="alert alert-danger">${sessionScope.error}</div>
-                <% session.removeAttribute("error"); %>
-            </c:if>
-
-            <!-- Thông báo thành công -->
-            <c:if test="${not empty sessionScope.message}">
-                <div class="alert alert-success">${sessionScope.message}</div>
-                <% session.removeAttribute("message");%>
-            </c:if>
-
-            <c:if test="${empty sessionScope.cart}">
-                <div class="alert alert-info">
-                    🛒 Giỏ hàng của bạn đang trống.
-                    <a href="HomeController" class="btn btn-sm btn-primary ms-3">Tiếp tục mua sắm</a>
-                </div>
-            </c:if>
-
-            <c:if test="${not empty sessionScope.cart}">
-                <form action="CartController" method="post">
-                    <input type="hidden" name="action" value="makePayment" />
-                    <table class="table table-bordered table-hover bg-white">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Chọn</th>
-                                <th>Hình ảnh</th>
-                                <th>Tên sản phẩm</th>
-                                <th>Đơn giá</th>
-                                <th>Số lượng</th>
-                                <th>Thành tiền</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:set var="total" value="0"/>
-                            <c:forEach var="item" items="${sessionScope.cart}">
-                                <tr>
-                                    <td>
-                                        <input type="checkbox" name="selectedProductIds" value="${item.key}" />
-                                    </td>
-                                    <td>
-                                        <img src="${item.value.proImageUrl}" class="product-img" alt="${item.value.proName}">
-                                    </td>
-                                    <td>${item.value.proName}</td>
-                                    <td>${item.value.proPrice} ₫</td>
-                                    <td>
-                                        <div class="d-flex justify-content-center align-items-center gap-1">
-                                            <form method="post" action="CartController" class="d-inline">
-                                                <input type="hidden" name="action" value="update"/>
-                                                <input type="hidden" name="productId" value="${item.key}"/>
-                                                <input type="hidden" name="change" value="-1"/>
-                                                <button class="btn btn-sm btn-outline-secondary" type="submit">-</button>
-                                            </form>
-                                            <span>${item.value.quantity}</span>
-                                            <form method="post" action="CartController" class="d-inline">
-                                                <input type="hidden" name="action" value="update"/>
-                                                <input type="hidden" name="productId" value="${item.key}"/>
-                                                <input type="hidden" name="change" value="1"/>
-                                                <button class="btn btn-sm btn-outline-secondary" type="submit">+</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                    <td>${item.value.proPrice * item.value.quantity} ₫</td>
-                                    <td>
-                                        <form method="post" action="CartController">
-                                            <input type="hidden" name="action" value="remove"/>
-                                            <input type="hidden" name="productId" value="${item.key}"/>
-                                            <button class="btn btn-sm btn-danger" type="submit"><i class="bi bi-trash"></i></button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                <c:set var="total" value="${total + (item.value.proPrice * item.value.quantity)}"/>
-                            </c:forEach>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="5" class="text-end"><strong>Tổng cộng:</strong></td>
-                                <td colspan="2"><strong>${total} ₫</strong></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-
-                    <div class="d-flex justify-content-between mt-3">
-                        <a href="HomeController" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Tiếp tục mua sắm
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            Thanh toán các mục đã chọn <i class="bi bi-cash-stack"></i>
-                        </button>
+        <div class="page-wrapper">
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-light sticky-top mb-4">
+                <div class="container py-2">
+                    <a class="navbar-brand" href="HomeController">
+                        <i class="fas fa-microchip me-2"></i>Tech Store
+                    </a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <form class="d-flex search-form mx-auto" action="HomeController" method="GET">
+                            <input class="form-control me-2" type="search" name="searchTerm"
+                                   placeholder="Search for products..." value="${searchTerm}">
+                            <button class="btn btn-outline-success" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item">
+                                <a class="nav-link position-relative" href="CartController?action=view" title="View Cart">
+                                    <i class="fas fa-shopping-cart fa-lg"></i>
+                                    <c:if test="${sessionScope.cartSize > 0}">
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                            ${sessionScope.cartSize}
+                                        </span>
+                                    </c:if>
+                                </a>
+                            </li>
+                            <c:choose>
+                                <c:when test="${not empty sessionScope.LOGIN_USER}">
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                           data-bs-toggle="dropdown">
+                                            <i class="fas fa-user"></i> ${sessionScope.LOGIN_USER.fullName}
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                                            <li><a class="dropdown-item" href="OrderController?action=view">My Orders</a></li>
+                                                <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                                <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
+                                                </c:if>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="MainController?action=Logout">Logout</a></li>
+                                        </ul>
+                                    </li>
+                                </c:when>
+                                <c:otherwise>
+                                    <li class="nav-item"><a class="nav-link" href="login.jsp">Login</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="register.jsp">Register</a></li>
+                                    </c:otherwise>
+                                </c:choose>
+                        </ul>
                     </div>
-                </form>
-            </c:if>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <div class="container content">
+                <h2 class="mb-4"><i class="fas fa-cart-shopping"></i> Your Shopping Cart</h2>
+
+                <c:if test="${not empty sessionScope.error}">
+                    <div class="alert alert-danger">${sessionScope.error}</div>
+                    <% session.removeAttribute("error"); %>
+                </c:if>
+
+                <c:if test="${not empty sessionScope.message}">
+                    <div class="alert alert-success">${sessionScope.message}</div>
+                    <% session.removeAttribute("message");%>
+                </c:if>
+
+                <c:if test="${empty sessionScope.cart}">
+                    <div class="alert alert-info">
+                        🛒 Your cart is currently empty.
+                        <a href="HomeController" class="btn btn-sm btn-primary ms-3">Continue Shopping</a>
+                    </div>
+                </c:if>
+
+                <c:if test="${not empty sessionScope.cart}">
+                    <form id="cartForm" action="PaymentController" method="post">
+                        <input type="hidden" name="action" value="create"/>
+
+                        <table class="table table-bordered table-hover bg-white">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Image</th>
+                                    <th>Product Name</th>
+                                    <th>Unit Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="item" items="${sessionScope.cart}">
+                                    <tr>
+                                        <td><input type="checkbox" name="selectedProductIds" value="${item.key}" /></td>
+                                        <td><img src="${item.value.proImageUrl}" class="product-img" alt="${item.value.proName}"></td>
+                                        <td>${item.value.proName}</td>
+                                        <td><fmt:formatNumber value="${item.value.proPrice}" type="currency" currencySymbol="" /> ₫</td>
+                                        <td>
+                                            <div class="d-flex justify-content-center align-items-center gap-1">
+                                                <form method="post" action="CartController" class="d-inline">
+                                                    <input type="hidden" name="action" value="update"/>
+                                                    <input type="hidden" name="productId" value="${item.key}"/>
+                                                    <input type="hidden" name="change" value="-1"/>
+                                                    <button class="btn btn-sm btn-outline-secondary" type="submit">-</button>
+                                                </form>
+                                                <span>${item.value.quantity}</span>
+                                                <form method="post" action="CartController" class="d-inline">
+                                                    <input type="hidden" name="action" value="update"/>
+                                                    <input type="hidden" name="productId" value="${item.key}"/>
+                                                    <input type="hidden" name="change" value="1"/>
+                                                    <button class="btn btn-sm btn-outline-secondary" type="submit">+</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                        <td><fmt:formatNumber value="${item.value.proPrice * item.value.quantity}" type="currency" currencySymbol="" /> ₫</td>
+                                        <td>
+                                            <form method="post" action="CartController">
+                                                <input type="hidden" name="action" value="remove"/>
+                                                <input type="hidden" name="productId" value="${item.key}"/>
+                                                <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+
+                        <!-- Checkout Bar -->
+                        <div class="fixed-bottom bg-white border-top shadow-sm p-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#voucherModal">
+                                    <i class="fas fa-ticket-alt"></i> Chọn hoặc nhập voucher
+                                </button>
+                                <span id="appliedVoucher" class="ms-2 text-success fw-bold"></span>
+                            </div>
+                            <div class="text-end">
+                                <div><strong>Subtotal:</strong> <span id="subtotal">₫0</span></div>
+                                <div><strong>Discount:</strong> <span id="discount">₫0</span></div>
+                                <div><strong>Total (selected):</strong> <span id="selectedTotal">₫0</span></div>
+                                <button type="submit" class="btn btn-danger ms-3">
+                                    Checkout <i class="fas fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </c:if>
+            </div>
+
+            <!-- Voucher Modal -->
+            <div class="modal fade" id="voucherModal" tabindex="-1" aria-labelledby="voucherModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Chọn Voucher</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <c:forEach var="voucher" items="${sessionScope.vouchers}">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card shadow-sm">
+                                            <div class="card-body">
+                                                <h5 class="card-title text-primary">${voucher.codeName}</h5>
+                                                <p class="card-text">
+                                                    Giảm:
+                                                    <c:choose>
+                                                        <c:when test="${voucher.discountType == 'percentage'}">${voucher.discountValue}%</c:when>
+                                                        <c:otherwise><fmt:formatNumber value="${voucher.discountValue}" type="currency" currencySymbol="" /> ₫</c:otherwise>
+                                                    </c:choose><br>
+                                                    Đơn tối thiểu: <fmt:formatNumber value="${voucher.minOrderAmount}" type="currency" currencySymbol="" /> ₫
+                                                </p>
+                                                <button type="button" class="btn btn-outline-success select-voucher-btn"
+                                                        data-code="${voucher.codeName}" 
+                                                        data-type="${voucher.discountType}" 
+                                                        data-value="${voucher.discountValue}" 
+                                                        data-min="${voucher.minOrderAmount}">
+                                                    Chọn Voucher
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </c:forEach>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="bg-dark text-light py-4 mt-5">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h5><i class="fas fa-microchip me-2"></i>Tech Store</h5>
+                            <p>Your ultimate destination for quality tech products.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Quick Links</h5>
+                            <ul class="list-unstyled">
+                                <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>About Us</a></li>
+                                <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>Contact</a></li>
+                                <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>FAQs</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Connect With Us</h5>
+                            <div class="social-links">
+                                <a href="#" class="text-light me-3"><i class="fab fa-facebook fa-lg"></i></a>
+                                <a href="#" class="text-light me-3"><i class="fab fa-instagram fa-lg"></i></a>
+                                <a href="#" class="text-light me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="mt-4">
+                    <div class="text-center">
+                        <small>© 2025 Tech Store. All rights reserved.</small>
+                    </div>
+                </div>
+            </footer>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const checkboxes = document.querySelectorAll('input[name="selectedProductIds"]');
+                const selectedTotal = document.getElementById('selectedTotal');
+                const subtotalEl = document.getElementById('subtotal');
+                const discountEl = document.getElementById('discount');
+                const appliedVoucher = document.getElementById('appliedVoucher');
+                const cartForm = document.getElementById('cartForm');
+                let voucher = null;
+                const currencyFormatter = new Intl.NumberFormat('vi-VN');
+
+                const formatCurrency = (number) => currencyFormatter.format(number) + " ₫";
+
+                const updateTotal = () => {
+                    let subtotal = 0;
+                    checkboxes.forEach(cb => {
+                        if (cb.checked) {
+                            const row = cb.closest("tr");
+                            const priceText = row.querySelector("td:nth-child(6)").textContent.trim();
+                            const price = parseInt(priceText.replace(/\D/g, ''));
+                            subtotal += price;
+                        }
+                    });
+
+                    let discount = 0;
+                    if (voucher && subtotal >= voucher.minOrder) {
+                        discount = voucher.type === "percentage"
+                                ? subtotal * voucher.value / 100
+                                : voucher.value;
+                    }
+
+                    subtotalEl.textContent = formatCurrency(subtotal);
+                    discountEl.textContent = formatCurrency(discount);
+                    selectedTotal.textContent = formatCurrency(subtotal - discount);
+                };
+
+                checkboxes.forEach(cb => cb.addEventListener("change", updateTotal));
+                updateTotal();
+
+                document.querySelectorAll(".select-voucher-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const subtotal = parseInt(subtotalEl.textContent.replace(/\D/g, '') || '0');
+                        const code = btn.dataset.code;
+                        const type = btn.dataset.type;
+                        const value = parseFloat(btn.dataset.value);
+                        const minOrder = parseFloat(btn.dataset.min);
+
+                        if (subtotal < minOrder) {
+                            alert(`Không thể chọn voucher '${code}'. Đơn hàng tối thiểu phải từ ${currencyFormatter.format(minOrder)} ₫`);
+                            return;
+                        }
+
+                        voucher = {code, type, value, minOrder};
+                        appliedVoucher.textContent = `Đã chọn: ${voucher.code}`;
+                        bootstrap.Modal.getInstance(document.getElementById('voucherModal')).hide();
+                        updateTotal();
+                    });
+                });
+
+                cartForm.addEventListener("submit", (e) => {
+                    const checkedBoxes = document.querySelectorAll('input[name="selectedProductIds"]:checked');
+                    if (checkedBoxes.length === 0) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
+                        return;
+                    }
+
+                    cartForm.querySelectorAll("input[name='selectedProductIds']").forEach(el => el.remove());
+                    cartForm.querySelectorAll("input[name='voucherCode']").forEach(el => el.remove());
+
+                    checkedBoxes.forEach(cb => {
+                        const hidden = document.createElement("input");
+                        hidden.type = "hidden";
+                        hidden.name = "selectedProductIds";
+                        hidden.value = cb.value;
+                        cartForm.appendChild(hidden);
+                    });
+
+                    if (voucher) {
+                        const hiddenVoucher = document.createElement("input");
+                        hiddenVoucher.type = "hidden";
+                        hiddenVoucher.name = "voucherCode";
+                        hiddenVoucher.value = voucher.code;
+                        cartForm.appendChild(hiddenVoucher);
+                    }
+
+                    // Form will submit automatically after this
+                });
+            });
+        </script>
     </body>
 </html>
