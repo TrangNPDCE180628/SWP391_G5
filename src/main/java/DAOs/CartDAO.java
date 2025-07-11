@@ -101,4 +101,15 @@ public class CartDAO {
         }
         return null;
     }
+
+    // Xóa sản phẩm cụ thể khỏi giỏ hàng theo cusId và proId
+    public void removeItem(String cusId, String proId) throws SQLException, ClassNotFoundException {
+        String sql = "DELETE FROM Cart WHERE cusId = ? AND proId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, cusId);
+            stmt.setString(2, proId);
+            stmt.executeUpdate();
+        }
+    }
+
 }

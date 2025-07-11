@@ -70,11 +70,17 @@ public class CartController extends HttpServlet {
             List<ViewCartCustomer> cartItems = cartDAO.getViewCartByCusId(cusId);
             LinkedHashMap<String, ViewCartCustomer> cartMap = new LinkedHashMap<>();
 
+            StockDAO stockDAO = new StockDAO();
+            Map<String, Integer> stockMap = new HashMap<>();
+
             for (ViewCartCustomer item : cartItems) {
+                int stockQuantity = stockDAO.getStockByProductId(item.getProId());
+                stockMap.put(item.getProId(), stockQuantity);
                 cartMap.put(item.getProId(), item);
             }
 
             session.setAttribute("cart", cartMap);
+            session.setAttribute("stockMap", stockMap);
             session.setAttribute("cartSize", cartMap.size());
 
         } catch (Exception e) {
@@ -149,26 +155,36 @@ public class CartController extends HttpServlet {
 
             int change = Integer.parseInt(request.getParameter("change"));
 
-            CartDAO cartDAO = new CartDAO();
-            ViewCartCustomer item = cartDAO.getViewCartByCusId(cusId).stream()
-                    .filter(c -> c.getProId().equals(productId))
-                    .findFirst()
-                    .orElse(null);
+            LinkedHashMap<String, ViewCartCustomer> cart
+                    = (LinkedHashMap<String, ViewCartCustomer>) session.getAttribute("cart");
+
+            ViewCartCustomer item = null;
+            for (Map.Entry<String, ViewCartCustomer> entry : cart.entrySet()) {
+                if (entry.getKey().trim().equals(productId.trim())) {
+                    item = entry.getValue();
+                    break;
+                }
+            }
 
             if (item != null) {
                 int newQuantity = item.getQuantity() + change;
+
                 StockDAO stockDAO = new StockDAO();
                 int stock = stockDAO.getStockByProductId(productId);
 
+                CartDAO cartDAO = new CartDAO();
+
                 if (newQuantity > 0 && newQuantity <= stock) {
                     cartDAO.updateQuantity(item.getCartId(), newQuantity);
+                    session.setAttribute("message", "Cập nhật số lượng thành công.");
                 } else if (newQuantity <= 0) {
                     cartDAO.deleteCartItem(item.getCartId());
+                    session.setAttribute("message", "Đã xóa sản phẩm vì số lượng = 0.");
                 } else {
                     session.setAttribute("error", "Số lượng vượt quá tồn kho.");
                 }
 
-                // ❗Reload cart sau khi update/delete
+                // Cập nhật lại cart
                 List<ViewCartCustomer> updatedCartList = cartDAO.getViewCartByCusId(cusId);
                 LinkedHashMap<String, ViewCartCustomer> updatedCart = new LinkedHashMap<>();
                 for (ViewCartCustomer vc : updatedCartList) {
@@ -177,11 +193,14 @@ public class CartController extends HttpServlet {
 
                 session.setAttribute("cart", updatedCart);
                 session.setAttribute("cartSize", updatedCart.size());
+
+            } else {
+                session.setAttribute("error", "Không tìm thấy sản phẩm trong giỏ.");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Cập nhật giỏ hàng thất bại.");
+            session.setAttribute("error", "Cập nhật giỏ hàng thất bại: " + e.getMessage());
         }
 
         response.sendRedirect("cart.jsp");

@@ -9,44 +9,62 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
-        <style>
-            body {
-                background-color: #f8f9fa;
-            }
-            .card {
-                border: none;
-                border-radius: 10px;
-                box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            }
-            .payment-method {
-                transition: all 0.3s ease;
-                border: 2px solid #e9ecef;
-                border-radius: 8px;
-                padding: 15px;
-                margin: 5px 0;
-                cursor: pointer;
-            }
-            .payment-method:hover {
-                border-color: #007bff;
-                background-color: #f8f9ff;
-            }
-            .payment-method.active {
-                border-color: #007bff;
-                background-color: #f8f9ff;
-            }
-            .payment-method input[type="radio"]:checked + label {
-                color: #007bff;
-                font-weight: bold;
-            }
-            .final-amount {
-                font-size: 1.2em;
-                font-weight: bold;
-                color: #dc3545;
-            }
-        </style>
+        <link href="css/payment.css" rel="stylesheet" />
+
     </head>
     <body>
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light sticky-top mb-4">
+            <div class="container py-2">
+                <a class="navbar-brand" href="HomeController">
+                    <i class="fas fa-microchip me-2"></i>Tech Store
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="CartController?action=view" title="View Cart">
+                                <i class="fas fa-shopping-cart fa-lg"></i>
+                                <c:if test="${sessionScope.cartSize > 0}">
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        ${sessionScope.cartSize}
+                                    </span>
+                                </c:if>
+                            </a>
+                        </li>
+                        <c:choose>
+                            <c:when test="${not empty sessionScope.LOGIN_USER}">
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                       data-bs-toggle="dropdown">
+                                        <i class="fas fa-user"></i> ${sessionScope.LOGIN_USER.fullName}
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#">Profile</a></li>
+                                        <li><a class="dropdown-item" href="OrderController?action=view">My Orders</a></li>
+                                            <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                            <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
+                                            </c:if>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="MainController?action=Logout">Logout</a></li>
+                                    </ul>
+                                </li>
+                            </c:when>
+                            <c:otherwise>
+                                <li class="nav-item"><a class="nav-link" href="login.jsp">Login</a></li>
+                                <li class="nav-item"><a class="nav-link" href="register.jsp">Register</a></li>
+                                </c:otherwise>
+                            </c:choose>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
         <div class="container py-4">
+
             <div class="row justify-content-center">
                 <div class="col-md-8">
                     <h2 class="mb-4 text-center">
@@ -135,7 +153,8 @@
                             <div class="card-body">
                                 <form action="${pageContext.request.contextPath}/PaymentController" method="post" onsubmit="return validateForm()">
                                     <input type="hidden" name="action" value="confirm"/>
-                                    
+                                    <input type="hidden" name="orderId" value="${order.orderId}"/>
+
                                     <!-- Payment Method Selection -->
                                     <div class="mb-4">
                                         <label class="form-label fw-bold">Chọn phương thức thanh toán:</label>
@@ -232,7 +251,37 @@
                 </div>
             </div>
         </div>
-
+        <!-- Footer -->
+        <footer class="bg-dark text-light py-4 mt-5">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5><i class="fas fa-microchip me-2"></i>Tech Store</h5>
+                        <p>Your ultimate destination for quality tech products.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Quick Links</h5>
+                        <ul class="list-unstyled">
+                            <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>About Us</a></li>
+                            <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>Contact</a></li>
+                            <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>FAQs</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Connect With Us</h5>
+                        <div class="social-links">
+                            <a href="#" class="text-light me-3"><i class="fab fa-facebook fa-lg"></i></a>
+                            <a href="#" class="text-light me-3"><i class="fab fa-instagram fa-lg"></i></a>
+                            <a href="#" class="text-light me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <hr class="mt-4">
+                <div class="text-center">
+                    <small>© 2025 Tech Store. All rights reserved.</small>
+                </div>
+            </div>
+        </footer>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
                                             document.addEventListener('DOMContentLoaded', function () {

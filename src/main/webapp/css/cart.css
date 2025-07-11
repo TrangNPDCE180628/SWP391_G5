@@ -1,0 +1,43 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jul 11, 2025, 2:40:19 PM
+    Author     : SE18-CE180628-Nguyen Pham Doan Trang
+*/
+
+html, body {
+    height: 100%;
+}
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+.content {
+    flex: 1;
+}
+body {
+    background-color: #f8f9fa;
+}
+.table th, .table td {
+    vertical-align: middle;
+    text-align: center;
+}
+img.product-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+}
+.navbar {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+.navbar-brand {
+    font-weight: 600;
+    color: #333;
+}
+.search-form {
+    width: 300px;
+}
