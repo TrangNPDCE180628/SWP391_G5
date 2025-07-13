@@ -437,9 +437,6 @@
                                 </div>
                             </form>
 
-
-
-
                             <!-- Buttons Row -->
                             <div class="row mt-2 mb-3">
                                 <div class="col d-flex gap-2">
@@ -449,9 +446,6 @@
 
                                 </div>
                             </div>
-
-
-
 
                             <div class="table-responsive">
                                 <table class="table table-bordered">
@@ -502,7 +496,6 @@
                                 </table>
                             </div>
 
-
                         </div>
 
                         <!-- Orders Tab -->
@@ -513,9 +506,6 @@
                         <div class="tab-pane fade" id="inventory">
                             <jsp:include page="Stock.jsp" />
                         </div>
-
-
-
 
                     </div>
                 </div>
@@ -1049,11 +1039,11 @@
         </div>
 
 
-
         <script>const contextPath = '${pageContext.request.contextPath}';</script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 
         <script src="${pageContext.request.contextPath}/js/ScriptAdminDashboard.js"></script>
+
     </body>
 </html>
 

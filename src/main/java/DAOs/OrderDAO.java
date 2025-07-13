@@ -10,6 +10,7 @@ import java.util.List;
 public class OrderDAO {
 
     // Create new order
+
     public void create(Order order) throws SQLException, ClassNotFoundException {
         String sql = "INSERT INTO [Order] (cusId, orderDate, totalAmount, discountAmount, voucherId, orderStatus, paymentMethod, shippingAddress) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -17,8 +18,8 @@ public class OrderDAO {
 
             stmt.setString(1, order.getCusId());
             stmt.setTimestamp(2, order.getOrderDate());
-            stmt.setDouble(3, order.getTotalAmount());
-            stmt.setDouble(4, order.getDiscountAmount());
+            stmt.setBigDecimal(3, order.getTotalAmount());
+            stmt.setBigDecimal(4, order.getDiscountAmount());
 
             if (order.getVoucherId() != null) {
                 stmt.setInt(5, order.getVoucherId());
@@ -39,7 +40,85 @@ public class OrderDAO {
         }
     }
 
+    public int createOrder(Order order) throws SQLException, ClassNotFoundException {
+        String sql = "INSERT INTO [Order] (cusId, orderDate, totalAmount, discountAmount, finalAmount, orderStatus, paymentMethod, shippingAddress, voucherId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setString(1, order.getCusId());
+            stmt.setTimestamp(2, order.getOrderDate());
+            stmt.setBigDecimal(3, order.getTotalAmount());
+            stmt.setBigDecimal(4, order.getDiscountAmount());
+
+            // FinalAmount = total - discount
+            order.setFinalAmount(order.getTotalAmount().subtract(order.getDiscountAmount()));
+            stmt.setBigDecimal(5, order.getFinalAmount());
+            stmt.setString(6, order.getOrderStatus());
+            stmt.setString(7, order.getPaymentMethod());
+            stmt.setString(8, order.getShippingAddress());
+
+            if (order.getVoucherId() != null) {
+                stmt.setInt(9, order.getVoucherId());
+            } else {
+                stmt.setNull(9, Types.INTEGER);
+            }
+
+            stmt.executeUpdate();
+            try ( ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    int id = rs.getInt(1);
+                    order.setOrderId(id);
+                    return id;
+                }
+            }
+        }
+        return -1;
+    }
+
+    public boolean updateOrder(Order order) throws SQLException, ClassNotFoundException {
+        String sql = "UPDATE [Order] SET paymentMethod = ?, shippingAddress = ?, orderStatus = ? WHERE orderId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, order.getPaymentMethod());
+            ps.setString(2, order.getShippingAddress());
+            ps.setString(3, order.getOrderStatus());
+            ps.setInt(4, order.getOrderId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public Order getOrderById(int id) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT * FROM [Order] WHERE orderId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            try ( ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Order order = new Order();
+                    order.setOrderId(rs.getInt("orderId"));
+                    order.setCusId(rs.getString("cusId"));
+                    order.setOrderDate(rs.getTimestamp("orderDate"));
+                    order.setTotalAmount(rs.getBigDecimal("totalAmount"));
+                    order.setDiscountAmount(rs.getBigDecimal("discountAmount"));
+                    order.setFinalAmount(rs.getBigDecimal("finalAmount"));
+                    order.setVoucherId(rs.getObject("voucherId") != null ? rs.getInt("voucherId") : null);
+                    order.setOrderStatus(rs.getString("orderStatus"));
+                    order.setPaymentMethod(rs.getString("paymentMethod"));
+                    order.setShippingAddress(rs.getString("shippingAddress"));
+                    return order;
+                }
+
+            }
+        }
+        return null;
+    }
+
+    public boolean delete(int id) throws SQLException, ClassNotFoundException {
+        String sql = "DELETE FROM [Order] WHERE orderId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
+        }
+    }
     // Read - Get order by ID
+
     public Order getById(int orderId) throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM [Order] WHERE orderId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -75,8 +154,9 @@ public class OrderDAO {
 
             stmt.setString(1, order.getCusId());
             stmt.setTimestamp(2, order.getOrderDate());
-            stmt.setDouble(3, order.getTotalAmount());
-            stmt.setDouble(4, order.getDiscountAmount());
+            stmt.setBigDecimal(3, order.getTotalAmount());
+            stmt.setBigDecimal(4, order.getDiscountAmount());
+
 
             if (order.getVoucherId() != null) {
                 stmt.setInt(5, order.getVoucherId());
@@ -93,26 +173,14 @@ public class OrderDAO {
         }
     }
 
-    // Delete
-    public void delete(int orderId) throws SQLException, ClassNotFoundException, ClassNotFoundException, ClassNotFoundException, ClassNotFoundException {
-        String sql = "DELETE FROM [Order] WHERE orderId = ?";
+    public void updateStatus(int orderId, String status) throws SQLException, ClassNotFoundException {
+        String sql = "UPDATE [Order] SET orderStatus = ? WHERE orderId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, orderId);
+            stmt.setString(1, status);
+            stmt.setInt(2, orderId);
             stmt.executeUpdate();
         }
     }
-
-    public void updateStatus(int orderId, String status) throws SQLException, ClassNotFoundException {
-    String sql = "UPDATE [Order] SET orderStatus = ? WHERE orderId = ?";
-    try (Connection conn = DBContext.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setString(1, status);
-        stmt.setInt(2, orderId);
-        stmt.executeUpdate();
-    }
-}
-
 
     public List<Order> getByStatus(String status) throws SQLException, ClassNotFoundException {
         List<Order> list = new ArrayList<>();
@@ -127,8 +195,8 @@ public class OrderDAO {
                             rs.getInt("orderId"),
                             rs.getString("cusId"),
                             rs.getTimestamp("orderDate"),
-                            rs.getDouble("totalAmount"),
-                            rs.getDouble("discountAmount"),
+                            rs.getBigDecimal("totalAmount"),
+                            rs.getBigDecimal("discountAmount"),
                             rs.getObject("voucherId") != null ? rs.getInt("voucherId") : null,
                             rs.getString("orderStatus"),
                             rs.getString("paymentMethod"),
@@ -136,6 +204,30 @@ public class OrderDAO {
                     );
                     list.add(o);
                 }
+            }
+        }
+        return list;
+    }
+
+    public void deleteOrder(int orderId) throws SQLException, ClassNotFoundException {
+        String deleteDetailsSql = "DELETE FROM [OrderDetail] WHERE orderId = ?";
+        String deleteOrderSql = "DELETE FROM [Order] WHERE orderId = ?";
+
+        try ( Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (
+                     PreparedStatement stmtDetails = conn.prepareStatement(deleteDetailsSql);  PreparedStatement stmtOrder = conn.prepareStatement(deleteOrderSql)) {
+                stmtDetails.setInt(1, orderId);
+                stmtDetails.executeUpdate();
+
+                stmtOrder.setInt(1, orderId);
+                stmtOrder.executeUpdate();
+
+                conn.commit();
+            } catch (SQLException ex) {
+                conn.rollback();
+                throw ex;
             }
         }
         return list;
@@ -183,4 +275,22 @@ public class OrderDAO {
         // finalAmount được tự động tính theo logic trong model (không cần set trực tiếp)
         return order;
     }
+
+    // Helper method to map ResultSet to Order object
+    private Order extractOrderFromResultSet(ResultSet rs) throws SQLException {
+        Order order = new Order();
+        order.setOrderId(rs.getInt("orderId"));
+        order.setCusId(rs.getString("cusId"));
+        order.setOrderDate(rs.getTimestamp("orderDate"));
+        order.setTotalAmount(rs.getBigDecimal("totalAmount"));
+        order.setDiscountAmount(rs.getBigDecimal("discountAmount"));
+        order.setVoucherId(rs.getObject("voucherId") != null ? rs.getInt("voucherId") : null);
+        order.setOrderStatus(rs.getString("orderStatus"));
+        order.setPaymentMethod(rs.getString("paymentMethod"));
+        order.setShippingAddress(rs.getString("shippingAddress"));
+
+        // finalAmount được tự động tính theo logic trong model (không cần set trực tiếp)
+        return order;
+    }
+
 }

@@ -24,19 +24,19 @@
 <div class="table-responsive">
     <table class="table table-striped">
         <thead>
-        <tr>
-            <th>Order ID</th>
-            <th>Customer ID</th>
-            <th>Order Date</th>
-            <th>Total Amount</th>
-            <th>Discount</th>
-            <th>Final Amount</th>
-            <th>Voucher</th>
-            <th>Status</th>
-            <th>Payment</th>
-            <th>Shipping Address</th>
-            <th>Actions</th>
-        </tr>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer ID</th>
+                <th>Order Date</th>
+                <th>Total Amount</th>
+                <th>Discount</th>
+                <th>Final Amount</th>
+                <th>Voucher</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Shipping Address</th>
+                <th>Actions</th>
+            </tr>
         </thead>
         <tbody>
         <c:forEach items="${orders}" var="o">
@@ -44,46 +44,46 @@
                 <td>${o.orderId}</td>
                 <td>${o.cusId}</td>
                 <td><fmt:formatDate value="${o.orderDate}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
-                <td>$${o.totalAmount}</td>
-                <td>$${o.discountAmount}</td>
-                <td><strong>$${o.finalAmount}</strong></td>
-                <td>
-                    <c:choose>
-                        <c:when test="${not empty o.voucherId}">
-                            ${o.voucherId}
-                        </c:when>
-                        <c:otherwise>
-                            <span class="text-muted">N/A</span>
-                        </c:otherwise>
-                    </c:choose>
-                </td>
-                <td>${o.orderStatus}</td>
-                <td>${o.paymentMethod}</td>
-                <td>${o.shippingAddress}</td>
-                <td class="d-flex flex-column gap-1">
-                    <!-- View (chuyển hướng sang orderDetails.jsp) -->
-                    <a href="AdminController?action=goToOrderDetailPage&orderId=${o.orderId}" class="btn btn-sm btn-info">
-                        <i class="fas fa-eye"></i> View
-                    </a>
+            <td>$${o.totalAmount}</td>
+            <td>$${o.discountAmount}</td>
+            <td><strong>$${o.finalAmount}</strong></td>
+            <td>
+            <c:choose>
+                <c:when test="${not empty o.voucherId}">
+                    ${o.voucherId}
+                </c:when>
+                <c:otherwise>
+                    <span class="text-muted">N/A</span>
+                </c:otherwise>
+            </c:choose>
+            </td>
+            <td>${o.orderStatus}</td>
+            <td>${o.paymentMethod}</td>
+            <td>${o.shippingAddress}</td>
+            <td class="d-flex flex-column gap-1">
+                <!-- View (chuyển hướng sang orderDetails.jsp) -->
+                <a href="AdminController?action=goToOrderDetailPage&orderId=${o.orderId}" class="btn btn-sm btn-info">
+                    <i class="fas fa-eye"></i> View
+                </a>
 
-                    <!-- Edit -->
-                    <button class="btn btn-sm btn-warning"
-                            data-bs-toggle="modal"
-                            data-bs-target="#editModal"
-                            onclick="openEditModal('${o.orderId}', '${o.orderStatus}')">
-                        <i class="fas fa-edit"></i> Edit
+                <!-- Edit -->
+                <button class="btn btn-sm btn-warning"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editModal"
+                        onclick="openEditModal('${o.orderId}', '${o.orderStatus}')">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+
+                <!-- Delete -->
+                <form method="post" action="AdminController">
+                    <input type="hidden" name="action" value="deleteOrder"/>
+                    <input type="hidden" name="orderId" value="${o.orderId}"/>
+                    <button class="btn btn-sm btn-danger w-100"
+                            onclick="return confirm('Are you sure you want to delete this order?');">
+                        <i class="fas fa-trash"></i> Delete
                     </button>
-
-                    <!-- Delete -->
-                    <form method="post" action="AdminController">
-                        <input type="hidden" name="action" value="deleteOrder"/>
-                        <input type="hidden" name="orderId" value="${o.orderId}"/>
-                        <button class="btn btn-sm btn-danger w-100"
-                                onclick="return confirm('Are you sure you want to delete this order?');">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </form>
-                </td>
+                </form>
+            </td>
             </tr>
         </c:forEach>
         </tbody>

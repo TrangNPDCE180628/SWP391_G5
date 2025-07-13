@@ -1,12 +1,13 @@
 package Models;
 
 public class OrderDetail {
-    private int orderDetailId;     // ID của dòng chi tiết
-    private int orderId;           // ID đơn hàng
-    private String proId;          // ID sản phẩm (String theo DB)
-    private int quantity;          // Số lượng
-    private double unitPrice;      // Giá mỗi sản phẩm
-    private Integer voucherId;     // Voucher (nullable)
+  
+    private int orderDetailId;
+    private int orderId;
+    private String proId;
+    private int quantity;
+    private double unitPrice;
+    private Integer voucherId;
 
     public OrderDetail() {
     }
@@ -19,8 +20,7 @@ public class OrderDetail {
         this.unitPrice = unitPrice;
         this.voucherId = voucherId;
     }
-
-
+  
     public int getOrderDetailId() {
         return orderDetailId;
     }
@@ -61,16 +61,14 @@ public class OrderDetail {
         this.unitPrice = unitPrice;
     }
 
+    public double getTotalPrice() {
+        return quantity * unitPrice;
+    }
     public Integer getVoucherId() {
         return voucherId;
     }
 
     public void setVoucherId(Integer voucherId) {
         this.voucherId = voucherId;
-    }
-
-    // ✅ Tính tổng giá (quantity * unitPrice)
-    public double getTotalPrice() {
-        return unitPrice * quantity;
     }
 }

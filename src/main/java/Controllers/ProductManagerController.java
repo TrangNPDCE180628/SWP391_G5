@@ -88,7 +88,7 @@ public class ProductManagerController extends HttpServlet {
                 return listProducts(request);
             }
 
-            if (productDAO.getProductById(proId) != null) {
+            if (productDAO.getById(proId) != null) {
                 request.setAttribute("ERROR", "Product ID already exists!");
                 return listProducts(request);
             }
