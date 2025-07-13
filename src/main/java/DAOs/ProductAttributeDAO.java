@@ -31,6 +31,34 @@ public class ProductAttributeDAO {
             stmt.executeUpdate();
         }
     }
+    
+     public List<ProductAttribute> getByProductId(String proId) throws SQLException, ClassNotFoundException {
+        List<ProductAttribute> list = new ArrayList<>();
+        String sql = "SELECT pa.proId, pa.attributeId, pa.value, "
+                + "a.attributeName, p.proName AS productName "
+                + "FROM ProductAttribute pa "
+                + "JOIN Attribute a ON pa.attributeId = a.attributeId "
+                + "JOIN Product p ON pa.proId = p.proId "
+                + "WHERE pa.proId = ?";
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, proId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                ProductAttribute pa = new ProductAttribute();
+                pa.setProId(rs.getString("proId"));
+                pa.setAttributeId(rs.getInt("attributeId"));
+                pa.setValue(rs.getString("value"));
+                pa.setAttributeName(rs.getString("attributeName"));
+                pa.setProductName(rs.getString("productName"));
+                list.add(pa);
+            }
+        }
+
+        return list;
+    }
 
     // READ - get all
     public List<ProductAttribute> getAll() throws SQLException {
