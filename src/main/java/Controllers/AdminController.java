@@ -6,7 +6,9 @@ import DAOs.FeedbackDAO;
 import DAOs.FeedbackReplyViewDAO;
 import DAOs.OrderDAO;
 import DAOs.AttributeDAO;
+import DAOs.OrderDetailDAO;
 import DAOs.ProductAttributeDAO;
+import DAOs.ProductDAO;
 import DAOs.ReplyFeedbackDAO;
 import DAOs.StaffDAO;
 import DAOs.VoucherDAO;
@@ -18,6 +20,8 @@ import Models.Feedback;
 import Models.FeedbackReplyView;
 import Models.Order;
 import Models.Attribute;
+import Models.OrderDetail;
+import Models.Product;
 import Models.ProductAttribute;
 import Models.ReplyFeedback;
 import Models.Staff;
@@ -46,6 +50,8 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 import java.sql.Connection;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
@@ -132,6 +138,20 @@ public class AdminController extends HttpServlet {
                 case "filterProductAttribute":
                     filterProductAttribute(request, response);
                     return;
+                case "updateOrderStatus":
+                    updateOrderStatus(request, response);
+                    return;
+                case "filterOrders":
+                    filterOrdersByStatus(request, response);
+                    return;
+                case "deleteOrder":
+                    deleteOrder(request, response);
+                    return;
+                case "goToOrderDetailPage":
+                    goToOrderDetailPage(request, response);
+                    return;
+
+                
 
                 default:
                     loadAdminPage(request, response);
@@ -160,6 +180,7 @@ public class AdminController extends HttpServlet {
             FeedbackReplyViewDAO viewfeedbackDAO = new FeedbackReplyViewDAO();
             AttributeDAO attributeDAO = new AttributeDAO();
             ProductAttributeDAO paDAO = new ProductAttributeDAO();
+            OrderDAO ordDao = new OrderDAO();
 
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
@@ -168,6 +189,7 @@ public class AdminController extends HttpServlet {
             List<FeedbackReplyView> viewFeedbacks = viewfeedbackDAO.getAllFeedbackReplies();
             List<Attribute> attributes = attributeDAO.getAll();
             List<ProductAttribute> productAttributes = paDAO.getAll();
+            List<Order> orders = ordDao.getAll();
 
 // === NEW: Load từ VIEW ===
             Connection conn = DBContext.getConnection();
@@ -182,6 +204,17 @@ public class AdminController extends HttpServlet {
             request.setAttribute("viewFeedbacks", viewFeedbacks);
             request.setAttribute("attributes", attributes);
             request.setAttribute("productAttributes", productAttributes);
+            request.setAttribute("orders", orders);
+
+            // 1. Lấy danh sách tất cả đơn hàng
+            OrderDetailDAO detailDAO = new OrderDetailDAO();
+            // 2. Tạo map: orderId -> list of OrderDetail
+            Map<Integer, List<OrderDetail>> orderDetailsMap = new HashMap<>();
+            for (Order o : orders) {
+                List<OrderDetail> details = detailDAO.getByOrderId(o.getOrderId());
+                orderDetailsMap.put(o.getOrderId(), details);
+            }
+            request.setAttribute("orderDetailsMap", orderDetailsMap);
 
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
@@ -196,11 +229,118 @@ public class AdminController extends HttpServlet {
                     StaffDAO staffDAO2 = new StaffDAO();
                     Staff staffProfile = staffDAO2.getById(String.valueOf(loginUser.getId()));
                     request.setAttribute("profile", staffProfile);
+
                 }
             }
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
             throw new ServletException(e);
+        }
+    }
+    
+    
+
+    /**
+     * Điều hướng sang trang orderdetail.jsp và đổ danh sách chi tiết đơn hàng
+     * theo orderId
+     *
+     * @param request HttpServletRequest chứa orderId
+     * @param response HttpServletResponse để forward sang JSP
+     * @throws ServletException nếu forward bị lỗi
+     * @throws IOException nếu có lỗi khi đọc ghi dữ liệu
+     */
+    private void goToOrderDetailPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int orderId = Integer.parseInt(request.getParameter("orderId"));
+
+            OrderDAO orderDAO = new OrderDAO();
+            OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
+            ProductDAO productDAO = new ProductDAO();
+
+            Order order = orderDAO.getById(orderId);
+            List<OrderDetail> orderDetailList = orderDetailDAO.getByOrderId(orderId);
+            Map<String, Product> productMap = new HashMap<>();
+            for (OrderDetail detail : orderDetailList) {
+                Product product = productDAO.getProductById(detail.getProId());
+                productMap.put(detail.getProId(), product);
+            }
+
+            request.setAttribute("order", order);
+            request.setAttribute("orderDetails", orderDetailList);
+            request.setAttribute("productMap", productMap);
+
+            request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
+        } catch (Exception e) {
+            throw new ServletException("Failed to load order detail page", e);
+        }
+    }
+
+    private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int orderId = Integer.parseInt(request.getParameter("orderId"));
+            String newStatus = request.getParameter("status");
+
+            OrderDAO dao = new OrderDAO();
+            dao.updateStatus(orderId, newStatus);
+
+            // Redirect về trang lọc đơn hàng với trạng thái hiện tại (giữ nguyên hoặc trả về All)
+            String filterStatus = request.getParameter("currentFilterStatus");
+            if (filterStatus == null || filterStatus.isEmpty()) {
+                filterStatus = "All";
+            }
+            
+
+            response.sendRedirect("AdminController?tab=orders");
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("ERROR", "Cannot update order status.");
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
+    }
+
+    private void filterOrdersByStatus(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String status = request.getParameter("status"); // All, pending, shipped, etc.
+
+            OrderDAO dao = new OrderDAO();
+            List<Order> filteredOrders;
+
+            if (status == null || status.isEmpty() || "All".equalsIgnoreCase(status)) {
+                filteredOrders = dao.getAll();  // Không lọc
+            } else {
+                filteredOrders = dao.getByStatus(status);  // Lọc theo status
+            }
+
+            request.setAttribute("orders", filteredOrders);
+            request.setAttribute("filterStatus", status); // Để giữ lại khi hiển thị lại dropdown
+            request.setAttribute("activeTab", "orders");
+
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("ERROR", "Unable to filter orders.");
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
+    }
+
+    private void deleteOrder(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int orderId = Integer.parseInt(request.getParameter("orderId"));
+
+            OrderDAO dao = new OrderDAO();
+            dao.delete(orderId);
+
+            response.sendRedirect("AdminController?tab=orders");
+        } catch (Exception e) {
+            log("Error deleting order: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Cannot delete order.");
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
         }
     }
 
@@ -645,39 +785,38 @@ public class AdminController extends HttpServlet {
         }
     }
 
-   private void filterProductAttribute(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-    try {
-        String proId = request.getParameter("filterProductId");
-        String attributeName = request.getParameter("filterAttributeName");
-        String value = request.getParameter("filterAttributeValue");
-        String sortField = request.getParameter("sortField");
-        String sortOrder = request.getParameter("sortOrder");
+    private void filterProductAttribute(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("filterProductId");
+            String attributeName = request.getParameter("filterAttributeName");
+            String value = request.getParameter("filterAttributeValue");
+            String sortField = request.getParameter("sortField");
+            String sortOrder = request.getParameter("sortOrder");
 
-        Connection conn = DBContext.getConnection();
-        ViewProductAttributeDAO viewDAO = new ViewProductAttributeDAO(conn);
-        List<ViewProductAttribute> filteredViewList = viewDAO.filterAndSort(proId, attributeName, value, sortField, sortOrder);
+            Connection conn = DBContext.getConnection();
+            ViewProductAttributeDAO viewDAO = new ViewProductAttributeDAO(conn);
+            List<ViewProductAttribute> filteredViewList = viewDAO.filterAndSort(proId, attributeName, value, sortField, sortOrder);
 
-        request.setAttribute("viewProductAttributes", filteredViewList);
-        request.setAttribute("activeTab", "attributes");
+            request.setAttribute("viewProductAttributes", filteredViewList);
+            request.setAttribute("activeTab", "attributes");
 
-        // Đặt lại param để giữ giá trị đã chọn
-        request.setAttribute("sortField", sortField);
-        request.setAttribute("sortOrder", sortOrder);
-        request.setAttribute("filterProductId", proId);
-        request.setAttribute("filterAttributeName", attributeName);
-        request.setAttribute("filterAttributeValue", value);
+            // Đặt lại param để giữ giá trị đã chọn
+            request.setAttribute("sortField", sortField);
+            request.setAttribute("sortOrder", sortOrder);
+            request.setAttribute("filterProductId", proId);
+            request.setAttribute("filterAttributeName", attributeName);
+            request.setAttribute("filterAttributeValue", value);
 
-        request.getRequestDispatcher("admin.jsp").forward(request, response);
-    } catch (Exception e) {
-        log("Error in filterProductAttribute: " + e.getMessage());
-        if (!response.isCommitted()) {
-            request.setAttribute("ERROR", "Unable to filter and sort attributes: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+            log("Error in filterProductAttribute: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Unable to filter and sort attributes: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
         }
     }
-}
-
 
     private void viewProductAttribute(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

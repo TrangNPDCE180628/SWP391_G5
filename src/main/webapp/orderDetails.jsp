@@ -1,52 +1,64 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<!DOCTYPE html>
-<html lang="en">
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Details</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Order Detail</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-<div class="container py-4">
-    <h2 class="mb-4">Order Details</h2>
-    <c:if test="${not empty ERROR}">
-        <div class="alert alert-danger">${ERROR}</div>
+
+<div class="container mt-4">
+    <h2>Order Detail - Order ID: ${order.orderId}</h2>
+
+    <p><strong>Customer ID:</strong> ${order.cusId}</p>
+    <p><strong>Order Date:</strong> <fmt:formatDate value="${order.orderDate}" pattern="yyyy-MM-dd HH:mm:ss"/></p>
+
+    <c:if test="${empty orderDetails}">
+        <p class="text-danger">No order details found for this order.</p>
     </c:if>
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Order #${order.id}</h5>
-            <p><strong>Customer:</strong> ${customer.fullname}</p>
-            <p><strong>Order Date:</strong> ${order.orderDate}</p>
-            <p><strong>Status:</strong> <span class="badge ${order.status == 'pending' ? 'bg-warning' : order.status == 'completed' ? 'bg-success' : 'bg-danger'}">${order.status}</span></p>
-            <p><strong>Total Price:</strong> $${order.totalPrice}</p>
-        </div>
-    </div>
-    <h5>Order Items</h5>
-    <div class="table-responsive">
-        <table class="table table-bordered">
-            <thead>
+
+    <c:if test="${not empty orderDetails}">
+        <table class="table table-bordered mt-3">
+            <thead class="thead-dark">
                 <tr>
+                    <th>Order Detail ID</th>
                     <th>Product ID</th>
+                    <th>Product Name</th>
                     <th>Quantity</th>
                     <th>Unit Price</th>
-                    <th>Total</th>
+                    <th>Total Price</th>
+                    <th>Voucher ID</th>
                 </tr>
             </thead>
             <tbody>
-                <c:forEach items="${orderDetails}" var="item">
+                <c:forEach var="detail" items="${orderDetails}">
                     <tr>
-                        <td>${item.productId}</td>
-                        <td>${item.quantity}</td>
-                        <td>$${item.unitPrice}</td>
-                        <td>$${item.totalPrice}</td>
+                        <td>${detail.orderDetailId}</td>
+                        <td>${detail.proId}</td>
+                        <td>${productMap[detail.proId].proName}</td>
+                        <td>${detail.quantity}</td>
+                        <td><fmt:formatNumber value="${detail.unitPrice}" type="currency"/></td>
+                        <td><fmt:formatNumber value="${detail.totalPrice}" type="currency"/></td>
+                        <td>
+                            <c:choose>
+                                <c:when test="${detail.voucherId != null}">
+                                    ${detail.voucherId}
+                                </c:when>
+                                <c:otherwise>
+                                    N/A
+                                </c:otherwise>
+                            </c:choose>
+                        </td>
                     </tr>
                 </c:forEach>
             </tbody>
         </table>
-    </div>
-    <a href="${pageContext.request.contextPath}/AdminController" class="btn btn-secondary mt-3">Back to Admin</a>
+    </c:if>
+
+    <a href="AdminController?action=loadAdminPage&tab=orders" class="btn btn-secondary mt-3">Back to Orders</a>
 </div>
+
 </body>
-</html> 
+</html>

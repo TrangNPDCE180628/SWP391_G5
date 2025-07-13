@@ -66,6 +66,12 @@
                                     <i class="fa-solid fa-ticket me-2"></i>FeedBack Manage
                                 </a>
                             </li>
+
+                            <li class="nav-item">
+                                <a href="#orders" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fa-solid fa-ticket me-2"></i>Order Manage
+                                </a>
+                            </li>
                         </ul>
                         <hr>
                         <div class="dropdown">
@@ -490,511 +496,527 @@
 
 
                         </div>
+
+                        <!-- Orders Tab -->
+                        <div class="tab-pane fade" id="orders">
+                            <jsp:include page="orderManage.jsp" />
+                        </div>
+                        
+                             <!-- Product Inventory Management Tab -->
+                        <div class="tab-pane fade" id="Product Inventory Managements">
+                            <jsp:include page="Product Inventory Management.jsp" />
+                        </div>
+
+
+
                     </div>
                 </div>
             </div>
 
-            <!-- Edit Profile Modal -->
-            <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <form action="AdminController" method="post" enctype="multipart/form-data" class="modal-content">
-                        <!-- BẮT BUỘC: Cho servlet biết action đang gọi -->
-                        <input type="hidden" name="action" value="editProfile">
-                        <input type="hidden" name="tab" value="profile">
-                        <!-- Hidden fields -->
-                        <input type="hidden" name="userId" id="editUserId">
-                        <input type="hidden" name="userRole" id="editUserRole">
-                        <input type="hidden" name="currentImage" id="currentProfileImagePath">
 
-                        <div class="modal-body">
-                            <div class="row">
-                                <!-- Avatar -->
-                                <div class="col-md-4 text-center">
-                                    <img id="previewProfileImage" src="" alt="Preview" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                                    <input type="file" class="form-control" name="image" id="editProfileImage" accept="image/*">
+        </div>
+
+        <!-- Edit Profile Modal -->
+        <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <form action="AdminController" method="post" enctype="multipart/form-data" class="modal-content">
+                    <!-- BẮT BUỘC: Cho servlet biết action đang gọi -->
+                    <input type="hidden" name="action" value="editProfile">
+                    <input type="hidden" name="tab" value="profile">
+                    <!-- Hidden fields -->
+                    <input type="hidden" name="userId" id="editUserId">
+                    <input type="hidden" name="userRole" id="editUserRole">
+                    <input type="hidden" name="currentImage" id="currentProfileImagePath">
+
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- Avatar -->
+                            <div class="col-md-4 text-center">
+                                <img id="previewProfileImage" src="" alt="Preview" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                                <input type="file" class="form-control" name="image" id="editProfileImage" accept="image/*">
+                            </div>
+
+                            <!-- Thông tin chung -->
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="editProfileFullName" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" name="fullName" id="editProfileFullName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editProfileEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" name="email" id="editProfileEmail" required>
                                 </div>
 
-                                <!-- Thông tin chung -->
-                                <div class="col-md-8">
+                                <!-- Staff-only fields -->
+                                <div id="staffFields" style="display: none;">
                                     <div class="mb-3">
-                                        <label for="editProfileFullName" class="form-label">Full Name</label>
-                                        <input type="text" class="form-control" name="fullName" id="editProfileFullName" required>
+                                        <label for="editProfileGender" class="form-label">Gender</label>
+                                        <select class="form-select" name="gender" id="editProfileGender">
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="editProfileEmail" class="form-label">Email</label>
-                                        <input type="email" class="form-control" name="email" id="editProfileEmail" required>
+                                        <label for="editProfilePhone" class="form-label">Phone</label>
+                                        <input type="text" class="form-control" name="phone" id="editProfilePhone">
                                     </div>
-
-                                    <!-- Staff-only fields -->
-                                    <div id="staffFields" style="display: none;">
-                                        <div class="mb-3">
-                                            <label for="editProfileGender" class="form-label">Gender</label>
-                                            <select class="form-select" name="gender" id="editProfileGender">
-                                                <option value="Male">Male</option>
-                                                <option value="Female">Female</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="editProfilePhone" class="form-label">Phone</label>
-                                            <input type="text" class="form-control" name="phone" id="editProfilePhone">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="editProfilePosition" class="form-label">Position</label>
-                                            <input type="text" class="form-control" name="position" id="editProfilePosition">
-                                        </div>
+                                    <div class="mb-3">
+                                        <label for="editProfilePosition" class="form-label">Position</label>
+                                        <input type="text" class="form-control" name="position" id="editProfilePosition">
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i> Save Changes
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Add Voucher Modal -->
+        <div class="modal fade" id="addVoucherModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Voucher</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="AdminController" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="addVoucher">
+                            <input type="hidden" name="tab" value="vouchers">
+                            <div class="mb-3">
+                                <label for="codeName" class="form-label">Voucher Code</label>
+                                <input type="text" class="form-control" id="codeName" name="codeName" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="voucherDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="voucherDescription" name="voucherDescription"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="discountType" class="form-label">Discount Type</label>
+                                <select class="form-select" id="discountType" name="discountType" required>
+                                    <option value="percentage">Percentage (%)</option>
+                                    <option value="fixed">Fixed Amount ($)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="discountValue" class="form-label">Discount Value</label>
+                                <input type="number" step="0.01" class="form-control" id="discountValue" name="discountValue" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="minOrderAmount" class="form-label">Min Order Amount</label>
+                                <input type="number" step="0.01" class="form-control" id="minOrderAmount" name="minOrderAmount" value="0">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="startDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="endDate" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="voucherActive" class="form-label">Status</label>
+                                <select class="form-select" id="voucherActive" name="voucherActive" required>
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
 
                         <div class="modal-footer">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save me-1"></i> Save Changes
-                            </button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="fas fa-times me-1"></i> Cancel
-                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add</button>
                         </div>
                     </form>
-
                 </div>
             </div>
+        </div>
 
-            <!-- Add Voucher Modal -->
-            <div class="modal fade" id="addVoucherModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
+        <!-- Edit Voucher Modal -->
+        <div class="modal fade" id="editVoucherModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="AdminController" method="post">
                         <div class="modal-header">
-                            <h5 class="modal-title">Add New Voucher</h5>
+                            <h5 class="modal-title">Edit Voucher</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <form action="AdminController" method="post">
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="addVoucher">
-                                <input type="hidden" name="tab" value="vouchers">
-                                <div class="mb-3">
-                                    <label for="codeName" class="form-label">Voucher Code</label>
-                                    <input type="text" class="form-control" id="codeName" name="codeName" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="voucherDescription" class="form-label">Description</label>
-                                    <textarea class="form-control" id="voucherDescription" name="voucherDescription"></textarea>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="discountType" class="form-label">Discount Type</label>
-                                    <select class="form-select" id="discountType" name="discountType" required>
-                                        <option value="percentage">Percentage (%)</option>
-                                        <option value="fixed">Fixed Amount ($)</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="discountValue" class="form-label">Discount Value</label>
-                                    <input type="number" step="0.01" class="form-control" id="discountValue" name="discountValue" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="minOrderAmount" class="form-label">Min Order Amount</label>
-                                    <input type="number" step="0.01" class="form-control" id="minOrderAmount" name="minOrderAmount" value="0">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="startDate" class="form-label">Start Date</label>
-                                    <input type="date" class="form-control" id="startDate" name="startDate" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="endDate" class="form-label">End Date</label>
-                                    <input type="date" class="form-control" id="endDate" name="endDate" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="voucherActive" class="form-label">Status</label>
-                                    <select class="form-select" id="voucherActive" name="voucherActive" required>
-                                        <option value="true">Active</option>
-                                        <option value="false">Inactive</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Add</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Edit Voucher Modal -->
-            <div class="modal fade" id="editVoucherModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form action="AdminController" method="post">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Edit Voucher</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <input type="hidden" name="action" value="updateVoucher">
-                            <input type="hidden" name="tab" value="vouchers">
-                            <div class="modal-body">
-                                <input type="hidden" id="editVoucherId" name="voucherId">
-                                <input type="hidden" name="action" value="updateVoucher">
-
-                                <div class="mb-3">
-                                    <label for="editCodeName" class="form-label">Voucher Code</label>
-                                    <input type="text" class="form-control" id="editCodeName" name="codeName" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="editDescription" class="form-label">Description</label>
-                                    <textarea class="form-control" id="editDescription" name="voucherDescription" rows="3"></textarea>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="editDiscountType" class="form-label">Discount Type</label>
-                                    <select class="form-select" id="editDiscountType" name="discountType">
-                                        <option value="percentage">Percentage (%)</option>
-                                        <option value="fixed">Fixed Amount ($)</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="editDiscountValue" class="form-label">Discount Value</label>
-                                    <input type="number" class="form-control" id="editDiscountValue" name="discountValue" step="0.01" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="editMinOrderAmount" class="form-label">Minimum Order Amount</label>
-                                    <input type="number" class="form-control" id="editMinOrderAmount" name="minOrderAmount" step="0.01" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="editStartDate" class="form-label">Start Date</label>
-                                    <input type="date" class="form-control" id="editStartDate" name="startDate" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="editEndDate" class="form-label">End Date</label>
-                                    <input type="date" class="form-control" id="editEndDate" name="endDate" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="editVoucherActive" class="form-label">Status</label>
-                                    <select class="form-select" id="editVoucherActive" name="voucherActive" required>
-                                        <option value="true">Active</option>
-                                        <option value="false">Inactive</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Update</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- View Reply Modal -->
-            <div class="modal fade" id="replyModal" tabindex="-1" aria-labelledby="replyModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="replyModalLabel">Reply Content</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
+                        <input type="hidden" name="action" value="updateVoucher">
+                        <input type="hidden" name="tab" value="vouchers">
                         <div class="modal-body">
-                            <p><strong>Reply By Staff ID:</strong> <span id="modalReplyStaffId"></span></p>
-                            <p><strong>Reply At:</strong> <span id="modalReplyTime"></span></p>
-                            <hr>
-                            <p id="modalReplyContent"></p>
+                            <input type="hidden" id="editVoucherId" name="voucherId">
+                            <input type="hidden" name="action" value="updateVoucher">
+
+                            <div class="mb-3">
+                                <label for="editCodeName" class="form-label">Voucher Code</label>
+                                <input type="text" class="form-control" id="editCodeName" name="codeName" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="editDescription" name="voucherDescription" rows="3"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editDiscountType" class="form-label">Discount Type</label>
+                                <select class="form-select" id="editDiscountType" name="discountType">
+                                    <option value="percentage">Percentage (%)</option>
+                                    <option value="fixed">Fixed Amount ($)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editDiscountValue" class="form-label">Discount Value</label>
+                                <input type="number" class="form-control" id="editDiscountValue" name="discountValue" step="0.01" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editMinOrderAmount" class="form-label">Minimum Order Amount</label>
+                                <input type="number" class="form-control" id="editMinOrderAmount" name="minOrderAmount" step="0.01" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editStartDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="editStartDate" name="startDate" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editEndDate" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="editEndDate" name="endDate" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editVoucherActive" class="form-label">Status</label>
+                                <select class="form-select" id="editVoucherActive" name="voucherActive" required>
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Reply Modal -->
+        <div class="modal fade" id="replyModal" tabindex="-1" aria-labelledby="replyModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="replyModalLabel">Reply Content</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Reply By Staff ID:</strong> <span id="modalReplyStaffId"></span></p>
+                        <p><strong>Reply At:</strong> <span id="modalReplyTime"></span></p>
+                        <hr>
+                        <p id="modalReplyContent"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reply Feedback Modal -->
+        <div class="modal fade" id="replyFeedbackModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="AdminController" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Reply to Feedback</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <!-- Hidden Fields -->
+                            <input type="hidden" name="action" value="replyFeedback">
+                            <input type="hidden" name="feedbackId" id="replyFeedbackId">
+                            <input type="hidden" name="cusId" id="replyCusId">
+
+                            <!-- Staff Selector -->
+                            <div class="mb-3">
+                                <label for="staffSelect" class="form-label">Select Staff</label>
+                                <select class="form-select" id="staffSelect" name="staffId" required>
+                                    <option value="">-- Choose Staff --</option>
+                                    <c:forEach var="staff" items="${staffs}">
+                                        <option value="${staff.staffId}">${staff.staffFullName}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+
+                            <!-- Reply Content -->
+                            <div class="mb-3">
+                                <label for="replyContent" class="form-label">Reply Content</label>
+                                <textarea class="form-control" id="replyContent" name="contentReply" rows="4" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Send Reply</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Staff Modal -->
+        <div class="modal fade" id="addStaffModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Staff</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="AdminController" method="post" enctype="multipart/form-data">
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="addStaff">
+
+
+                            <div class="mb-3">
+                                <label for="id" class="form-label">ID</label>
+                                <input type="text" class="form-control" id="id" name="id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="fullname" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="fullname" name="fullname">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="gender" class="form-label">Gender</label>
+                                <select class="form-select" id="gender" name="gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Image</label>
+                                <input type="file" class="form-control" id="image" name="image">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="gmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="gmail" name="gmail">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="phone" name="phone">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Position</label>
+                                <input type="text" class="form-control" id="position" name="position">
+                            </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Staff</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
+        </div>
 
-            <!-- Reply Feedback Modal -->
-            <div class="modal fade" id="replyFeedbackModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form action="AdminController" method="post">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Reply to Feedback</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <!-- Edit Staff Modal -->
+        <div class="modal fade" id="editStaffModal" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="AdminController" method="post" enctype="multipart/form-data" class="modal-content" >
+
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="editStaff">
+                            <!-- Hidden inputs submit -->
+                            <input type="hidden" name="staffId" id="editStaffIdHidden">
+                            <input type="hidden" name="staffName" id="editStaffNameHidden">
+                            <input type="hidden" name="currentImage" id="currentImagePath">
+
+                            <div class="mb-3">
+                                <label for="editStaffFullName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="editStaffFullName" name="staffFullName">
                             </div>
-
-                            <div class="modal-body">
-                                <!-- Hidden Fields -->
-                                <input type="hidden" name="action" value="replyFeedback">
-                                <input type="hidden" name="feedbackId" id="replyFeedbackId">
-                                <input type="hidden" name="cusId" id="replyCusId">
-
-                                <!-- Staff Selector -->
-                                <div class="mb-3">
-                                    <label for="staffSelect" class="form-label">Select Staff</label>
-                                    <select class="form-select" id="staffSelect" name="staffId" required>
-                                        <option value="">-- Choose Staff --</option>
-                                        <c:forEach var="staff" items="${staffs}">
-                                            <option value="${staff.staffId}">${staff.staffFullName}</option>
-                                        </c:forEach>
-                                    </select>
-                                </div>
-
-                                <!-- Reply Content -->
-                                <div class="mb-3">
-                                    <label for="replyContent" class="form-label">Reply Content</label>
-                                    <textarea class="form-control" id="replyContent" name="contentReply" rows="4" required></textarea>
+                            <div class="mb-3">
+                                <label for="editStaffPassword" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="editStaffPassword" name="staffPassword">
                                 </div>
                             </div>
-
-                            <div class="modal-footer">
-                                <button type="submit" class="btn btn-primary">Send Reply</button>
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <div class="mb-3">
+                                <label for="editStaffGender" class="form-label">Gender</label>
+                                <select class="form-select" id="editStaffGender" name="staffGender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
                             </div>
-                        </form>
-                    </div>
+                            <div class="mb-3">
+                                <label for="editStaffGmail" class="form-label">Gmail</label>
+                                <input type="email" class="form-control" id="editStaffGmail" name="staffGmail">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editStaffPhone" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="editStaffPhone" name="staffPhone">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editStaffPosition" class="form-label">Position</label>
+                                <input type="text" class="form-control" id="editStaffPosition" name="staffPosition">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editStaffImage" class="form-label">Image</label>
+                                <input type="file" class="form-control" id="editStaffImage" name="staffImage" accept="image/*">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Current Image</label><br>
+                                <img id="editStaffImagePreview" src="#" alt="Preview" width="100" height="120">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </div>
+                    </form>
                 </div>
             </div>
+        </div>
 
-            <!-- Add Staff Modal -->
-            <div class="modal fade" id="addStaffModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
+
+
+        <!-- Edit Product Attribute Modal -->
+        <div class="modal fade" id="editProductAttributeModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="AdminController" method="post">
                         <div class="modal-header">
-                            <h5 class="modal-title">Add New Staff</h5>
+                            <h5 class="modal-title">Edit Product Attribute</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <form action="AdminController" method="post" enctype="multipart/form-data">
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="addStaff">
 
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="updateProductAttribute">
+                            <input type="hidden" name="tab" value="productAttributes">
 
-                                <div class="mb-3">
-                                    <label for="id" class="form-label">ID</label>
-                                    <input type="text" class="form-control" id="id" name="id" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="username" class="form-label">Username</label>
-                                    <input type="text" class="form-control" id="username" name="username" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="password" class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="fullname" class="form-label">Full Name</label>
-                                    <input type="text" class="form-control" id="fullname" name="fullname">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="gender" class="form-label">Gender</label>
-                                    <select class="form-select" id="gender" name="gender">
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="image" class="form-label">Image</label>
-                                    <input type="file" class="form-control" id="image" name="image">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="gmail" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="gmail" name="gmail">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="phone" class="form-label">Phone</label>
-                                    <input type="text" class="form-control" id="phone" name="phone">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="role" class="form-label">Position</label>
-                                    <input type="text" class="form-control" id="position" name="position">
-                                </div>
+                            <div class="mb-3">
+                                <label for="editProId" class="form-label">Product ID</label>
+                                <input type="text" class="form-control" id="editProId" name="proId" readonly>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Add Staff</button>
+
+                            <div class="mb-3">
+                                <label for="editAttributeId" class="form-label">Attribute ID</label>
+                                <input type="number" class="form-control" id="editAttributeId" name="attributeId" readonly>
                             </div>
-                        </form>
-                    </div>
+
+                            <div class="mb-3">
+                                <label for="editAttributeValue" class="form-label">Attribute Value</label>
+                                <input type="text" class="form-control" id="editAttributeValue" name="value" required>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Update</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
                 </div>
             </div>
+        </div>
+        <!-- Modal Add Product Attribute -->
+        <div class="modal fade" id="addProductAttributeModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="AdminController" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Product Attribute</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
 
-            <!-- Edit Staff Modal -->
-            <div class="modal fade" id="editStaffModal" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form action="AdminController" method="post" enctype="multipart/form-data" class="modal-content" >
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="addProductAttribute">
+                            <input type="hidden" name="tab" value="productAttributes">
 
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="editStaff">
-                                <!-- Hidden inputs submit -->
-                                <input type="hidden" name="staffId" id="editStaffIdHidden">
-                                <input type="hidden" name="staffName" id="editStaffNameHidden">
-                                <input type="hidden" name="currentImage" id="currentImagePath">
-
-                                <div class="mb-3">
-                                    <label for="editStaffFullName" class="form-label">Full Name</label>
-                                    <input type="text" class="form-control" id="editStaffFullName" name="staffFullName">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editStaffPassword" class="form-label">Password</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="editStaffPassword" name="staffPassword">
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editStaffGender" class="form-label">Gender</label>
-                                    <select class="form-select" id="editStaffGender" name="staffGender">
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editStaffGmail" class="form-label">Gmail</label>
-                                    <input type="email" class="form-control" id="editStaffGmail" name="staffGmail">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editStaffPhone" class="form-label">Phone</label>
-                                    <input type="tel" class="form-control" id="editStaffPhone" name="staffPhone">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editStaffPosition" class="form-label">Position</label>
-                                    <input type="text" class="form-control" id="editStaffPosition" name="staffPosition">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editStaffImage" class="form-label">Image</label>
-                                    <input type="file" class="form-control" id="editStaffImage" name="staffImage" accept="image/*">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Current Image</label><br>
-                                    <img id="editStaffImagePreview" src="#" alt="Preview" width="100" height="120">
-                                </div>
+                            <!-- Product -->
+                            <div class="mb-3">
+                                <label for="proId" class="form-label">Product</label>
+                                <select class="form-select" id="proId" name="proId" required>
+                                    <option value="">-- Select Product --</option>
+                                    <option value="L001">L001 - Dell XPS</option>
+                                    <option value="S001">S001 - iPhone</option>
+                                    <!-- Bạn tự thêm nếu cần -->
+                                </select>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Update</button>
+
+                            <!-- Attribute -->
+                            <div class="mb-3">
+                                <label for="attributeId" class="form-label">Attribute</label>
+                                <select class="form-select" id="attributeId" name="attributeId" required>
+                                    <option value="">-- Select Attribute --</option>
+                                    <c:forEach var="attr" items="${attributes}">
+                                        <option value="${attr.attributeId}">${attr.attributeId} - ${attr.attributeName}</option>
+                                    </c:forEach>
+                                </select>
                             </div>
-                        </form>
-                    </div>
+
+                            <!-- Value -->
+                            <div class="mb-3">
+                                <label for="value" class="form-label">Attribute Value</label>
+                                <input type="text" class="form-control" id="value" name="value" required>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Add</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-
-
-            <!-- Edit Product Attribute Modal -->
-            <div class="modal fade" id="editProductAttributeModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form action="AdminController" method="post">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Edit Product Attribute</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="updateProductAttribute">
-                                <input type="hidden" name="tab" value="productAttributes">
-
-                                <div class="mb-3">
-                                    <label for="editProId" class="form-label">Product ID</label>
-                                    <input type="text" class="form-control" id="editProId" name="proId" readonly>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="editAttributeId" class="form-label">Attribute ID</label>
-                                    <input type="number" class="form-control" id="editAttributeId" name="attributeId" readonly>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="editAttributeValue" class="form-label">Attribute Value</label>
-                                    <input type="text" class="form-control" id="editAttributeValue" name="value" required>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="submit" class="btn btn-primary">Update</button>
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <!-- Modal Add Product Attribute -->
-            <div class="modal fade" id="addProductAttributeModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form action="AdminController" method="post">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Add Product Attribute</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="addProductAttribute">
-                                <input type="hidden" name="tab" value="productAttributes">
-
-                                <!-- Product -->
-                                <div class="mb-3">
-                                    <label for="proId" class="form-label">Product</label>
-                                    <select class="form-select" id="proId" name="proId" required>
-                                        <option value="">-- Select Product --</option>
-                                        <option value="L001">L001 - Dell XPS</option>
-                                        <option value="S001">S001 - iPhone</option>
-                                        <!-- Bạn tự thêm nếu cần -->
-                                    </select>
-                                </div>
-
-                                <!-- Attribute -->
-                                <div class="mb-3">
-                                    <label for="attributeId" class="form-label">Attribute</label>
-                                    <select class="form-select" id="attributeId" name="attributeId" required>
-                                        <option value="">-- Select Attribute --</option>
-                                        <c:forEach var="attr" items="${attributes}">
-                                            <option value="${attr.attributeId}">${attr.attributeId} - ${attr.attributeName}</option>
-                                        </c:forEach>
-                                    </select>
-                                </div>
-
-                                <!-- Value -->
-                                <div class="mb-3">
-                                    <label for="value" class="form-label">Attribute Value</label>
-                                    <input type="text" class="form-control" id="value" name="value" required>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="submit" class="btn btn-primary">Add</button>
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+        </div>
 
 
 
 
 
 
-            <script>const contextPath = '${pageContext.request.contextPath}';</script>
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script>const contextPath = '${pageContext.request.contextPath}';</script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 
-            <script src="${pageContext.request.contextPath}/js/ScriptAdminDashboard.js"></script>
+        <script src="${pageContext.request.contextPath}/js/ScriptAdminDashboard.js"></script>
     </body>
 </html>
 <!-- View Product Attribute Modal -->
