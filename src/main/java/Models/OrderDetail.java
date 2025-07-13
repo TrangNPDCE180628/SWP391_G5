@@ -1,7 +1,7 @@
 package Models;
 
 public class OrderDetail {
-
+  
     private int orderDetailId;
     private int orderId;
     private String proId;
@@ -20,7 +20,7 @@ public class OrderDetail {
         this.unitPrice = unitPrice;
         this.voucherId = voucherId;
     }
-
+  
     public int getOrderDetailId() {
         return orderDetailId;
     }
@@ -64,7 +64,6 @@ public class OrderDetail {
     public double getTotalPrice() {
         return quantity * unitPrice;
     }
-
     public Integer getVoucherId() {
         return voucherId;
     }

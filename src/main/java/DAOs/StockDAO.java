@@ -6,10 +6,12 @@ package DAOs;
 
 import Models.Stock;
 import Ultis.DBContext;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +33,7 @@ public class StockDAO {
         }
         return false;
     }
-
+  
     public List<Stock> getAllStocks() throws SQLException, ClassNotFoundException {
         List<Stock> stockList = new ArrayList<>();
         String sql = "SELECT proId, stockQuantity, lastUpdated FROM Stock";
@@ -63,6 +65,7 @@ public class StockDAO {
     public void deleteStock(String proId) throws SQLException, ClassNotFoundException {
         String sql = "DELETE FROM Stock WHERE proId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, proId);
             stmt.executeUpdate();
         }
@@ -76,6 +79,7 @@ public class StockDAO {
             throw new SQLException("Product ID " + proId + " does not exist in the Product table");
         }
         String sql = "INSERT INTO Stock (proId, stockQuantity, lastUpdated) VALUES (?, ?, GETDATE())";
+
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, proId);
             stmt.setInt(2, quantity);

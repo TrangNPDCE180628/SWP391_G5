@@ -20,7 +20,7 @@ public class Stock {
         this.stockQuantity = stockQuantity;
         this.lastUpdated = lastUpdated;
     }
-
+  
     public String getProId() {
         return proId;
     }
@@ -28,7 +28,7 @@ public class Stock {
     public void setProId(String proId) {
         this.proId = proId;
     }
-
+  
     public int getStockQuantity() {
         return stockQuantity;
     }
