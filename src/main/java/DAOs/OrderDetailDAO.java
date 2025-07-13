@@ -8,121 +8,199 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderDetailDAO {
-    // Create
-    public void create(OrderDetail orderDetail) throws SQLException, ClassNotFoundException {
-        String sql = "INSERT INTO OrderDetails (orderId, productId, quantity, unitPrice, totalPrice) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setInt(1, orderDetail.getOrderId());
-            stmt.setInt(2, orderDetail.getProductId());
-            stmt.setInt(3, orderDetail.getQuantity());
-            stmt.setDouble(4, orderDetail.getUnitPrice());
-            stmt.setDouble(5, orderDetail.getTotalPrice());
-            stmt.executeUpdate();
 
-            ResultSet rs = stmt.getGeneratedKeys();
-            if (rs.next()) {
-                orderDetail.setId(rs.getInt(1));
+    /* ───────────────────────────  CREATE  ─────────────────────────── */
+    public boolean create(OrderDetail detail) throws SQLException, ClassNotFoundException {
+        if (detail == null) {
+            throw new IllegalArgumentException("OrderDetail cannot be null");
+        }
+
+        String sql = "INSERT INTO OrderDetail (orderId, proId, quantity, unitPrice, voucherId) "
+                + "VALUES (?, ?, ?, ?, ?)";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, detail.getOrderId());
+            stmt.setString(2, detail.getProId());
+            stmt.setInt(3, detail.getQuantity());
+            stmt.setBigDecimal(4, java.math.BigDecimal.valueOf(detail.getUnitPrice())); // ✅
+            if (detail.getVoucherId() != null) {
+                stmt.setInt(5, detail.getVoucherId());
+            } else {
+                stmt.setNull(5, Types.INTEGER);
             }
+
+            return stmt.executeUpdate() > 0;
         }
     }
 
-    // Read by ID
+    /**
+     * Thêm OrderDetail và trả về khóa chính sinh tự động, -1 nếu thất bại
+     */
+    public int createWithId(OrderDetail detail) throws SQLException, ClassNotFoundException {
+        if (detail == null) {
+            throw new IllegalArgumentException("OrderDetail cannot be null");
+        }
+
+        String sql
+                = "INSERT INTO OrderDetail (orderId, proId, quantity, unitPrice, voucherId) "
+                + "VALUES (?, ?, ?, ?, ?)";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setInt(1, detail.getOrderId());
+            stmt.setString(2, detail.getProId());
+            stmt.setInt(3, detail.getQuantity());
+            stmt.setDouble(4, detail.getUnitPrice());
+
+            if (detail.getVoucherId() != null) {
+                stmt.setInt(5, detail.getVoucherId());
+            } else {
+                stmt.setNull(5, Types.INTEGER);
+            }
+
+            if (stmt.executeUpdate() > 0) {
+                try ( ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+            return -1;
+        }
+    }
+
+    /* ───────────────────────────  READ  ─────────────────────────── */
     public OrderDetail getById(int id) throws SQLException, ClassNotFoundException {
-        String sql = "SELECT * FROM OrderDetails WHERE id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        String sql = "SELECT * FROM OrderDetail WHERE orderDetailId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return new OrderDetail(
-                        rs.getInt("id"),
-                        rs.getInt("orderId"),
-                        rs.getInt("productId"),
-                        rs.getInt("quantity"),
-                        rs.getDouble("unitPrice"),
-                        rs.getDouble("totalPrice")
-                );
+            try ( ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? extract(rs) : null;
             }
-            return null;
         }
     }
 
-    // Read all
     public List<OrderDetail> getAll() throws SQLException, ClassNotFoundException {
-        String sql = "SELECT * FROM OrderDetails";
-        List<OrderDetail> orderDetails = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        String sql = "SELECT * FROM OrderDetail";
+        List<OrderDetail> list = new ArrayList<>();
+        try ( Connection conn = DBContext.getConnection();  Statement stmt = conn.createStatement();  ResultSet rs = stmt.executeQuery(sql)) {
+
             while (rs.next()) {
-                orderDetails.add(new OrderDetail(
-                        rs.getInt("id"),
-                        rs.getInt("orderId"),
-                        rs.getInt("productId"),
-                        rs.getInt("quantity"),
-                        rs.getDouble("unitPrice"),
-                        rs.getDouble("totalPrice")
-                ));
+                list.add(extract(rs));
             }
-            return orderDetails;
         }
+        return list;
     }
 
-    // Read by order ID
     public List<OrderDetail> getByOrderId(int orderId) throws SQLException, ClassNotFoundException {
-        String sql = "SELECT * FROM OrderDetails WHERE orderId = ?";
-        List<OrderDetail> orderDetails = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, orderId);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                orderDetails.add(new OrderDetail(
-                        rs.getInt("id"),
-                        rs.getInt("orderId"),
-                        rs.getInt("productId"),
-                        rs.getInt("quantity"),
-                        rs.getDouble("unitPrice"),
-                        rs.getDouble("totalPrice")
-                ));
+        List<OrderDetail> list = new ArrayList<>();
+        String sql = "SELECT * FROM OrderDetail WHERE orderId = ?";
+        try ( Connection con = DBContext.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            try ( ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    OrderDetail od = new OrderDetail();
+                    od.setOrderId(rs.getInt("orderId"));
+                    od.setProId(rs.getString("proId"));
+                    od.setQuantity(rs.getInt("quantity"));
+                    od.setUnitPrice(rs.getDouble("unitPrice"));
+                    list.add(od);
+                }
             }
-            return orderDetails;
+        }
+        return list;
+    }
+
+
+    /* ───────────────────────────  UPDATE  ─────────────────────────── */
+    public boolean update(OrderDetail detail) throws SQLException, ClassNotFoundException {
+        if (detail == null) {
+            throw new IllegalArgumentException("OrderDetail cannot be null");
+        }
+
+        String sql
+                = "UPDATE OrderDetail SET orderId = ?, proId = ?, quantity = ?, unitPrice = ?, voucherId = ? "
+                + "WHERE orderDetailId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, detail.getOrderId());
+            stmt.setString(2, detail.getProId());
+            stmt.setInt(3, detail.getQuantity());
+            stmt.setDouble(4, detail.getUnitPrice());
+
+            if (detail.getVoucherId() != null) {
+                stmt.setInt(5, detail.getVoucherId());
+            } else {
+                stmt.setNull(5, Types.INTEGER);
+            }
+
+            stmt.setInt(6, detail.getOrderDetailId());
+            return stmt.executeUpdate() > 0;
         }
     }
 
-    // Update
-    public void update(OrderDetail orderDetail) throws SQLException, ClassNotFoundException {
-        String sql = "UPDATE OrderDetails SET orderId = ?, productId = ?, quantity = ?, unitPrice = ?, totalPrice = ? WHERE id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, orderDetail.getOrderId());
-            stmt.setInt(2, orderDetail.getProductId());
-            stmt.setInt(3, orderDetail.getQuantity());
-            stmt.setDouble(4, orderDetail.getUnitPrice());
-            stmt.setDouble(5, orderDetail.getTotalPrice());
-            stmt.setInt(6, orderDetail.getId());
-            stmt.executeUpdate();
-        }
-    }
+    /* ───────────────────────────  DELETE  ─────────────────────────── */
+    public boolean delete(int id) throws SQLException, ClassNotFoundException {
+        String sql = "DELETE FROM OrderDetail WHERE orderDetailId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-    // Delete
-    public void delete(int id) throws SQLException, ClassNotFoundException {
-        String sql = "DELETE FROM OrderDetails WHERE id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-            stmt.executeUpdate();
+            return stmt.executeUpdate() > 0;
         }
     }
 
-    // Delete by order ID
-    public void deleteByOrderId(int orderId) throws SQLException, ClassNotFoundException {
-        String sql = "DELETE FROM OrderDetails WHERE orderId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public boolean deleteByOrderId(int orderId) throws SQLException, ClassNotFoundException {
+        String sql = "DELETE FROM OrderDetail WHERE orderId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, orderId);
-            stmt.executeUpdate();
+            return stmt.executeUpdate() > 0;
         }
     }
-} 
+
+    /* ───────────────────────────  UTILITIES  ─────────────────────────── */
+    /**
+     * Kiểm tra tồn tại OrderDetail theo ID
+     */
+    public boolean exists(int id) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT 1 FROM OrderDetail WHERE orderDetailId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+            try ( ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /**
+     * Tổng tiền (quantity * unitPrice) của một Order
+     */
+    public double getTotalByOrderId(int orderId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT SUM(quantity * unitPrice) FROM OrderDetail WHERE orderId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, orderId);
+            try ( ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getDouble(1) : 0.0;
+            }
+        }
+    }
+
+    /* ───────────────────────────  PRIVATE  ─────────────────────────── */
+    /**
+     * Chuyển ResultSet → OrderDetail
+     */
+    private OrderDetail extract(ResultSet rs) throws SQLException {
+        OrderDetail d = new OrderDetail();
+        d.setOrderDetailId(rs.getInt("orderDetailId"));
+        d.setOrderId(rs.getInt("orderId"));
+        d.setProId(rs.getString("proId"));
+        d.setQuantity(rs.getInt("quantity"));
+        d.setUnitPrice(rs.getDouble("unitPrice"));
+
+        int vId = rs.getInt("voucherId");
+        d.setVoucherId(rs.wasNull() ? null : vId);
+        return d;
+    }
+}

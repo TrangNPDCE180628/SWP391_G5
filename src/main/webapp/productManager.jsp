@@ -36,7 +36,7 @@
     </head>
     <body>
         <div class="container py-4">
-            <h2 class="mb-4">📦 Product Manager</h2>
+            <h2 class="mb-4">Product Manager</h2>
 
             <!-- Search -->
             <form method="get" action="ProductManagerController" class="mb-3 d-flex gap-2">

@@ -123,6 +123,18 @@ public class VoucherDAO {
         return 0;
     }
 
+    public Voucher getByCode(String codeName) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT * FROM Voucher WHERE codeName = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, codeName);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return extractVoucher(rs);
+            }
+        }
+        return null;
+    }
+
     // Helper method: convert ResultSet to Voucher object
     private Voucher extractVoucher(ResultSet rs) throws SQLException {
         return new Voucher(

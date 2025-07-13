@@ -1,4 +1,4 @@
-package Controllers;
+    package Controllers;
 
 import DAOs.ProductDAO;
 import DAOs.ProductAttributeDAO;
@@ -28,7 +28,7 @@ public class ProductDetailServlet extends HttpServlet {
             }
 
             ProductDAO productDAO = new ProductDAO();
-            Product product = productDAO.getProductById(productId);
+            Product product = productDAO.getById(productId);
 
             if (product != null) {
                 // [THÊM MỚI]: Lấy danh sách thuộc tính sản phẩm

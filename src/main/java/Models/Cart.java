@@ -1,63 +1,44 @@
 package Models;
 
 public class Cart {
-    private int id;
-    private int userId;
-    private String status;
-    private int productId;
-    private double unitPrice;
-    private int quantity;
+
+    private int cartId;      // cartId INT
+    private String cusId;    // cusId VARCHAR(10)
+    private String proId;    // proId VARCHAR(10)
+    private int quantity;    // quantity INT
 
     public Cart() {
     }
 
-    public Cart(int id, int userId, String status, int productId, double unitPrice, int quantity) {
-        this.id = id;
-        this.userId = userId;
-        this.status = status;
-        this.productId = productId;
-        this.unitPrice = unitPrice;
+    public Cart(int cartId, String cusId, String proId, int quantity) {
+        this.cartId = cartId;
+        this.cusId = cusId;
+        this.proId = proId;
         this.quantity = quantity;
     }
 
-    public int getId() {
-        return id;
+    public int getCartId() {
+        return cartId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setCartId(int cartId) {
+        this.cartId = cartId;
     }
 
-    public int getUserId() {
-        return userId;
+    public String getCusId() {
+        return cusId;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
+    public void setCusId(String cusId) {
+        this.cusId = cusId;
     }
 
-    public String getStatus() {
-        return status;
+    public String getProId() {
+        return proId;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public int getProductId() {
-        return productId;
-    }
-
-    public void setProductId(int productId) {
-        this.productId = productId;
-    }
-
-    public double getUnitPrice() {
-        return unitPrice;
-    }
-
-    public void setUnitPrice(double unitPrice) {
-        this.unitPrice = unitPrice;
+    public void setProId(String proId) {
+        this.proId = proId;
     }
 
     public int getQuantity() {
@@ -67,4 +48,4 @@ public class Cart {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
-} 
+}
