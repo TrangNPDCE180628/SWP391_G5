@@ -6,23 +6,24 @@ import java.util.List;
 
 public class Order {
 
-    private int orderId;
-    private String cusId;
-    private Timestamp orderDate;
-    private BigDecimal totalAmount;
-    private BigDecimal discountAmount;
-    private BigDecimal finalAmount;
-    private Integer voucherId; 
-    private String orderStatus;
-    private String paymentMethod;
-    private String shippingAddress;
-
-    private List<OrderDetail> orderDetails; // optional if needed in logic
+    private int orderId;                      // Mã đơn hàng
+    private String cusId;                     // Mã khách hàng
+    private Timestamp orderDate;              // Ngày đặt hàng
+    private BigDecimal totalAmount;               // Tổng tiền hàng trước giảm giá
+    private BigDecimal discountAmount;            // Số tiền được giảm
+    private BigDecimal finalAmount;               // Tổng tiền sau giảm giá
+    private Integer voucherId;                // Mã voucher (nullable)
+    private String orderStatus;               // Trạng thái đơn hàng
+    private String paymentMethod;             // Phương thức thanh toán
+    private String shippingAddress;           // Địa chỉ giao hàng
+    private List<OrderDetail> orderDetails;   // Danh sách chi tiết đơn hàng
 
     public Order() {
     }
 
-    public Order(int orderId, String cusId, Timestamp orderDate, BigDecimal totalAmount, BigDecimal discountAmount, BigDecimal finalAmount, Integer voucherId, String orderStatus, String paymentMethod, String shippingAddress, List<OrderDetail> orderDetails) {
+    public Order(int orderId, String cusId, Timestamp orderDate, BigDecimal totalAmount,
+            BigDecimal discountAmount, BigDecimal finalAmount, Integer voucherId,
+            String orderStatus, String paymentMethod, String shippingAddress, List<OrderDetail> orderDetails) {
         this.orderId = orderId;
         this.cusId = cusId;
         this.orderDate = orderDate;
@@ -34,6 +35,20 @@ public class Order {
         this.paymentMethod = paymentMethod;
         this.shippingAddress = shippingAddress;
         this.orderDetails = orderDetails;
+    }
+
+    public Order(int orderId, String cusId, Timestamp orderDate, BigDecimal totalAmount,
+            BigDecimal discountAmount, Integer voucherId,
+            String orderStatus, String paymentMethod, String shippingAddress) {
+        this.orderId = orderId;
+        this.cusId = cusId;
+        this.orderDate = orderDate;
+        this.totalAmount = totalAmount;
+        this.discountAmount = discountAmount;
+        this.voucherId = voucherId;
+        this.orderStatus = orderStatus;
+        this.paymentMethod = paymentMethod;
+        this.shippingAddress = shippingAddress;
     }
 
     public int getOrderId() {

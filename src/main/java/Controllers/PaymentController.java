@@ -132,14 +132,14 @@ public class PaymentController extends HttpServlet {
             order.setVoucherId(voucherId);
 
             OrderDAO orderDAO = new OrderDAO();
-            orderId = orderDAO.create(order);             // trả về khóa
+            orderId = orderDAO.createOrder(order);             // trả về khóa
             order.setOrderId(orderId);
 
             /* 6. Lưu OrderDetail */
             OrderDetailDAO detailDAO = new OrderDetailDAO();
             for (OrderDetail d : orderDetails) {
                 d.setOrderId(orderId);
-                if (!detailDAO.create(d)) {
+                if (!detailDAO.createOrderDetail(d)) {
                     throw new SQLException("Không thể lưu chi tiết đơn hàng.");
                 }
             }
@@ -235,7 +235,7 @@ public class PaymentController extends HttpServlet {
             order.setShippingAddress(shippingAddress);
             order.setOrderStatus("paid");
 
-            if (!dao.update(order)) {
+            if (!dao.updateOrder(order)) {
                 throw new RuntimeException("Cập nhật đơn hàng thất bại.");
             }
 

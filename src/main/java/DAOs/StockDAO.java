@@ -4,10 +4,14 @@
  */
 package DAOs;
 
+import Models.Stock;
 import Ultis.DBContext;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -15,7 +19,100 @@ import java.sql.ResultSet;
  */
 public class StockDAO {
 
-    public int getStockByProductId(String proId) {
+    public boolean doesProductExist(String proId) throws ClassNotFoundException, SQLException {
+        String sql = "SELECT COUNT(*) FROM Product WHERE proId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, proId);
+            try ( ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    public List<Stock> getAllStocks() throws SQLException, ClassNotFoundException {
+        List<Stock> stockList = new ArrayList<>();
+        String sql = "SELECT proId, stockQuantity, lastUpdated FROM Stock";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql);  ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Stock stock = new Stock(
+                        rs.getString("proId"),
+                        rs.getInt("stockQuantity"),
+                        rs.getTimestamp("lastUpdated")
+                );
+                stockList.add(stock);
+            }
+        }
+        return stockList;
+    }
+
+    public void addStockQuantity(String proId, int quantity) throws SQLException, ClassNotFoundException {
+        if (quantity <= 0) {
+            return;
+        }
+        String sql = "UPDATE Stock SET stockQuantity = stockQuantity + ?, lastUpdated = GETDATE() WHERE proId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, quantity);
+            stmt.setString(2, proId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void deleteStock(String proId) throws SQLException, ClassNotFoundException {
+        String sql = "DELETE FROM Stock WHERE proId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, proId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void createStock(String proId, int quantity) throws SQLException, ClassNotFoundException {
+        if (quantity < 0) {
+            throw new SQLException("Quantity must be non-negative");
+        }
+        if (!doesProductExist(proId)) {
+            throw new SQLException("Product ID " + proId + " does not exist in the Product table");
+        }
+        String sql = "INSERT INTO Stock (proId, stockQuantity, lastUpdated) VALUES (?, ?, GETDATE())";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, proId);
+            stmt.setInt(2, quantity);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void updateStockQuantity(String proId, int newQuantity) throws SQLException, ClassNotFoundException {
+        if (newQuantity < 0) {
+            return;
+        }
+        String sql = "UPDATE Stock SET stockQuantity = ?, lastUpdated = GETDATE() WHERE proId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, newQuantity);
+            stmt.setString(2, proId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public Stock getStockByProductId(String proId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT proId, stockQuantity, lastUpdated FROM Stock WHERE proId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, proId);
+            try ( ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Stock(
+                            rs.getString("proId"),
+                            rs.getInt("stockQuantity"),
+                            rs.getTimestamp("lastUpdated")
+                    );
+                }
+            }
+        }
+        return null;
+    }
+
+    public int getStockProductByProductId(String proId) {
         int quantity = 0;
         try ( Connection con = DBContext.getConnection();  PreparedStatement ps = con.prepareStatement("SELECT stockQuantity FROM Stock WHERE proId = ?")) {
             ps.setString(1, proId);
