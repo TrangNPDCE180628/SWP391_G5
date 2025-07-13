@@ -11,6 +11,7 @@ import DAOs.ProductAttributeDAO;
 import DAOs.ProductDAO;
 import DAOs.ReplyFeedbackDAO;
 import DAOs.StaffDAO;
+import DAOs.StockDAO;
 import DAOs.VoucherDAO;
 import DAOs.ViewProductAttributeDAO;
 
@@ -19,12 +20,13 @@ import Models.Customer;
 import Models.Feedback;
 import Models.FeedbackReplyView;
 import Models.Order;
-import Models.Attribute;
 import Models.OrderDetail;
+import Models.Attribute;
 import Models.Product;
 import Models.ProductAttribute;
 import Models.ReplyFeedback;
 import Models.Staff;
+import Models.Stock;
 import Models.Voucher;
 import Models.User;
 import Models.ViewProductAttribute;
@@ -50,6 +52,7 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -150,9 +153,21 @@ public class AdminController extends HttpServlet {
                 case "goToOrderDetailPage":
                     goToOrderDetailPage(request, response);
                     return;
-
-                
-
+                case "viewStockList":
+                    viewStockList(request, response);
+                    return;
+                case "addStockQuantity":
+                    addStockQuantity(request, response);
+                    return;
+                case "deleteStock":
+                    deleteStock(request, response);
+                    return;
+                case "createStock":
+                    createStock(request, response);
+                    return;
+                case "updateStockQuantity":
+                    updateStockQuantity(request, response);
+                    return;
                 default:
                     loadAdminPage(request, response);
             }
@@ -181,6 +196,7 @@ public class AdminController extends HttpServlet {
             AttributeDAO attributeDAO = new AttributeDAO();
             ProductAttributeDAO paDAO = new ProductAttributeDAO();
             OrderDAO ordDao = new OrderDAO();
+            StockDAO stockDAO = new StockDAO();
 
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
@@ -190,8 +206,9 @@ public class AdminController extends HttpServlet {
             List<Attribute> attributes = attributeDAO.getAll();
             List<ProductAttribute> productAttributes = paDAO.getAll();
             List<Order> orders = ordDao.getAll();
+            List<Stock> stocks = stockDAO.getAllStocks();
 
-// === NEW: Load từ VIEW ===
+            // === NEW: Load từ VIEW ===
             Connection conn = DBContext.getConnection();
             ViewProductAttributeDAO viewProductAttributeDAO = new ViewProductAttributeDAO(conn);
             List<ViewProductAttribute> viewProductAttributes = viewProductAttributeDAO.getAll();
@@ -205,6 +222,7 @@ public class AdminController extends HttpServlet {
             request.setAttribute("attributes", attributes);
             request.setAttribute("productAttributes", productAttributes);
             request.setAttribute("orders", orders);
+            request.setAttribute("stocks", stocks);
 
             // 1. Lấy danh sách tất cả đơn hàng
             OrderDetailDAO detailDAO = new OrderDetailDAO();
@@ -229,7 +247,6 @@ public class AdminController extends HttpServlet {
                     StaffDAO staffDAO2 = new StaffDAO();
                     Staff staffProfile = staffDAO2.getById(String.valueOf(loginUser.getId()));
                     request.setAttribute("profile", staffProfile);
-
                 }
             }
             request.getRequestDispatcher("admin.jsp").forward(request, response);
@@ -237,8 +254,98 @@ public class AdminController extends HttpServlet {
             throw new ServletException(e);
         }
     }
-    
-    
+
+    private void viewStockList(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            StockDAO stockDAO = new StockDAO();
+            List<Stock> stocks = stockDAO.getAllStocks();
+            request.setAttribute("stocks", stocks);
+            request.setAttribute("activeTab", "inventory");
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+            log("Error in viewStockList: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Unable to load stock list: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
+        }
+    }
+
+    private void addStockQuantity(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+            StockDAO stockDAO = new StockDAO();
+            stockDAO.addStockQuantity(proId, quantity);
+            response.sendRedirect("AdminController?tab=inventory");
+        } catch (Exception e) {
+            log("Error in addStockQuantity: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Unable to add stock quantity: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
+        }
+    }
+
+    private void deleteStock(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            StockDAO stockDAO = new StockDAO();
+            stockDAO.deleteStock(proId);
+            response.sendRedirect("AdminController?tab=inventory");
+        } catch (Exception e) {
+            log("Error in deleteStock: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Unable to delete stock: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
+        }
+    }
+
+    /**
+     * Creates a new stock record for a product.
+     *
+     * @param request the HttpServletRequest object
+     * @param response the HttpServletResponse object
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    private void createStock(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+            StockDAO stockDAO = new StockDAO();
+            stockDAO.createStock(proId, quantity);
+            response.sendRedirect("AdminController?tab=inventory");
+        } catch (Exception e) {
+            log("Error in createStock: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Unable to create stock: " + e.getMessage());
+                request.getRequestDispatcher("inventory.jsp").forward(request, response);
+            }
+        }
+    }
+
+    private void updateStockQuantity(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            int newQuantity = Integer.parseInt(request.getParameter("newQuantity"));
+            StockDAO stockDAO = new StockDAO();
+            stockDAO.updateStockQuantity(proId, newQuantity);
+            response.sendRedirect("AdminController?tab=inventory");
+        } catch (Exception e) {
+            log("Error in updateStockQuantity: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Unable to update stock quantity: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
+        }
+    }
 
     /**
      * Điều hướng sang trang orderdetail.jsp và đổ danh sách chi tiết đơn hàng
@@ -290,7 +397,6 @@ public class AdminController extends HttpServlet {
             if (filterStatus == null || filterStatus.isEmpty()) {
                 filterStatus = "All";
             }
-            
 
             response.sendRedirect("AdminController?tab=orders");
         } catch (Exception e) {
