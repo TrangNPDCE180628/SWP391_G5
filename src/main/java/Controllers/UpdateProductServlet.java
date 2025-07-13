@@ -21,7 +21,7 @@ public class UpdateProductServlet extends HttpServlet {
         try {
             String productId = request.getParameter("id");
             ProductDAO productDAO = new ProductDAO();
-            Product product = productDAO.getProductById(productId);
+            Product product = productDAO.getById(productId);
 
             if (product != null) {
                 request.setAttribute("product", product);

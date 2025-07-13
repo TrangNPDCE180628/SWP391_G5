@@ -1,6 +1,7 @@
 package DAOs;
 
 import Models.Cart;
+import Models.ViewCartCustomer;
 import Ultis.DBContext;
 
 import java.sql.*;
@@ -8,154 +9,107 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CartDAO {
-    // Create
-    public void create(Cart cart) throws SQLException, ClassNotFoundException {
-        String sql = "INSERT INTO Carts (user_id, status, productId, unitPrice, quantity) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setInt(1, cart.getUserId());
-            stmt.setString(2, cart.getStatus());
-            stmt.setInt(3, cart.getProductId());
-            stmt.setDouble(4, cart.getUnitPrice());
-            stmt.setInt(5, cart.getQuantity());
-            stmt.executeUpdate();
+// Thêm sản phẩm vào giỏ: nếu đã có thì cộng thêm số lượng
 
-            ResultSet rs = stmt.getGeneratedKeys();
-            if (rs.next()) {
-                cart.setId(rs.getInt(1));
-            }
+    public void addToCart(String cusId, String proId, int quantity) throws SQLException, ClassNotFoundException {
+        Cart existing = getCartItem(cusId, proId);
+        if (existing != null) {
+            int newQuantity = existing.getQuantity() + quantity;
+            updateQuantity(existing.getCartId(), newQuantity);
+        } else {
+            insertCart(cusId, proId, quantity);
         }
     }
 
-    // Read by ID
-    public Cart getById(int id) throws SQLException, ClassNotFoundException {
-        String sql = "SELECT * FROM Carts WHERE id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
+    // Thêm sản phẩm vào giỏ
+    public void insertCart(String cusId, String proId, int quantity) throws SQLException, ClassNotFoundException {
+        String sql = "INSERT INTO Cart (cusId, proId, quantity) VALUES (?, ?, ?)";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, cusId);
+            stmt.setString(2, proId);
+            stmt.setInt(3, quantity);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Cập nhật số lượng trong giỏ
+    public void updateQuantity(int cartId, int quantity) throws SQLException, ClassNotFoundException {
+        String sql = "UPDATE Cart SET quantity = ? WHERE cartId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, quantity);
+            stmt.setInt(2, cartId);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Xóa sản phẩm trong giỏ theo cartId
+    public void deleteCartItem(int cartId) throws SQLException, ClassNotFoundException {
+        String sql = "DELETE FROM Cart WHERE cartId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, cartId);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Xóa toàn bộ giỏ hàng của khách
+    public void deleteAllByCusId(String cusId) throws SQLException, ClassNotFoundException {
+        String sql = "DELETE FROM Cart WHERE cusId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, cusId);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Lấy danh sách ViewCartCustomer theo cusId
+    public List<ViewCartCustomer> getViewCartByCusId(String cusId) throws SQLException, ClassNotFoundException {
+        List<ViewCartCustomer> list = new ArrayList<>();
+        String sql = "SELECT * FROM ViewCartCustomer WHERE cusId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, cusId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                ViewCartCustomer vcc = new ViewCartCustomer(
+                        rs.getInt("cartId"),
+                        rs.getString("cusId"),
+                        rs.getString("proId"),
+                        rs.getString("proName"),
+                        rs.getDouble("proPrice"),
+                        rs.getString("proImageUrl"),
+                        rs.getInt("quantity")
+                );
+                list.add(vcc);
+            }
+        }
+        return list;
+    }
+
+    // Kiểm tra xem sản phẩm đã tồn tại trong giỏ chưa (dùng để insert/update logic)
+    public Cart getCartItem(String cusId, String proId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT * FROM Cart WHERE cusId = ? AND proId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, cusId);
+            stmt.setString(2, proId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return new Cart(
-                        rs.getInt("id"),
-                        rs.getInt("user_id"),
-                        rs.getString("status"),
-                        rs.getInt("productId"),
-                        rs.getDouble("unitPrice"),
+                        rs.getInt("cartId"),
+                        rs.getString("cusId"),
+                        rs.getString("proId"),
                         rs.getInt("quantity")
                 );
             }
-            return null;
         }
+        return null;
     }
 
-    // Read all
-    public List<Cart> getAll() throws SQLException, ClassNotFoundException {
-        String sql = "SELECT * FROM Carts";
-        List<Cart> carts = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                carts.add(new Cart(
-                        rs.getInt("id"),
-                        rs.getInt("user_id"),
-                        rs.getString("status"),
-                        rs.getInt("productId"),
-                        rs.getDouble("unitPrice"),
-                        rs.getInt("quantity")
-                ));
-            }
-            return carts;
-        }
-    }
-
-    // Read by user ID
-    public List<Cart> getByUserId(int userId) throws SQLException, ClassNotFoundException {
-        String sql = "SELECT * FROM Carts WHERE user_id = ?";
-        List<Cart> carts = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, userId);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                carts.add(new Cart(
-                        rs.getInt("id"),
-                        rs.getInt("user_id"),
-                        rs.getString("status"),
-                        rs.getInt("productId"),
-                        rs.getDouble("unitPrice"),
-                        rs.getInt("quantity")
-                ));
-            }
-            return carts;
-        }
-    }
-
-    // Read active cart by user ID
-    public List<Cart> getActiveCartByUserId(int userId) throws SQLException, ClassNotFoundException {
-        String sql = "SELECT * FROM Carts WHERE user_id = ? AND status = 'active'";
-        List<Cart> carts = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, userId);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                carts.add(new Cart(
-                        rs.getInt("id"),
-                        rs.getInt("user_id"),
-                        rs.getString("status"),
-                        rs.getInt("productId"),
-                        rs.getDouble("unitPrice"),
-                        rs.getInt("quantity")
-                ));
-            }
-            return carts;
-        }
-    }
-
-    // Update
-    public void update(Cart cart) throws SQLException, ClassNotFoundException {
-        String sql = "UPDATE Carts SET user_id = ?, status = ?, productId = ?, unitPrice = ?, quantity = ? WHERE id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, cart.getUserId());
-            stmt.setString(2, cart.getStatus());
-            stmt.setInt(3, cart.getProductId());
-            stmt.setDouble(4, cart.getUnitPrice());
-            stmt.setInt(5, cart.getQuantity());
-            stmt.setInt(6, cart.getId());
+    // Xóa sản phẩm cụ thể khỏi giỏ hàng theo cusId và proId
+    public void removeItem(String cusId, String proId) throws SQLException, ClassNotFoundException {
+        String sql = "DELETE FROM Cart WHERE cusId = ? AND proId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, cusId);
+            stmt.setString(2, proId);
             stmt.executeUpdate();
         }
     }
 
-    // Delete
-    public void delete(int id) throws SQLException, ClassNotFoundException {
-        String sql = "DELETE FROM Carts WHERE id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            stmt.executeUpdate();
-        }
-    }
-
-    // Delete by user ID
-    public void deleteByUserId(int userId) throws SQLException, ClassNotFoundException {
-        String sql = "DELETE FROM Carts WHERE user_id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, userId);
-            stmt.executeUpdate();
-        }
-    }
-
-    // Update cart status
-    public void updateCartStatus(int userId, String status) throws SQLException, ClassNotFoundException {
-        String sql = "UPDATE Carts SET status = ? WHERE user_id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, status);
-            stmt.setInt(2, userId);
-            stmt.executeUpdate();
-        }
-    }
-} 
+}

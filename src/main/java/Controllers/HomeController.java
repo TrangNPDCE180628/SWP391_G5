@@ -15,6 +15,7 @@ import java.util.List;
 
 @WebServlet(name = "HomeController", urlPatterns = {"/home", "/HomeController", ""})
 public class HomeController extends HttpServlet {
+
     private static final int PRODUCTS_PER_PAGE = 8;
     private static final String DEFAULT_IMAGE = "images/products/default.jpg";
 
