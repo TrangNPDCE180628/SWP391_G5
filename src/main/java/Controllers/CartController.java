@@ -74,7 +74,7 @@ public class CartController extends HttpServlet {
             Map<String, Integer> stockMap = new HashMap<>();
 
             for (ViewCartCustomer item : cartItems) {
-                int stockQuantity = stockDAO.getStockByProductId(item.getProId());
+                int stockQuantity = stockDAO.getStockProductByProductId(item.getProId());
                 stockMap.put(item.getProId(), stockQuantity);
                 cartMap.put(item.getProId(), item);
             }
@@ -108,7 +108,7 @@ public class CartController extends HttpServlet {
             CartDAO cartDAO = new CartDAO();
 
             Product product = productDAO.getById(productId);
-            int stockQuantity = stockDAO.getStockByProductId(productId);
+            int stockQuantity = stockDAO.getStockProductByProductId(productId);
 
             if (product == null || stockQuantity <= 0) {
                 session.setAttribute("error", "Sản phẩm không hợp lệ hoặc đã hết hàng.");
@@ -170,7 +170,7 @@ public class CartController extends HttpServlet {
                 int newQuantity = item.getQuantity() + change;
 
                 StockDAO stockDAO = new StockDAO();
-                int stock = stockDAO.getStockByProductId(productId);
+                int stock = stockDAO.getStockProductByProductId(productId);
 
                 CartDAO cartDAO = new CartDAO();
 

@@ -66,6 +66,16 @@
                                     <i class="fa-solid fa-ticket me-2"></i>FeedBack Manage
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="#orders" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fa-solid fa-ticket me-2"></i>Order Manage
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#inventory" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fa-solid fa-ticket me-2"></i>Manage Inventory
+                                </a>
+                            </li>
                         </ul>
                         <hr>
                         <div class="dropdown">
@@ -423,9 +433,6 @@
                                 </div>
                             </form>
 
-
-
-
                             <!-- Buttons Row -->
                             <div class="row mt-2 mb-3">
                                 <div class="col d-flex gap-2">
@@ -435,9 +442,6 @@
 
                                 </div>
                             </div>
-
-
-
 
                             <div class="table-responsive">
                                 <table class="table table-bordered">
@@ -488,8 +492,17 @@
                                 </table>
                             </div>
 
-
                         </div>
+                        <!-- Orders Tab -->
+                        <div class="tab-pane fade" id="orders">
+                            <jsp:include page="orderManage.jsp" />
+                        </div>
+                        <!-- inventory Tab -->
+                        <div class="tab-pane fade" id="inventory">
+                            <jsp:include page="Stock.jsp" />
+                        </div>
+
+
                     </div>
                 </div>
             </div>
