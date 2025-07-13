@@ -63,5 +63,30 @@ public class ViewUserDAO {
         }
         return null;
     }
+    
+    public User getUserByEmail(String email) throws SQLException, ClassNotFoundException {
+    String sql = "SELECT * FROM UserView WHERE email = ?";
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setString(1, email);
+        ResultSet rs = stmt.executeQuery();
+
+        if (rs.next()) {
+            User user = new User();
+            user.setId(rs.getString("userId"));
+            user.setUsername(rs.getString("username"));
+            user.setPassword(rs.getString("password"));
+            user.setFullName(rs.getString("fullName"));
+            user.setGender(rs.getString("gender"));
+            user.setImage(rs.getString("image"));
+            user.setEmail(rs.getString("email"));
+            user.setPhone(rs.getString("phone"));
+            user.setRole(rs.getString("role"));
+            return user;
+        }
+    }
+    return null;
+}
 }
 

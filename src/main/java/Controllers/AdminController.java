@@ -60,6 +60,7 @@ public class AdminController extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
 
         try {
@@ -440,58 +441,45 @@ public class AdminController extends HttpServlet {
     private void editStaff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
+            String id = request.getParameter("id");
+            String username = request.getParameter("username");
+            String password = request.getParameter("password");
+            String fullname = request.getParameter("fullname");
+            String gender = request.getParameter("gender");
+            String gmail = request.getParameter("gmail");
+            String phone = request.getParameter("phone");
+            String position = request.getParameter("position");
 
-            // Lấy dữ liệu từ form
-            String staffId = request.getParameter("staffId");  // hidden input
-            String staffName = request.getParameter("staffName"); // hidden input
-            String staffFullName = request.getParameter("staffFullName");
-            String staffPassword = request.getParameter("staffPassword");
-            String staffGender = request.getParameter("staffGender");
-            String staffGmail = request.getParameter("staffGmail");
-            String staffPhone = request.getParameter("staffPhone");
-            String staffPosition = request.getParameter("staffPosition");
-            String currentImage = request.getParameter("currentImage");
+            // Xử lý file ảnh
+            Part imagePart = request.getPart("image");
+            String fileName = Paths.get(imagePart.getSubmittedFileName()).getFileName().toString();
 
-            System.out.println("ID staff :" + staffId);
-            // Xử lý ảnh upload
-            Part filePart = request.getPart("staffImage");
-            String fileName = "";
+            String imageFileName = null;
 
-            if (filePart != null && filePart.getSize() > 0) {
-                fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-
-                // Tạo đường dẫn thư mục lưu ảnh
-                String uploadPath = getServletContext().getRealPath("/") + "images" + File.separator + "staff";
+            if (fileName != null && !fileName.trim().isEmpty()) {
+                // Có upload ảnh mới
+                String uploadPath = getServletContext().getRealPath("") + File.separator + "images/staff";
                 File uploadDir = new File(uploadPath);
                 if (!uploadDir.exists()) {
                     uploadDir.mkdirs();
                 }
-
-                // Ghi ảnh mới vào thư mục
-                filePart.write(uploadPath + File.separator + fileName);
+                imagePart.write(uploadPath + File.separator + fileName);
+                imageFileName = fileName;
             } else {
-                // Nếu không chọn ảnh mới, giữ nguyên ảnh cũ
-                fileName = currentImage != null ? currentImage : "";
+                // Không có ảnh mới => giữ ảnh cũ từ database
+                StaffDAO dao = new StaffDAO();
+                Staff existing = dao.getById(id);
+                imageFileName = existing.getStaffImage();
             }
 
-            // Tạo đối tượng Staff để update
-            Staff staff = new Staff();
-            staff.setStaffId(staffId);
-            staff.setStaffName(staffName);
-            staff.setStaffFullName(staffFullName);
-            staff.setStaffPassword(staffPassword);
-            staff.setStaffGender(staffGender);
-            staff.setStaffImage(fileName); // Tên file ảnh (mới hoặc cũ)
-            staff.setStaffGmail(staffGmail);
-            staff.setStaffPhone(staffPhone);
-            staff.setStaffPosition(staffPosition);
+            // Cập nhật dữ liệu
+            Staff updatedStaff = new Staff(id, username, fullname, password,
+                    gender, imageFileName, gmail, phone, position);
 
-            // Gọi DAO để update
-            StaffDAO staffDAO = new StaffDAO();
-            staffDAO.update(staff);
+            StaffDAO dao = new StaffDAO();
+            dao.update(updatedStaff);
 
-            // Chuyển hướng lại trang admin
-            loadAdminPage(request, response);
+            response.sendRedirect("AdminController?tab=staff");
 
         } catch (Exception e) {
             throw new ServletException(e);
@@ -645,39 +633,38 @@ public class AdminController extends HttpServlet {
         }
     }
 
-   private void filterProductAttribute(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-    try {
-        String proId = request.getParameter("filterProductId");
-        String attributeName = request.getParameter("filterAttributeName");
-        String value = request.getParameter("filterAttributeValue");
-        String sortField = request.getParameter("sortField");
-        String sortOrder = request.getParameter("sortOrder");
+    private void filterProductAttribute(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("filterProductId");
+            String attributeName = request.getParameter("filterAttributeName");
+            String value = request.getParameter("filterAttributeValue");
+            String sortField = request.getParameter("sortField");
+            String sortOrder = request.getParameter("sortOrder");
 
-        Connection conn = DBContext.getConnection();
-        ViewProductAttributeDAO viewDAO = new ViewProductAttributeDAO(conn);
-        List<ViewProductAttribute> filteredViewList = viewDAO.filterAndSort(proId, attributeName, value, sortField, sortOrder);
+            Connection conn = DBContext.getConnection();
+            ViewProductAttributeDAO viewDAO = new ViewProductAttributeDAO(conn);
+            List<ViewProductAttribute> filteredViewList = viewDAO.filterAndSort(proId, attributeName, value, sortField, sortOrder);
 
-        request.setAttribute("viewProductAttributes", filteredViewList);
-        request.setAttribute("activeTab", "attributes");
+            request.setAttribute("viewProductAttributes", filteredViewList);
+            request.setAttribute("activeTab", "attributes");
 
-        // Đặt lại param để giữ giá trị đã chọn
-        request.setAttribute("sortField", sortField);
-        request.setAttribute("sortOrder", sortOrder);
-        request.setAttribute("filterProductId", proId);
-        request.setAttribute("filterAttributeName", attributeName);
-        request.setAttribute("filterAttributeValue", value);
+            // Đặt lại param để giữ giá trị đã chọn
+            request.setAttribute("sortField", sortField);
+            request.setAttribute("sortOrder", sortOrder);
+            request.setAttribute("filterProductId", proId);
+            request.setAttribute("filterAttributeName", attributeName);
+            request.setAttribute("filterAttributeValue", value);
 
-        request.getRequestDispatcher("admin.jsp").forward(request, response);
-    } catch (Exception e) {
-        log("Error in filterProductAttribute: " + e.getMessage());
-        if (!response.isCommitted()) {
-            request.setAttribute("ERROR", "Unable to filter and sort attributes: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+            log("Error in filterProductAttribute: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Unable to filter and sort attributes: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
         }
     }
-}
-
 
     private void viewProductAttribute(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

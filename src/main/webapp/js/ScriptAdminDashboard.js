@@ -13,7 +13,30 @@ document.addEventListener("DOMContentLoaded", function () {
             new bootstrap.Tab(tabTrigger).show();
         }
     }
-});
+
+// --- Xử lý tìm kiếm Staff ---
+    const searchInput = document.getElementById("searchStaffInput");
+    if (searchInput) {
+        searchInput.addEventListener("input", function () {
+            const keyword = this.value.trim().toLowerCase();
+            const staffRows = document.querySelectorAll("#staff tbody tr");
+
+            staffRows.forEach(row => {
+                const staffId = row.dataset.staffId ? row.dataset.staffId.toLowerCase() : "";
+                const staffName = row.dataset.staffName ? row.dataset.staffName.toLowerCase() : "";
+                const fullName = row.dataset.staffFullname ? row.dataset.staffFullname.toLowerCase() : "";
+
+                const isMatch =
+                        staffId.includes(keyword) ||
+                        staffName.includes(keyword) ||
+                        fullName.includes(keyword);
+
+                row.style.display = isMatch ? "" : "none";
+            });
+        });
+    }
+}
+);
 function editProfile(role, id) {
     const row = document.querySelector(`tr[data-user-id="${id}"][data-user-role="${role}"]`);
     if (!row)
@@ -460,5 +483,7 @@ function viewProductAttribute(productId, attributeId) {
 
     new bootstrap.Modal(document.getElementById('viewProductAttributeModal')).show();
 }
+
+
 
 
