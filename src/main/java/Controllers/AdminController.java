@@ -20,7 +20,6 @@ import Models.Customer;
 import Models.Feedback;
 import Models.FeedbackReplyView;
 import Models.Order;
-import Models.OrderDetail;
 import Models.Attribute;
 import Models.OrderDetail;
 import Models.Product;
@@ -53,8 +52,6 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 import java.sql.Connection;
-import java.util.ArrayList;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,7 +68,6 @@ public class AdminController extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
 
         try {
@@ -211,7 +207,7 @@ public class AdminController extends HttpServlet {
             List<Order> orders = ordDao.getAll();
             List<Stock> stocks = stockDAO.getAllStocks();
 
-            // === NEW: Load từ VIEW ===
+// === NEW: Load từ VIEW ===
             Connection conn = DBContext.getConnection();
             ViewProductAttributeDAO viewProductAttributeDAO = new ViewProductAttributeDAO(conn);
             List<ViewProductAttribute> viewProductAttributes = viewProductAttributeDAO.getAll();
@@ -255,201 +251,6 @@ public class AdminController extends HttpServlet {
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
             throw new ServletException(e);
-        }
-    }
-
-    private void viewStockList(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            StockDAO stockDAO = new StockDAO();
-            List<Stock> stocks = stockDAO.getAllStocks();
-            request.setAttribute("stocks", stocks);
-            request.setAttribute("activeTab", "inventory");
-            request.getRequestDispatcher("admin.jsp").forward(request, response);
-        } catch (Exception e) {
-            log("Error in viewStockList: " + e.getMessage());
-            if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Unable to load stock list: " + e.getMessage());
-                request.getRequestDispatcher("error.jsp").forward(request, response);
-            }
-        }
-    }
-
-    private void addStockQuantity(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String proId = request.getParameter("proId");
-            int quantity = Integer.parseInt(request.getParameter("quantity"));
-            StockDAO stockDAO = new StockDAO();
-            stockDAO.addStockQuantity(proId, quantity);
-            response.sendRedirect("AdminController?tab=inventory");
-        } catch (Exception e) {
-            log("Error in addStockQuantity: " + e.getMessage());
-            if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Unable to add stock quantity: " + e.getMessage());
-                request.getRequestDispatcher("error.jsp").forward(request, response);
-            }
-        }
-    }
-
-    private void deleteStock(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String proId = request.getParameter("proId");
-            StockDAO stockDAO = new StockDAO();
-            stockDAO.deleteStock(proId);
-            response.sendRedirect("AdminController?tab=inventory");
-        } catch (Exception e) {
-            log("Error in deleteStock: " + e.getMessage());
-            if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Unable to delete stock: " + e.getMessage());
-                request.getRequestDispatcher("error.jsp").forward(request, response);
-            }
-        }
-    }
-
-    /**
-     * Creates a new stock record for a product.
-     *
-     * @param request the HttpServletRequest object
-     * @param response the HttpServletResponse object
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    private void createStock(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String proId = request.getParameter("proId");
-            int quantity = Integer.parseInt(request.getParameter("quantity"));
-            StockDAO stockDAO = new StockDAO();
-            stockDAO.createStock(proId, quantity);
-            response.sendRedirect("AdminController?tab=inventory");
-        } catch (Exception e) {
-            log("Error in createStock: " + e.getMessage());
-            if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Unable to create stock: " + e.getMessage());
-                request.getRequestDispatcher("inventory.jsp").forward(request, response);
-            }
-        }
-    }
-
-    private void updateStockQuantity(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String proId = request.getParameter("proId");
-            int newQuantity = Integer.parseInt(request.getParameter("newQuantity"));
-            StockDAO stockDAO = new StockDAO();
-            stockDAO.updateStockQuantity(proId, newQuantity);
-            response.sendRedirect("AdminController?tab=inventory");
-        } catch (Exception e) {
-            log("Error in updateStockQuantity: " + e.getMessage());
-            if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Unable to update stock quantity: " + e.getMessage());
-                request.getRequestDispatcher("error.jsp").forward(request, response);
-            }
-        }
-    }
-
-    /**
-     * Điều hướng sang trang orderdetail.jsp và đổ danh sách chi tiết đơn hàng
-     * theo orderId
-     *
-     * @param request HttpServletRequest chứa orderId
-     * @param response HttpServletResponse để forward sang JSP
-     * @throws ServletException nếu forward bị lỗi
-     * @throws IOException nếu có lỗi khi đọc ghi dữ liệu
-     */
-    private void goToOrderDetailPage(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int orderId = Integer.parseInt(request.getParameter("orderId"));
-
-            OrderDAO orderDAO = new OrderDAO();
-            OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
-            ProductDAO productDAO = new ProductDAO();
-
-            Order order = orderDAO.getById(orderId);
-            List<OrderDetail> orderDetailList = orderDetailDAO.getByOrderId(orderId);
-            Map<String, Product> productMap = new HashMap<>();
-            for (OrderDetail detail : orderDetailList) {
-                Product product = productDAO.getProductById(detail.getProId());
-                productMap.put(detail.getProId(), product);
-            }
-
-            request.setAttribute("order", order);
-            request.setAttribute("orderDetails", orderDetailList);
-            request.setAttribute("productMap", productMap);
-
-            request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
-        } catch (Exception e) {
-            throw new ServletException("Failed to load order detail page", e);
-        }
-    }
-
-    private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int orderId = Integer.parseInt(request.getParameter("orderId"));
-            String newStatus = request.getParameter("status");
-
-            OrderDAO dao = new OrderDAO();
-            dao.updateStatus(orderId, newStatus);
-
-            // Redirect về trang lọc đơn hàng với trạng thái hiện tại (giữ nguyên hoặc trả về All)
-            String filterStatus = request.getParameter("currentFilterStatus");
-            if (filterStatus == null || filterStatus.isEmpty()) {
-                filterStatus = "All";
-            }
-
-            response.sendRedirect("AdminController?tab=orders");
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("ERROR", "Cannot update order status.");
-            request.getRequestDispatcher("error.jsp").forward(request, response);
-        }
-    }
-
-    private void filterOrdersByStatus(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String status = request.getParameter("status"); // All, pending, shipped, etc.
-
-            OrderDAO dao = new OrderDAO();
-            List<Order> filteredOrders;
-
-            if (status == null || status.isEmpty() || "All".equalsIgnoreCase(status)) {
-                filteredOrders = dao.getAll();  // Không lọc
-            } else {
-                filteredOrders = dao.getByStatus(status);  // Lọc theo status
-            }
-
-            request.setAttribute("orders", filteredOrders);
-            request.setAttribute("filterStatus", status); // Để giữ lại khi hiển thị lại dropdown
-            request.setAttribute("activeTab", "orders");
-
-            request.getRequestDispatcher("admin.jsp").forward(request, response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("ERROR", "Unable to filter orders.");
-            request.getRequestDispatcher("error.jsp").forward(request, response);
-        }
-    }
-
-    private void deleteOrder(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int orderId = Integer.parseInt(request.getParameter("orderId"));
-
-            OrderDAO dao = new OrderDAO();
-            dao.delete(orderId);
-
-            response.sendRedirect("AdminController?tab=orders");
-        } catch (Exception e) {
-            log("Error deleting order: " + e.getMessage());
-            if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Cannot delete order.");
-                request.getRequestDispatcher("error.jsp").forward(request, response);
-            }
         }
     }
 
@@ -689,45 +490,58 @@ public class AdminController extends HttpServlet {
     private void editStaff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            String id = request.getParameter("id");
-            String username = request.getParameter("username");
-            String password = request.getParameter("password");
-            String fullname = request.getParameter("fullname");
-            String gender = request.getParameter("gender");
-            String gmail = request.getParameter("gmail");
-            String phone = request.getParameter("phone");
-            String position = request.getParameter("position");
 
-            // Xử lý file ảnh
-            Part imagePart = request.getPart("image");
-            String fileName = Paths.get(imagePart.getSubmittedFileName()).getFileName().toString();
+            // Lấy dữ liệu từ form
+            String staffId = request.getParameter("staffId");  // hidden input
+            String staffName = request.getParameter("staffName"); // hidden input
+            String staffFullName = request.getParameter("staffFullName");
+            String staffPassword = request.getParameter("staffPassword");
+            String staffGender = request.getParameter("staffGender");
+            String staffGmail = request.getParameter("staffGmail");
+            String staffPhone = request.getParameter("staffPhone");
+            String staffPosition = request.getParameter("staffPosition");
+            String currentImage = request.getParameter("currentImage");
 
-            String imageFileName = null;
+            System.out.println("ID staff :" + staffId);
+            // Xử lý ảnh upload
+            Part filePart = request.getPart("staffImage");
+            String fileName = "";
 
-            if (fileName != null && !fileName.trim().isEmpty()) {
-                // Có upload ảnh mới
-                String uploadPath = getServletContext().getRealPath("") + File.separator + "images/staff";
+            if (filePart != null && filePart.getSize() > 0) {
+                fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+
+                // Tạo đường dẫn thư mục lưu ảnh
+                String uploadPath = getServletContext().getRealPath("/") + "images" + File.separator + "staff";
                 File uploadDir = new File(uploadPath);
                 if (!uploadDir.exists()) {
                     uploadDir.mkdirs();
                 }
-                imagePart.write(uploadPath + File.separator + fileName);
-                imageFileName = fileName;
+
+                // Ghi ảnh mới vào thư mục
+                filePart.write(uploadPath + File.separator + fileName);
             } else {
-                // Không có ảnh mới => giữ ảnh cũ từ database
-                StaffDAO dao = new StaffDAO();
-                Staff existing = dao.getById(id);
-                imageFileName = existing.getStaffImage();
+                // Nếu không chọn ảnh mới, giữ nguyên ảnh cũ
+                fileName = currentImage != null ? currentImage : "";
             }
 
-            // Cập nhật dữ liệu
-            Staff updatedStaff = new Staff(id, username, fullname, password,
-                    gender, imageFileName, gmail, phone, position);
+            // Tạo đối tượng Staff để update
+            Staff staff = new Staff();
+            staff.setStaffId(staffId);
+            staff.setStaffName(staffName);
+            staff.setStaffFullName(staffFullName);
+            staff.setStaffPassword(staffPassword);
+            staff.setStaffGender(staffGender);
+            staff.setStaffImage(fileName); // Tên file ảnh (mới hoặc cũ)
+            staff.setStaffGmail(staffGmail);
+            staff.setStaffPhone(staffPhone);
+            staff.setStaffPosition(staffPosition);
 
-            StaffDAO dao = new StaffDAO();
-            dao.update(updatedStaff);
+            // Gọi DAO để update
+            StaffDAO staffDAO = new StaffDAO();
+            staffDAO.update(staff);
 
-            response.sendRedirect("AdminController?tab=staff");
+            // Chuyển hướng lại trang admin
+            loadAdminPage(request, response);
 
         } catch (Exception e) {
             throw new ServletException(e);
