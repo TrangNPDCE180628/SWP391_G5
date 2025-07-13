@@ -97,6 +97,16 @@ public class StaffDAO {
         }
     }
 
+    //Update pasword staff
+    public boolean updatePassword(String email, String newPassword) throws SQLException,ClassNotFoundException {
+        String sql = "UPDATE Staff SET staffPassword = ? WHERE staffGmail = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newPassword);
+            ps.setString(2, email);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     // Update no pass
     public void updateProfileInfo(Staff staff) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE Staff SET staffFullName = ?, staffGender = ?, staffImage = ?, staffGmail = ?, staffPhone = ?, staffPosition = ? "
