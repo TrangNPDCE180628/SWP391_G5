@@ -1,31 +1,32 @@
 package Models;
 
 public class OrderDetail {
-    private int id;
-    private int orderId;
-    private int productId;
-    private int quantity;
-    private double unitPrice;
-    private double totalPrice;
+    private int orderDetailId;     // ID của dòng chi tiết
+    private int orderId;           // ID đơn hàng
+    private String proId;          // ID sản phẩm (String theo DB)
+    private int quantity;          // Số lượng
+    private double unitPrice;      // Giá mỗi sản phẩm
+    private Integer voucherId;     // Voucher (nullable)
 
     public OrderDetail() {
     }
 
-    public OrderDetail(int id, int orderId, int productId, int quantity, double unitPrice, double totalPrice) {
-        this.id = id;
+    public OrderDetail(int orderDetailId, int orderId, String proId, int quantity, double unitPrice, Integer voucherId) {
+        this.orderDetailId = orderDetailId;
         this.orderId = orderId;
-        this.productId = productId;
+        this.proId = proId;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
-        this.totalPrice = totalPrice;
+        this.voucherId = voucherId;
     }
 
-    public int getId() {
-        return id;
+
+    public int getOrderDetailId() {
+        return orderDetailId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setOrderDetailId(int orderDetailId) {
+        this.orderDetailId = orderDetailId;
     }
 
     public int getOrderId() {
@@ -36,12 +37,12 @@ public class OrderDetail {
         this.orderId = orderId;
     }
 
-    public int getProductId() {
-        return productId;
+    public String getProId() {
+        return proId;
     }
 
-    public void setProductId(int productId) {
-        this.productId = productId;
+    public void setProId(String proId) {
+        this.proId = proId;
     }
 
     public int getQuantity() {
@@ -60,11 +61,16 @@ public class OrderDetail {
         this.unitPrice = unitPrice;
     }
 
-    public double getTotalPrice() {
-        return totalPrice;
+    public Integer getVoucherId() {
+        return voucherId;
     }
 
-    public void setTotalPrice(double totalPrice) {
-        this.totalPrice = totalPrice;
+    public void setVoucherId(Integer voucherId) {
+        this.voucherId = voucherId;
     }
-} 
+
+    // ✅ Tính tổng giá (quantity * unitPrice)
+    public double getTotalPrice() {
+        return unitPrice * quantity;
+    }
+}
