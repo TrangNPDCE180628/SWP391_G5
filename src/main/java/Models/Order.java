@@ -4,6 +4,12 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
 
+/**
+ * Order - Represents an order in the TechStore system.
+ * Maps to the SQL table [Order].
+ * 
+ * @author <Your Name>
+ */
 public class Order {
 
     private int orderId;                      // Mã đơn hàng
@@ -62,7 +68,6 @@ public class Order {
     public String getCusId() {
         return cusId;
     }
-
     public void setCusId(String cusId) {
         this.cusId = cusId;
     }
@@ -98,7 +103,6 @@ public class Order {
     public void setFinalAmount(BigDecimal finalAmount) {
         this.finalAmount = finalAmount;
     }
-
     public Integer getVoucherId() {
         return voucherId;
     }

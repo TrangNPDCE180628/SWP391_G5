@@ -176,6 +176,7 @@ public class OrderDetailDAO {
             stmt.setInt(6, detail.getOrderDetailId());
             return stmt.executeUpdate() > 0;
         }
+        return list;
     }
 
     public void update(OrderDetail orderDetail) throws SQLException, ClassNotFoundException {
@@ -199,11 +200,11 @@ public class OrderDetailDAO {
         }
     }
 
+
     /* ───────────────────────────  DELETE  ─────────────────────────── */
     public boolean delete(int id) throws SQLException, ClassNotFoundException {
         String sql = "DELETE FROM OrderDetail WHERE orderDetailId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
-
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         }
@@ -212,7 +213,6 @@ public class OrderDetailDAO {
     public boolean deleteByOrderId(int orderId) throws SQLException, ClassNotFoundException {
         String sql = "DELETE FROM OrderDetail WHERE orderId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
-
             stmt.setInt(1, orderId);
             return stmt.executeUpdate() > 0;
         }

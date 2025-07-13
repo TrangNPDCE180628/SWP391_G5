@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderDAO {
+
     // Create new order
 
     public void create(Order order) throws SQLException, ClassNotFoundException {
@@ -103,6 +104,7 @@ public class OrderDAO {
                     order.setShippingAddress(rs.getString("shippingAddress"));
                     return order;
                 }
+
             }
         }
         return null;
@@ -154,6 +156,7 @@ public class OrderDAO {
             stmt.setTimestamp(2, order.getOrderDate());
             stmt.setBigDecimal(3, order.getTotalAmount());
             stmt.setBigDecimal(4, order.getDiscountAmount());
+
 
             if (order.getVoucherId() != null) {
                 stmt.setInt(5, order.getVoucherId());
@@ -227,6 +230,50 @@ public class OrderDAO {
                 throw ex;
             }
         }
+        return list;
+    }
+
+    public void deleteOrder(int orderId) throws SQLException, ClassNotFoundException {
+        String deleteDetailsSql = "DELETE FROM [OrderDetail] WHERE orderId = ?";
+        String deleteOrderSql = "DELETE FROM [Order] WHERE orderId = ?";
+
+        try ( Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (
+                     PreparedStatement stmtDetails = conn.prepareStatement(deleteDetailsSql);  PreparedStatement stmtOrder = conn.prepareStatement(deleteOrderSql)) {
+                stmtDetails.setInt(1, orderId);
+                stmtDetails.executeUpdate();
+
+                stmtOrder.setInt(1, orderId);
+                stmtOrder.executeUpdate();
+
+                conn.commit();
+            } catch (SQLException ex) {
+                conn.rollback();
+                throw ex;
+            }
+        }
+    }
+    
+     
+
+
+    // Helper method to map ResultSet to Order object
+    private Order extractOrderFromResultSet(ResultSet rs) throws SQLException {
+        Order order = new Order();
+        order.setOrderId(rs.getInt("orderId"));
+        order.setCusId(rs.getString("cusId"));
+        order.setOrderDate(rs.getTimestamp("orderDate"));
+        order.setTotalAmount(rs.getDouble("totalAmount"));
+        order.setDiscountAmount(rs.getDouble("discountAmount"));
+        order.setVoucherId(rs.getObject("voucherId") != null ? rs.getInt("voucherId") : null);
+        order.setOrderStatus(rs.getString("orderStatus"));
+        order.setPaymentMethod(rs.getString("paymentMethod"));
+        order.setShippingAddress(rs.getString("shippingAddress"));
+
+        // finalAmount được tự động tính theo logic trong model (không cần set trực tiếp)
+        return order;
     }
 
     // Helper method to map ResultSet to Order object
@@ -245,4 +292,5 @@ public class OrderDAO {
         // finalAmount được tự động tính theo logic trong model (không cần set trực tiếp)
         return order;
     }
+
 }
