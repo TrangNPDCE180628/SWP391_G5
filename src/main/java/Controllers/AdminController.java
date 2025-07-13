@@ -5,27 +5,25 @@ import DAOs.CustomerDAO;
 import DAOs.FeedbackDAO;
 import DAOs.FeedbackReplyViewDAO;
 import DAOs.OrderDAO;
-import DAOs.ProductDAO;
+import DAOs.AttributeDAO;
+import DAOs.ProductAttributeDAO;
 import DAOs.ReplyFeedbackDAO;
 import DAOs.StaffDAO;
 import DAOs.VoucherDAO;
-import DAOs.ProductSpecDAO;
-import DAOs.ProductTypeDAO;
-
+import DAOs.ViewProductAttributeDAO;
 
 import Models.Admin;
 import Models.Customer;
 import Models.Feedback;
 import Models.FeedbackReplyView;
 import Models.Order;
-import Models.Product;
+import Models.Attribute;
+import Models.ProductAttribute;
 import Models.ReplyFeedback;
 import Models.Staff;
 import Models.Voucher;
 import Models.User;
-import Models.ProductSpecification;
-import Models.ProductTypes;
-
+import Models.ViewProductAttribute;
 
 import com.google.gson.Gson;
 
@@ -37,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import javax.servlet.http.HttpSession;
+import Ultis.DBContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,12 +45,13 @@ import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
+import java.sql.Connection;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
-        maxFileSize = 1024 * 1024 * 10, // 10 MB
-        maxRequestSize = 1024 * 1024 * 100 // 100 MB
+        fileSizeThreshold = 1024 * 1024 * 1,
+        maxFileSize = 1024 * 1024 * 10,
+        maxRequestSize = 1024 * 1024 * 100
 )
 public class AdminController extends HttpServlet {
 
@@ -69,24 +69,9 @@ public class AdminController extends HttpServlet {
             }
 
             switch (action) {
-
-                /* Manage Profile*/
                 case "editProfile":
                     editProfile(request, response);
                     break;
-
-                // Product Type
-                case "addProductType":
-                    addProductType(request, response);
-                    break;
-                case "updateProductType":
-                    updateProductType(request, response);
-                    break;
-                case "deleteProductType":
-                    deleteProductType(request, response);
-                    break;
-
-                /*Manage Voucher*/
                 case "addVoucher":
                     addVoucher(request, response);
                     break;
@@ -99,29 +84,66 @@ public class AdminController extends HttpServlet {
                 case "getVoucherDetails":
                     getVoucherDetails(request, response);
                     break;
-
-                /*Manage Staff*/
                 case "addStaff":
                     addStaff(request, response);
                     break;
                 case "editStaff":
-                    response.sendRedirect("error.jsp");
+                    editStaff(request, response);
                     break;
                 case "deleteStaff":
                     deleteStaff(request, response);
                     break;
-
-                /*Manage Feedback*/
                 case "replyFeedback":
                     replyFeedback(request, response);
                     break;
+                case "addAttribute":
+                    addAttribute(request, response);
+                    return;
+                case "updateAttribute":
+                    updateAttribute(request, response);
+                    return;
+                case "deleteAttribute":
+                    deleteAttribute(request, response);
+                    return;
+                case "addProductAttribute":
+                    addProductAttribute(request, response);
+                    return;
+                case "updateProductAttribute":
+                    updateProductAttribute(request, response);
+                    return;
+                case "deleteProductAttribute":
+                    deleteProductAttribute(request, response);
+                    return;
+                case "viewProductAttribute": {
+                    String proId = request.getParameter("proId");
+                    int attributeId = Integer.parseInt(request.getParameter("attributeId"));
+
+                    ProductAttributeDAO dao = new ProductAttributeDAO();
+                    ProductAttribute pa = dao.getByProductIdAndAttributeId(proId, attributeId);
+
+                    Gson gson = new Gson();
+                    String json = gson.toJson(pa);
+
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write(json);
+                    return; // Kết thúc ở đây vì không cần forward
+                }
+                case "filterProductAttribute":
+                    filterProductAttribute(request, response);
+                    return;
+
                 default:
                     loadAdminPage(request, response);
             }
         } catch (Exception e) {
             log("Error at AdminController: " + e.toString());
-            request.setAttribute("ERROR", "An error occurred: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "An error occurred: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            } else {
+                log("Response was already committed. Cannot forward to error.jsp");
+            }
         }
     }
 
@@ -134,26 +156,32 @@ public class AdminController extends HttpServlet {
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
-
-            ProductTypeDAO productTypeDAO = new ProductTypeDAO();
             FeedbackDAO feedbackDAO = new FeedbackDAO();
             FeedbackReplyViewDAO viewfeedbackDAO = new FeedbackReplyViewDAO();
-
+            AttributeDAO attributeDAO = new AttributeDAO();
+            ProductAttributeDAO paDAO = new ProductAttributeDAO();
 
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
             List<Voucher> vouchers = voucherDAO.getAll();
-            List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes();
             List<Feedback> feedbacks = feedbackDAO.getAllFeedbacks();
             List<FeedbackReplyView> viewFeedbacks = viewfeedbackDAO.getAllFeedbackReplies();
+            List<Attribute> attributes = attributeDAO.getAll();
+            List<ProductAttribute> productAttributes = paDAO.getAll();
+
+// === NEW: Load từ VIEW ===
+            Connection conn = DBContext.getConnection();
+            ViewProductAttributeDAO viewProductAttributeDAO = new ViewProductAttributeDAO(conn);
+            List<ViewProductAttribute> viewProductAttributes = viewProductAttributeDAO.getAll();
+            request.setAttribute("viewProductAttributes", viewProductAttributes);
 
             request.setAttribute("users", users);
             request.setAttribute("staffs", staffs);
             request.setAttribute("vouchers", vouchers);
-            request.setAttribute("productTypes", productTypes);
             request.setAttribute("feedbacks", feedbacks);
             request.setAttribute("viewFeedbacks", viewFeedbacks);
-
+            request.setAttribute("attributes", attributes);
+            request.setAttribute("productAttributes", productAttributes);
 
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
@@ -240,12 +268,15 @@ public class AdminController extends HttpServlet {
             }
 
             response.sendRedirect("AdminController?tab=profile");
-
         } catch (Exception e) {
             log("Error in editProfile(): " + e.getMessage());
             e.printStackTrace();
-            request.setAttribute("ERROR", "Lỗi cập nhật hồ sơ: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Lỗi cập nhật hồ sơ: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            } else {
+                log("Response already committed while editing profile");
+            }
         }
     }
 
@@ -260,51 +291,6 @@ public class AdminController extends HttpServlet {
         return "";
     }
 
-    private void addProductType(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-    try {
-        String name = request.getParameter("typeName");
-        if (name != null && !name.trim().isEmpty()) {
-            ProductTypeDAO dao = new ProductTypeDAO();
-            ProductTypes type = new ProductTypes();
-            type.setName(name);
-            dao.addProductType(type);
-        }
-        response.sendRedirect("AdminController?tab=productTypes");
-    } catch (Exception e) {
-        throw new ServletException(e);
-    }
-}
-
-private void updateProductType(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-    try {
-        int id = Integer.parseInt(request.getParameter("typeId"));
-        String name = request.getParameter("typeName");
-        if (name != null && !name.trim().isEmpty()) {
-            ProductTypeDAO dao = new ProductTypeDAO();
-            ProductTypes type = new ProductTypes();
-            type.setId(id);
-            type.setName(name);
-            dao.updateProductType(type);
-        }
-        response.sendRedirect("AdminController?tab=productTypes");
-    } catch (Exception e) {
-        throw new ServletException(e);
-    }
-}
-
-private void deleteProductType(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-    try {
-        int id = Integer.parseInt(request.getParameter("id"));
-        ProductTypeDAO dao = new ProductTypeDAO();
-        dao.deleteProductType(id);
-        response.sendRedirect("AdminController?tab=productTypes");
-    } catch (Exception e) {
-        throw new ServletException(e);
-    }
-}
     private void addVoucher(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -376,7 +362,9 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
 
             if (voucher == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write("Voucher not found");
+                if (!response.isCommitted()) {
+                    response.getWriter().write("Voucher not found");
+                }
                 return;
             }
 
@@ -386,7 +374,9 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
             out.flush();
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("Error fetching voucher: " + e.getMessage());
+            if (!response.isCommitted()) {
+                response.getWriter().write("Error fetching voucher: " + e.getMessage());
+            }
         }
     }
 
@@ -511,42 +501,36 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
     private void deleteStaff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Lấy staffId từ request
             String staffId = request.getParameter("id");
-
-            // Kiểm tra staffId không null hoặc rỗng
             if (staffId != null && !staffId.trim().isEmpty()) {
                 StaffDAO staffDAO = new StaffDAO();
                 staffDAO.delete(staffId);
             }
-
-            // Chuyển hướng về lại trang admin
             response.sendRedirect("AdminController");
-
         } catch (Exception e) {
-
-            request.setAttribute("error", "Error while deleting staff: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            if (!response.isCommitted()) {
+                request.setAttribute("error", "Error while deleting staff: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            } else {
+                log("Response already committed while deleting staff");
+            }
         }
     }
 
     private void replyFeedback(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Lấy dữ liệu từ form
             int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
             String cusId = request.getParameter("cusId");
             String staffId = request.getParameter("staffId");
             String contentReply = request.getParameter("contentReply");
 
-            // Kiểm tra dữ liệu
             if (staffId == null || staffId.trim().isEmpty() || contentReply == null || contentReply.trim().isEmpty()) {
                 request.setAttribute("ERROR", "Missing required reply data.");
                 request.getRequestDispatcher("admin.jsp").forward(request, response);
                 return;
             }
 
-            // Gọi DAO để insert
             ReplyFeedbackDAO dao = new ReplyFeedbackDAO();
             ReplyFeedback reply = new ReplyFeedback();
             reply.setFeedbackId(feedbackId);
@@ -555,14 +539,15 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
             reply.setContentReply(contentReply);
 
             dao.insertReplyFeedback(reply);
-
-            // Quay về trang admin và load lại dữ liệu
             loadAdminPage(request, response);
-
         } catch (Exception e) {
             log("Error in replyFeedback: " + e.toString());
-            request.setAttribute("ERROR", "Failed to reply feedback.");
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Failed to reply feedback.");
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            } else {
+                log("Response already committed while replying feedback");
+            }
         }
     }
 
@@ -580,6 +565,137 @@ private void deleteProductType(HttpServletRequest request, HttpServletResponse r
         int quantity;
         double unitPrice;
         double totalPrice;
+    }
+
+    // == ATTRIBUTE ==
+    private void addAttribute(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String name = request.getParameter("attributeName");
+            String unit = request.getParameter("unit");
+            int proTypeId = Integer.parseInt(request.getParameter("proTypeId"));
+            new AttributeDAO().create(new Attribute(0, name, unit, proTypeId));
+            response.sendRedirect("AdminController?tab=attributes");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void updateAttribute(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("attributeId"));
+            String name = request.getParameter("attributeName");
+            String unit = request.getParameter("unit");
+            int proTypeId = Integer.parseInt(request.getParameter("proTypeId"));
+            new AttributeDAO().update(new Attribute(id, name, unit, proTypeId));
+            response.sendRedirect("AdminController?tab=attributes");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void deleteAttribute(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("attributeId"));
+            new AttributeDAO().delete(id);
+            response.sendRedirect("AdminController?tab=attributes");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+// == PRODUCT ATTRIBUTE ==
+    private void addProductAttribute(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            int attributeId = Integer.parseInt(request.getParameter("attributeId"));
+            String value = request.getParameter("value");
+            new ProductAttributeDAO().create(new ProductAttribute(proId, attributeId, value));
+            response.sendRedirect("AdminController?tab=productAttributes");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void updateProductAttribute(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            int attributeId = Integer.parseInt(request.getParameter("attributeId"));
+            String value = request.getParameter("value");
+            new ProductAttributeDAO().update(new ProductAttribute(proId, attributeId, value));
+            response.sendRedirect("AdminController?tab=productAttributes");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void deleteProductAttribute(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            int attributeId = Integer.parseInt(request.getParameter("attributeId"));
+            new ProductAttributeDAO().delete(proId, attributeId);
+            response.sendRedirect("AdminController?tab=productAttributes");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+   private void filterProductAttribute(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    try {
+        String proId = request.getParameter("filterProductId");
+        String attributeName = request.getParameter("filterAttributeName");
+        String value = request.getParameter("filterAttributeValue");
+        String sortField = request.getParameter("sortField");
+        String sortOrder = request.getParameter("sortOrder");
+
+        Connection conn = DBContext.getConnection();
+        ViewProductAttributeDAO viewDAO = new ViewProductAttributeDAO(conn);
+        List<ViewProductAttribute> filteredViewList = viewDAO.filterAndSort(proId, attributeName, value, sortField, sortOrder);
+
+        request.setAttribute("viewProductAttributes", filteredViewList);
+        request.setAttribute("activeTab", "attributes");
+
+        // Đặt lại param để giữ giá trị đã chọn
+        request.setAttribute("sortField", sortField);
+        request.setAttribute("sortOrder", sortOrder);
+        request.setAttribute("filterProductId", proId);
+        request.setAttribute("filterAttributeName", attributeName);
+        request.setAttribute("filterAttributeValue", value);
+
+        request.getRequestDispatcher("admin.jsp").forward(request, response);
+    } catch (Exception e) {
+        log("Error in filterProductAttribute: " + e.getMessage());
+        if (!response.isCommitted()) {
+            request.setAttribute("ERROR", "Unable to filter and sort attributes: " + e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
+    }
+}
+
+
+    private void viewProductAttribute(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            int attrId = Integer.parseInt(request.getParameter("attributeId"));
+
+            ProductAttributeDAO dao = new ProductAttributeDAO();
+            ProductAttribute pa = dao.getByProductIdAndAttributeId(proId, attrId);
+
+            request.setAttribute("viewedProductAttribute", pa);
+            request.setAttribute("activeTab", "productAttributes");
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+            log("Error in viewProductAttribute: " + e.getMessage());
+            request.setAttribute("ERROR", "Không thể xem chi tiết thuộc tính sản phẩm.");
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
     }
 
     @Override
