@@ -77,6 +77,11 @@
                                     <i class="fa-solid fa-ticket me-2"></i>Manage Inventory
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="#revenue" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fa-solid fa-ticket me-2"></i>Manage Revenue
+                                </a>
+                            </li>
                         </ul>
                         <hr>
                         <div class="dropdown">
@@ -506,6 +511,11 @@
                         <div class="tab-pane fade" id="inventory">
                             <jsp:include page="Stock.jsp" />
                         </div>
+                        <!-- Revenue Tab -->
+                        <div class="tab-pane fade" id="revenue">
+                            <jsp:include page="Revenue.jsp" />
+                        </div>
+
 
                     </div>
                 </div>

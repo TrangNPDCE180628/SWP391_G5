@@ -10,6 +10,7 @@ import DAOs.OrderDetailDAO;
 import DAOs.ProductAttributeDAO;
 import DAOs.ProductDAO;
 import DAOs.ReplyFeedbackDAO;
+import DAOs.RevenueDAO;
 import DAOs.StaffDAO;
 import DAOs.StockDAO;
 import DAOs.VoucherDAO;
@@ -52,6 +53,8 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 import java.sql.Connection;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -167,6 +170,12 @@ public class AdminController extends HttpServlet {
                 case "updateStockQuantity":
                     updateStockQuantity(request, response);
                     return;
+                case "viewRevenue":
+                    viewRevenue(request, response);
+                    return;
+                case "filterRevenue":
+                    filterRevenue(request, response);
+                    return;
                 default:
                     loadAdminPage(request, response);
             }
@@ -196,6 +205,7 @@ public class AdminController extends HttpServlet {
             ProductAttributeDAO paDAO = new ProductAttributeDAO();
             OrderDAO ordDao = new OrderDAO();
             StockDAO stockDAO = new StockDAO();
+            RevenueDAO revenueDao = new RevenueDAO();
 
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
@@ -206,6 +216,7 @@ public class AdminController extends HttpServlet {
             List<ProductAttribute> productAttributes = paDAO.getAll();
             List<Order> orders = ordDao.getAll();
             List<Stock> stocks = stockDAO.getAllStocks();
+            BigDecimal totalRevenue = revenueDao.getTotalRevenue(null, null);
 
 // === NEW: Load từ VIEW ===
             Connection conn = DBContext.getConnection();
@@ -222,6 +233,7 @@ public class AdminController extends HttpServlet {
             request.setAttribute("productAttributes", productAttributes);
             request.setAttribute("orders", orders);
             request.setAttribute("stocks", stocks);
+            request.setAttribute("totalRevenue", totalRevenue);
 
             // 1. Lấy danh sách tất cả đơn hàng
             OrderDetailDAO detailDAO = new OrderDetailDAO();
@@ -940,6 +952,76 @@ public class AdminController extends HttpServlet {
                 request.getRequestDispatcher("error.jsp").forward(request, response);
             }
         }
+    }
+
+    private void viewRevenue(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String startDateStr = request.getParameter("startDate");
+        String endDateStr = request.getParameter("endDate");
+        Timestamp startDate = null;
+        Timestamp endDate = null;
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+        try {
+            if (startDateStr != null && !startDateStr.isEmpty() && endDateStr != null && !endDateStr.isEmpty()) {
+                startDate = new Timestamp(sdf.parse(startDateStr).getTime());
+                endDate = new Timestamp(sdf.parse(endDateStr).getTime());
+            }
+
+            RevenueDAO revenueDAO = new RevenueDAO();
+            BigDecimal totalRevenue = revenueDAO.getTotalRevenue(startDate, endDate);
+            List<Object[]> monthlyRevenue = revenueDAO.getMonthlyRevenue(startDate, endDate);
+
+            request.setAttribute("totalRevenue", totalRevenue);
+            request.setAttribute("monthlyRevenue", monthlyRevenue);
+            request.setAttribute("startDate", startDateStr);
+            request.setAttribute("endDate", endDateStr);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            request.setAttribute("ERROR", "Database error: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("ERROR", "Invalid date format");
+        }
+
+        request.getRequestDispatcher("revenue.jsp").forward(request, response);
+    }
+
+    private void filterRevenue(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String startDateStr = request.getParameter("startDate");
+        String endDateStr = request.getParameter("endDate");
+        Timestamp startDate = null;
+        Timestamp endDate = null;
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+        try {
+            if (startDateStr != null && !startDateStr.isEmpty() && endDateStr != null && !endDateStr.isEmpty()) {
+                startDate = new Timestamp(sdf.parse(startDateStr).getTime());
+                endDate = new Timestamp(sdf.parse(endDateStr).getTime());
+            }
+
+            RevenueDAO revenueDAO = new RevenueDAO();
+            BigDecimal totalRevenue = revenueDAO.getTotalRevenue(startDate, endDate);
+            List<Object[]> monthlyRevenue = revenueDAO.getMonthlyRevenue(startDate, endDate);
+
+            request.setAttribute("totalRevenue", totalRevenue);
+            request.setAttribute("monthlyRevenue", monthlyRevenue);
+            request.setAttribute("startDate", startDateStr);
+            request.setAttribute("endDate", endDateStr);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            request.setAttribute("ERROR", "Database error: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("ERROR", "Invalid date format");
+        }
+
+        request.getRequestDispatcher("revenue.jsp").forward(request, response);
     }
 
     @Override
