@@ -1,9 +1,13 @@
 package Controllers;
 
+import DAOs.FeedbackDAO;
 import DAOs.ProductDAO;
 import DAOs.ProductTypeDAO;
+import DAOs.ReplyFeedbackDAO;
+import Models.Feedback;
 import Models.Product;
 import Models.ProductTypes;
+import Models.ReplyFeedback;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -53,7 +57,7 @@ public class HomeController extends HttpServlet {
             }
 
             int totalPages = (int) Math.ceil((double) totalProducts / PRODUCTS_PER_PAGE);
-
+                        
             request.setAttribute("products", products);
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages", totalPages);
