@@ -2,10 +2,13 @@ package DAOs;
 
 import Models.Order;
 import Ultis.DBContext;
+import java.math.BigDecimal;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class OrderDAO {
     // Create new order
@@ -246,6 +249,56 @@ public class OrderDAO {
         return order;
     }
 
+    public BigDecimal getRevenueByMonth(int year, int month) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT SUM(finalAmount) AS revenue "
+                + "FROM [Order] "
+                + "WHERE orderStatus = 'Completed' "
+                + "AND YEAR(orderDate) = ? AND MONTH(orderDate) = ?";
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, year);
+            stmt.setInt(2, month);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getBigDecimal("revenue") != null ? rs.getBigDecimal("revenue") : BigDecimal.ZERO;
+            }
+        }
+        return BigDecimal.ZERO;
+    }
+
+    public BigDecimal getTotalRevenue() throws SQLException, ClassNotFoundException {
+        String sql = "SELECT SUM(finalAmount) AS total FROM [Order] WHERE orderStatus = 'Completed'";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql);  ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getBigDecimal("total") != null ? rs.getBigDecimal("total") : BigDecimal.ZERO;
+            }
+        }
+        return BigDecimal.ZERO;
+    }
+
+    public Map<String, BigDecimal> getMonthlyRevenueInYear(int year) throws SQLException,ClassNotFoundException {
+        Map<String, BigDecimal> revenueMap = new LinkedHashMap<>();
+
+        String sql = "SELECT MONTH(orderDate) AS month, SUM(finalAmount) AS revenue "
+                + "FROM [Order] "
+                + "WHERE orderStatus = 'Completed' AND YEAR(orderDate) = ? "
+                + "GROUP BY MONTH(orderDate) ORDER BY month";
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                int month = rs.getInt("month");
+                BigDecimal revenue = rs.getBigDecimal("revenue");
+                revenueMap.put(String.format("%02d", month), revenue);
+            }
+        }
+        return revenueMap;
+       }
     public boolean checkOrderStatus(String cusId, String proId) throws Exception {
         String sql ="SELECT COUNT(*) "
                 + "AS total FROM [Order] o "

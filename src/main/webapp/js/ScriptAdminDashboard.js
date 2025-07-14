@@ -35,6 +35,49 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
+
+    const canvas = document.getElementById("revenueChart");
+    if (!canvas)
+        return; // Không có biểu đồ thì không vẽ
+
+    const ctx = canvas.getContext("2d");
+
+    // Lấy dữ liệu từ thẻ hidden được render từ JSP
+    const revenueData = JSON.parse(document.getElementById("monthlyRevenueData").textContent);
+    const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const data = [];
+    for (let i = 1; i <= 12; i++) {
+        const key = i < 10 ? "0" + i : "" + i;
+        data.push(revenueData[key] || 0);
+    }
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                    label: 'Monthly Revenue',
+                    data: data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {position: 'top'},
+                title: {display: true, text: 'Monthly Revenue Overview'}
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 }
 );
 function editProfile(role, id) {
