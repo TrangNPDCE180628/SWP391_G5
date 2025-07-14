@@ -245,4 +245,25 @@ public class OrderDAO {
         // finalAmount được tự động tính theo logic trong model (không cần set trực tiếp)
         return order;
     }
+
+    public boolean checkOrderStatus(String cusId, String proId) throws Exception {
+        String sql ="SELECT COUNT(*) "
+                + "AS total FROM [Order] o "
+                + "JOIN OrderDetail od ON o.orderId = od.orderId "
+                + "WHERE o.cusId = ? AND od.proId = ? "
+                + "AND o.orderStatus IN ('Completed') ";
+
+        try (
+                 Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, cusId);
+            stmt.setString(2, proId);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("total") > 0;
+            }
+        }
+        return false;
+    }
+
 }

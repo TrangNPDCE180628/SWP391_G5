@@ -154,6 +154,9 @@
             .btn-back:hover {
                 transform: scale(1.02);
             }
+            .shadow-sm {
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+            }
             /* [END ADDED] */
         </style>
     </head>
@@ -285,6 +288,115 @@
                 </div>
             </c:otherwise>
         </c:choose>
+
+        <!-- FEEDBACK SECTION UPGRADED -->
+        <c:if test="${not empty viewfeedbacks}">
+            <div class="mt-5">
+                <h4 class="fw-bold mb-4">Customer Feedback</h4>
+
+                <c:forEach var="fb" items="${viewfeedbacks}">
+                    <div class="d-flex mb-4">
+                        <!-- Avatar khách hàng -->
+                        <div class="me-3">
+                            <img src="images/customers/${fb.cusId}.jpg" onerror="this.onerror=null;this.src='images/customer-default.webp';" class="rounded-circle" width="50" height="50" alt="${fb.cusFullName}" style="object-fit: cover;">                           
+                        </div>
+
+                        <!-- Nội dung Feedback -->
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h6 class="mb-1 fw-bold d-flex align-items-center">
+                                    ${fb.cusFullName}
+                                    <span class="ms-3 text-success d-flex align-items-center" style="font-size: 0.9rem;">
+                                        <i class="fas fa-check-circle me-1"></i> Confirmed purchase
+                                    </span>
+                                    <span class="ms-3 text-warning">
+                                        <c:forEach begin="1" end="${fb.rate}">
+                                            <i class="fas fa-star"></i>
+                                        </c:forEach>
+                                        <c:forEach begin="${fb.rate + 1}" end="5">
+                                            <i class="far fa-star"></i>
+                                        </c:forEach>
+                                    </span>
+                                </h6>
+                            </div>
+
+                            <!-- Bubble Feedback -->
+                            <div class="mt-2 p-3 bg-white border rounded shadow-sm">
+                                <p class="mb-0">${fb.feedbackContent}</p>
+                            </div>
+
+                            <!-- Reply nếu có -->
+                            <c:if test="${not empty fb.replyFeedbackId}">
+                                <div class="mt-3 ps-4 border-start border-3 border-danger">
+                                    <div class="d-flex align-items-center mb-1 text-muted">
+                                        <i class="fas fa-reply me-2 text-danger"></i>
+                                        <strong>Replied by staff (${fb.staffId})</strong>
+                                    </div>
+                                    <div class="bg-light p-3 rounded shadow-sm">
+                                        <p class="mb-1">${fb.contentReply}</p>
+                                        <small class="text-muted fst-italic">
+                                            <fmt:formatDate value="${fb.createdAt}" pattern="dd-MM-yyyy HH:mm"/>
+                                        </small>
+                                    </div>
+                                </div>
+                            </c:if>
+                        </div>
+                    </div>
+                </c:forEach>
+            </div>
+        </c:if>
+        <!-- Write Feedback -->
+        <c:if test="${sessionScope.LOGIN_USER != null && hasBought && !hasFeedback}">
+            <div class="card my-4 shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-comment-dots text-primary me-2"></i> Write a Review
+                    </h5>
+                    <form action="product-detail" method="POST">
+                        <input type="hidden" name="action" value="create">
+                        <input type="hidden" name="cusId" value="${sessionScope.LOGIN_USER.id}">
+                        <input type="hidden" name="proId" value="${product.proId}">
+
+                        <!-- Star Rating Select -->
+                        <div class="mb-3">
+                            <label for="rate" class="form-label fw-bold">
+                                <i class="fas fa-star text-warning me-1"></i> Rating
+                            </label>
+                            <select class="form-select shadow-sm" name="rate" id="rate" required>
+                                <option value="5">★★★★★ - Excellent</option>
+                                <option value="4">★★★★ - Good</option>
+                                <option value="3">★★★ - Average</option>
+                                <option value="2">★★ - Poor</option>
+                                <option value="1">★ - Terrible</option>
+                            </select>
+                        </div>
+
+                        <!-- Feedback Content -->
+                        <div class="mb-3">
+                            <label for="content" class="form-label fw-bold">
+                                <i class="fas fa-pencil-alt me-1"></i> Your Feedback
+                            </label>
+                            <textarea class="form-control shadow-sm" id="content" name="content" rows="4" 
+                                      placeholder="Share your thoughts..." required></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-paper-plane me-1"></i> Submit
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </c:if>
+
+        <c:if test="${sessionScope.LOGIN_USER != null && hasFeedback}">
+            <p class="text-muted">You have already written feedback for this product.</p>
+        </c:if>
+
+
 
         <!-- Footer -->
         <footer class="bg-dark text-light py-4 mt-5">
