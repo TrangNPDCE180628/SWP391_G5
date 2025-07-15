@@ -247,6 +247,7 @@ public class OrderDAO {
 
         // finalAmount được tự động tính theo logic trong model (không cần set trực tiếp)
         return order;
+
     }
 
     public BigDecimal getRevenueByMonth(int year, int month) throws SQLException, ClassNotFoundException {
@@ -318,5 +319,4 @@ public class OrderDAO {
         }
         return false;
     }
-
 }
