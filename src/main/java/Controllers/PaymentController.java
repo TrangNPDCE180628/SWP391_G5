@@ -39,7 +39,7 @@ public class PaymentController extends HttpServlet {
             }
         } catch (Exception ex) {
             Logger.getLogger(PaymentController.class.getName()).log(Level.SEVERE, null, ex);
-            request.getSession().setAttribute("error", "Lỗi hệ thống: " + ex.getMessage());
+            request.getSession().setAttribute("error", "System error:" + ex.getMessage());
             response.sendRedirect("CartController?action=view");
         }
     }
@@ -63,7 +63,7 @@ public class PaymentController extends HttpServlet {
             String voucherCode = request.getParameter("voucherCode");
 
             if (selectedIds == null || selectedIds.length == 0) {
-                session.setAttribute("error", "Vui lòng chọn ít nhất một sản phẩm để thanh toán.");
+                session.setAttribute("error", "Please select at least one product to checkout.");
                 response.sendRedirect("CartController?action=view");
                 return;
             }
@@ -72,7 +72,7 @@ public class PaymentController extends HttpServlet {
             Map<String, ViewCartCustomer> cart
                     = (Map<String, ViewCartCustomer>) session.getAttribute("cart");
             if (cart == null || cart.isEmpty()) {
-                session.setAttribute("error", "Giỏ hàng trống.");
+                session.setAttribute("error", "Cart is empty.");
                 response.sendRedirect("CartController?action=view");
                 return;
             }
@@ -89,7 +89,7 @@ public class PaymentController extends HttpServlet {
                 }
                 if (stockDAO.getQuantity(proId) < item.getQuantity()) {
                     session.setAttribute("error",
-                            "Sản phẩm " + item.getProName() + " không đủ hàng.");
+                            "Product " + item.getProName() + " out of stock");
                     response.sendRedirect("CartController?action=view");
                     return;
                 }
@@ -111,7 +111,7 @@ public class PaymentController extends HttpServlet {
             if (voucherCode != null && !voucherCode.trim().isEmpty()) {
                 Voucher v = new VoucherDAO().getByCode(voucherCode);
                 if (v == null || totalAmount.compareTo(v.getMinOrderAmount()) < 0) {
-                    session.setAttribute("error", "Voucher không hợp lệ hoặc không đủ điều kiện.");
+                    session.setAttribute("error", "Voucher is invalid or ineligible.");
                     response.sendRedirect("CartController?action=view");
                     return;
                 }
@@ -140,7 +140,7 @@ public class PaymentController extends HttpServlet {
             for (OrderDetail d : orderDetails) {
                 d.setOrderId(orderId);
                 if (!detailDAO.createOrderDetail(d)) {
-                    throw new SQLException("Không thể lưu chi tiết đơn hàng.");
+                    throw new SQLException("Unable to save order details.");
                 }
             }
 
@@ -163,7 +163,7 @@ public class PaymentController extends HttpServlet {
                 new OrderDAO().delete(orderId);  // rollback Order + cascading FK
             }
             ex.printStackTrace();
-            session.setAttribute("error", "Lỗi xử lý đơn hàng: " + ex.getMessage());
+            session.setAttribute("error", "Order processing error: " + ex.getMessage());
             response.sendRedirect("CartController?action=view");
         }
     }
@@ -190,57 +190,67 @@ public class PaymentController extends HttpServlet {
 
             /* 3. Validate đầu vào */
             if (paymentMethod == null || paymentMethod.trim().isEmpty()) {
-                throw new IllegalArgumentException("Vui lòng chọn phương thức thanh toán.");
+                throw new IllegalArgumentException("Please select payment method.");
             }
             if (shippingAddress == null || shippingAddress.trim().length() < 10) {
-                throw new IllegalArgumentException("Vui lòng nhập địa chỉ giao hàng chi tiết.");
+                throw new IllegalArgumentException("Please enter detailed shipping address.");
             }
             if ("creditcard".equals(paymentMethod)) {
                 if (cardNumber == null || !cardNumber.replaceAll("\\s+", "").matches("\\d{8,16}")) {
-                    throw new IllegalArgumentException("Số thẻ tín dụng không hợp lệ.");
+                    throw new IllegalArgumentException("Invalid credit card number.");
                 }
                 if (expiryDate == null || !expiryDate.matches("(0[1-9]|1[0-2])/[0-9]{2}")) {
-                    throw new IllegalArgumentException("Ngày hết hạn không hợp lệ.");
+                    throw new IllegalArgumentException("Invalid expiration date.");
                 }
                 if (cvv == null || !cvv.matches("\\d{3,4}")) {
-                    throw new IllegalArgumentException("Mã CVV không hợp lệ.");
+                    throw new IllegalArgumentException("Invalid CVV code.");
                 }
             }
 
             /* 4. Lấy đơn hàng */
             OrderDAO dao = new OrderDAO();
-            Order order = dao.getById(orderId);
+            Order order = dao.getOrderById(orderId);
             if (order == null) {
-                throw new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId);
+                throw new IllegalArgumentException("Order not found #" + orderId);
             }
 
             /* 5. Quyền sở hữu đơn hàng */
             if (!order.getCusId().equals(user.getId())) {
-                throw new IllegalArgumentException("Bạn không có quyền thanh toán đơn hàng này.");
+                throw new IllegalArgumentException("You are not authorized to pay for this order.");
             }
 
             /* 6. Trạng thái đơn */
             if ("paid".equals(order.getOrderStatus())) {
                 session.setAttribute("order", order);
-                session.setAttribute("message", "Đơn hàng đã được thanh toán trước đó.");
+                session.setAttribute("message", "The order has been paid in advance.");
                 response.sendRedirect("payment_success.jsp");
                 return;
             }
             if (!"pending".equals(order.getOrderStatus())) {
-                throw new IllegalArgumentException("Đơn hàng không hợp lệ để thanh toán.");
+                throw new IllegalArgumentException("Order is not valid for payment.");
             }
 
             /* 7. Cập nhật đơn hàng -> paid */
             order.setPaymentMethod(paymentMethod);
             order.setShippingAddress(shippingAddress);
-            order.setOrderStatus("paid");
+            order.setOrderStatus("completed");
 
             if (!dao.updateOrder(order)) {
-                throw new RuntimeException("Cập nhật đơn hàng thất bại.");
+                throw new RuntimeException("Order update failed.");
             }
 
             /* 8. Lấy chi tiết đơn và xóa khỏi giỏ hàng */
             List<OrderDetail> details = new OrderDetailDAO().getByOrderId(orderId);
+            ProductDAO productDAO = new ProductDAO();
+            Map<String, String> productNames = new HashMap<>();
+
+            for (OrderDetail d : details) {
+                Product p = productDAO.getById(d.getProId());
+                if (p != null) {
+                    productNames.put(d.getProId(), p.getProName());
+                }
+            }
+
             @SuppressWarnings("unchecked")
             Map<String, ViewCartCustomer> cart
                     = (Map<String, ViewCartCustomer>) session.getAttribute("cart");
@@ -259,14 +269,15 @@ public class PaymentController extends HttpServlet {
             /* 9. Lưu thông tin & redirect success */
             session.setAttribute("order", order);
             session.setAttribute("orderDetails", details);
-            session.setAttribute("message", "Thanh toán thành công đơn hàng #" + orderId);
+            session.setAttribute("productNames", productNames);
+            session.setAttribute("message", "Order payment successful #" + orderId);
             response.sendRedirect("payment_success.jsp");
 
         } catch (Exception e) {
             e.printStackTrace();
 
             /* Trường hợp lỗi -> quay lại payment.jsp với thông báo */
-            request.setAttribute("error", "Lỗi khi xác nhận thanh toán: " + e.getMessage());
+            request.setAttribute("error", "Error confirming payment: " + e.getMessage());
 
             try {
                 int orderId = Integer.parseInt(request.getParameter("orderId"));
@@ -274,7 +285,7 @@ public class PaymentController extends HttpServlet {
                 if (order != null && "paid".equals(order.getOrderStatus())) {
                     // Nếu đơn đã thanh toán vẫn chuyển đến success
                     session.setAttribute("order", order);
-                    session.setAttribute("message", "Đơn hàng đã được thanh toán trước đó.");
+                    session.setAttribute("message", "The order has been paid in advance.");
                     session.setAttribute("orderDetails",
                             new OrderDetailDAO().getByOrderId(order.getOrderId()));
                     response.sendRedirect("payment_success.jsp");

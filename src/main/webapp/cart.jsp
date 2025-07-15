@@ -132,13 +132,13 @@
                             <table class="table table-bordered table-hover bg-white align-middle text-center">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th style="width: 5%;">Chọn</th>
-                                        <th style="width: 10%;">Ảnh</th>
-                                        <th style="width: 30%;">Tên sản phẩm</th>
-                                        <th style="width: 15%;">Đơn giá</th>
-                                        <th style="width: 15%;">Số lượng</th>
-                                        <th style="width: 15%;">Thành tiền</th>
-                                        <th style="width: 10%;">Thao tác</th>
+                                        <th style="width: 5%;">Select</th>
+                                        <th style="width: 10%;">Image</th>
+                                        <th style="width: 30%;">Product ame</th>
+                                        <th style="width: 15%;">Price</th>
+                                        <th style="width: 15%;">Quantity</th>
+                                        <th style="width: 15%;">Total amount</th>
+                                        <th style="width: 10%;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -181,7 +181,7 @@
                             <div class="fixed-bottom bg-white border-top shadow-sm p-3 d-flex justify-content-between align-items-center">
                                 <div>
                                     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#voucherModal">
-                                        <i class="fas fa-ticket-alt"></i> Chọn hoặc nhập voucher
+                                        <i class="fas fa-ticket-alt"></i> Select or enter voucher
                                     </button>
                                     <span id="appliedVoucher" class="ms-2 text-success fw-bold"></span>
                                 </div>
@@ -203,7 +203,7 @@
                     <div class="modal-dialog modal-dialog-scrollable modal-lg">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title">Chọn Voucher</h5>
+                                <h5 class="modal-title">Select voucher</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
@@ -214,19 +214,19 @@
                                                 <div class="card-body">
                                                     <h5 class="card-title text-primary">${voucher.codeName}</h5>
                                                     <p class="card-text">
-                                                        Giảm:
+                                                        Discount:
                                                         <c:choose>
                                                             <c:when test="${voucher.discountType == 'percentage'}">${voucher.discountValue}%</c:when>
                                                             <c:otherwise><fmt:formatNumber value="${voucher.discountValue}" type="currency" currencySymbol="" /> ₫</c:otherwise>
                                                         </c:choose><br>
-                                                        Đơn tối thiểu: <fmt:formatNumber value="${voucher.minOrderAmount}" type="currency" currencySymbol="" /> ₫
+                                                        Minimum order: <fmt:formatNumber value="${voucher.minOrderAmount}" type="currency" currencySymbol="" /> ₫
                                                     </p>
                                                     <button type="button" class="btn btn-outline-success select-voucher-btn"
                                                             data-code="${voucher.codeName}" 
                                                             data-type="${voucher.discountType}" 
                                                             data-value="${voucher.discountValue}" 
                                                             data-min="${voucher.minOrderAmount}">
-                                                        Chọn Voucher
+                                                        Select Voucher
                                                     </button>
                                                 </div>
                                             </div>
@@ -324,12 +324,12 @@
                             const minOrder = parseFloat(btn.dataset.min);
 
                             if (subtotal < minOrder) {
-                                alert(`Không thể chọn voucher '${code}'. Đơn hàng tối thiểu phải từ ${currencyFormatter.format(minOrder)} ₫`);
+                                alert(`Cannot select voucher '${code}'. Minimum order must be from ${currencyFormatter.format(minOrder)} ₫`);
                                 return;
                             }
 
                             voucher = {code, type, value, minOrder};
-                            appliedVoucher.textContent = `Đã chọn: ${voucher.code}`;
+                            appliedVoucher.textContent = `Selected ${voucher.code}`;
                             bootstrap.Modal.getInstance(document.getElementById('voucherModal')).hide();
                             updateTotal();
                         });
@@ -344,7 +344,7 @@
                         const checkedBoxes = document.querySelectorAll('input[name="selectedProductIds"]:checked');
                         if (checkedBoxes.length === 0) {
                             e.preventDefault();
-                            alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
+                            alert('Please select at least one product to checkout.');
                             return;
                         }
 

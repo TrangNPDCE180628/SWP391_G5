@@ -56,7 +56,7 @@ public class CartController extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("errorMessage", "Có lỗi xảy ra khi xử lý giỏ hàng.");
+            request.setAttribute("errorMessage", "An error occurred while processing the shopping cart!");
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
@@ -85,7 +85,7 @@ public class CartController extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Không thể tải giỏ hàng từ cơ sở dữ liệu.");
+            session.setAttribute("error", "Unable to load cart from database!");
         }
     }
 
@@ -98,7 +98,7 @@ public class CartController extends HttpServlet {
 
         try {
             if (cusId == null) {
-                session.setAttribute("error", "Bạn cần đăng nhập để thêm sản phẩm vào giỏ.");
+                session.setAttribute("error", "You need to login to add products to cart!");
                 response.sendRedirect("login.jsp");
                 return;
             }
@@ -111,7 +111,7 @@ public class CartController extends HttpServlet {
             int stockQuantity = stockDAO.getStockProductByProductId(productId);
 
             if (product == null || stockQuantity <= 0) {
-                session.setAttribute("error", "Sản phẩm không hợp lệ hoặc đã hết hàng.");
+                session.setAttribute("error", "Product is invalid or out of stock!");
                 response.sendRedirect("HomeController");
                 return;
             }
@@ -130,12 +130,12 @@ public class CartController extends HttpServlet {
 
             session.setAttribute("cart", updatedCart);
             session.setAttribute("cartSize", updatedCart.size());
-            session.setAttribute("message", "Đã thêm sản phẩm vào giỏ hàng.");
+            session.setAttribute("message", "Product added to cart!");
             response.sendRedirect("HomeController");
 
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Lỗi khi thêm vào giỏ.");
+            session.setAttribute("error", "Error adding to cart!");
             response.sendRedirect("HomeController");
         }
     }
@@ -148,7 +148,7 @@ public class CartController extends HttpServlet {
 
         try {
             if (cusId == null) {
-                session.setAttribute("error", "Bạn cần đăng nhập để thao tác.");
+                session.setAttribute("error", "You need to login to operate!");
                 response.sendRedirect("login.jsp");
                 return;
             }
@@ -176,12 +176,12 @@ public class CartController extends HttpServlet {
 
                 if (newQuantity > 0 && newQuantity <= stock) {
                     cartDAO.updateQuantity(item.getCartId(), newQuantity);
-                    session.setAttribute("message", "Cập nhật số lượng thành công.");
+                    session.setAttribute("message", "Quantity update successful!");
                 } else if (newQuantity <= 0) {
                     cartDAO.deleteCartItem(item.getCartId());
-                    session.setAttribute("message", "Đã xóa sản phẩm vì số lượng = 0.");
+                    session.setAttribute("message", "Product removed!");
                 } else {
-                    session.setAttribute("error", "Số lượng vượt quá tồn kho.");
+                    session.setAttribute("error", "Quantity exceeds inventory!");
                 }
 
                 // Cập nhật lại cart
@@ -195,12 +195,12 @@ public class CartController extends HttpServlet {
                 session.setAttribute("cartSize", updatedCart.size());
 
             } else {
-                session.setAttribute("error", "Không tìm thấy sản phẩm trong giỏ.");
+                session.setAttribute("error", "No products found in the cart!");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Cập nhật giỏ hàng thất bại: " + e.getMessage());
+            session.setAttribute("error", "Cart update failed: " + e.getMessage());
         }
 
         response.sendRedirect("cart.jsp");
@@ -220,14 +220,14 @@ public class CartController extends HttpServlet {
                     CartDAO cartDAO = new CartDAO();
                     cartDAO.deleteCartItem(item.getCartId());
                     cart.remove(productId);
-                    session.setAttribute("message", "Đã xóa sản phẩm khỏi giỏ.");
+                    session.setAttribute("message", "Product removed from cart!");
                 }
 
                 session.setAttribute("cart", cart);
                 session.setAttribute("cartSize", cart.size());
             } catch (Exception e) {
                 e.printStackTrace();
-                session.setAttribute("error", "Xóa sản phẩm khỏi giỏ thất bại.");
+                session.setAttribute("error", "Removing product from cart failed!");
             }
         }
 
