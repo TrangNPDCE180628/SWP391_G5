@@ -49,9 +49,10 @@ import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.sql.Date;
-import java.sql.SQLException;
 import java.util.List;
 import java.sql.Connection;
+import java.time.LocalDate;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -167,6 +168,9 @@ public class AdminController extends HttpServlet {
                 case "updateStockQuantity":
                     updateStockQuantity(request, response);
                     return;
+                case "RevenueByMonth":
+                    handleRevenueByMonth(request, response);
+                    return;
                 default:
                     loadAdminPage(request, response);
             }
@@ -206,6 +210,7 @@ public class AdminController extends HttpServlet {
             List<ProductAttribute> productAttributes = paDAO.getAll();
             List<Order> orders = ordDao.getAll();
             List<Stock> stocks = stockDAO.getAllStocks();
+            BigDecimal totalRevenue = ordDao.getTotalRevenue();
 
 // === NEW: Load từ VIEW ===
             Connection conn = DBContext.getConnection();
@@ -222,6 +227,7 @@ public class AdminController extends HttpServlet {
             request.setAttribute("productAttributes", productAttributes);
             request.setAttribute("orders", orders);
             request.setAttribute("stocks", stocks);
+            request.setAttribute("totalRevenue", totalRevenue);
 
             // 1. Lấy danh sách tất cả đơn hàng
             OrderDetailDAO detailDAO = new OrderDetailDAO();
@@ -232,6 +238,14 @@ public class AdminController extends HttpServlet {
                 orderDetailsMap.put(o.getOrderId(), details);
             }
             request.setAttribute("orderDetailsMap", orderDetailsMap);
+
+            // Doanh thu theo tháng trong năm hiện tại
+            int currentYear = LocalDate.now().getYear();
+            Map<String, BigDecimal> monthlyRevenue = ordDao.getMonthlyRevenueInYear(currentYear);
+            request.setAttribute("monthlyRevenueMap", monthlyRevenue);
+            request.setAttribute("revenueYear", currentYear);
+            
+            System.out.println(monthlyRevenue);
 
             // Load profile info
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
@@ -939,6 +953,39 @@ public class AdminController extends HttpServlet {
                 request.setAttribute("ERROR", "Cannot delete order.");
                 request.getRequestDispatcher("error.jsp").forward(request, response);
             }
+        }
+    }
+
+    private void handleRevenueByMonth(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String monthParam = request.getParameter("month"); // format: yyyy-MM
+
+            BigDecimal revenue = BigDecimal.ZERO;
+
+            if (monthParam != null && !monthParam.isEmpty()) {
+                String[] parts = monthParam.split("-");
+                int year = Integer.parseInt(parts[0]);
+                int month = Integer.parseInt(parts[1]);
+
+                OrderDAO orderDAO = new OrderDAO();
+                revenue = orderDAO.getRevenueByMonth(year, month);
+
+                request.setAttribute("activeTab", "revenue");
+                request.setAttribute("selectedMonth", monthParam);
+                request.setAttribute("monthlyRevenue", revenue);
+
+                System.out.println("Controllers.AdminController.handleRevenueByMonth()");
+                System.out.println(revenue);
+                System.out.println(year);
+                System.out.println(month);
+            }
+
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+
+            request.setAttribute("error", "Error loading revenue data: " + e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
 

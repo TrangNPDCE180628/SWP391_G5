@@ -43,4 +43,37 @@ public class FeedbackReplyViewDAO {
 
         return list;
     }
+    
+    public List<FeedbackReplyView> getFeedbackRepliesByProduct(String proId) throws Exception {
+    List<FeedbackReplyView> list = new ArrayList<>();
+
+    String sql = "SELECT * FROM ViewFeedbackReply WHERE proId = ?";
+
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setString(1, proId);
+        ResultSet rs = stmt.executeQuery();
+
+        while (rs.next()) {
+            FeedbackReplyView fb = new FeedbackReplyView();
+            fb.setFeedbackId(rs.getInt("feedbackId"));
+            fb.setCusId(rs.getString("cusId"));
+            fb.setCusFullName(rs.getString("cusFullName"));
+            fb.setProId(rs.getString("proId"));
+            fb.setProName(rs.getString("proName"));
+            fb.setFeedbackContent(rs.getString("feedbackContent"));
+            fb.setRate(rs.getInt("rate"));
+            fb.setReplyFeedbackId(rs.getObject("replyFeedbackId") != null ? rs.getInt("replyFeedbackId") : null);
+            fb.setStaffId(rs.getString("staffId"));
+            fb.setContentReply(rs.getString("contentReply"));
+            fb.setCreatedAt(rs.getTimestamp("createdAt"));
+
+            list.add(fb);
+        }
+    }
+
+    return list;
+}
+
 }

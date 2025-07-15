@@ -90,4 +90,22 @@ public class FeedbackDAO {
             stmt.executeUpdate();
         }
     }
+
+    public boolean hasWrittenFeedback(String cusId, String proId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT COUNT(*) FROM Feedback WHERE cusId = ? AND proId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, cusId);
+            stmt.setString(2, proId);
+
+            try ( ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+
 }

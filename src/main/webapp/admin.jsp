@@ -11,6 +11,7 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <link href="css/admindashboard.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
             .action-buttons .btn {
                 margin-right: 5px;
@@ -75,6 +76,11 @@
                             <li class="nav-item">
                                 <a href="#inventory" class="nav-link" data-bs-toggle="tab">
                                     <i class="fa-solid fa-ticket me-2"></i>Manage Inventory
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#revenue" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fa-solid fa-ticket me-2"></i>Manage Revenue
                                 </a>
                             </li>
                         </ul>
@@ -506,6 +512,11 @@
                         <div class="tab-pane fade" id="inventory">
                             <jsp:include page="Stock.jsp" />
                         </div>
+                        <!-- Revenue Tab -->
+                        <div class="tab-pane fade" id="revenue">
+                            <jsp:include page="Revenue.jsp" />
+                        </div>
+
 
                     </div>
                 </div>
