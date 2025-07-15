@@ -35,7 +35,37 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
+    /* ---- Kiểm tra ngày Voucher ---- */
+    const addForm = document.querySelector('#addVoucherForm');
+    if (addForm) {
+        // Tạo alert lỗi và chèn vào đầu modal-body
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger';
+        errorDiv.style.display = 'none';
+        addForm.querySelector('.modal-body').prepend(errorDiv);
 
+        // Xử lý submit
+        addForm.addEventListener('submit', function (e) {
+            const start = new Date(document.getElementById('startDate').value);
+            const end = new Date(document.getElementById('endDate').value);
+            if (start >= end) {
+                e.preventDefault();
+                errorDiv.textContent = 'Start date must be before end date.';
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        });
+
+        // Ẩn alert khi chỉnh lại ngày
+        document.getElementById('startDate').addEventListener('change', () => {
+            errorDiv.style.display = 'none';
+        });
+        document.getElementById('endDate').addEventListener('change', () => {
+            errorDiv.style.display = 'none';
+        });
+    }
+    /* ---- Hết kiểm tra ngày Voucher ---- */
     const canvas = document.getElementById("revenueChart");
     if (!canvas)
         return; // Không có biểu đồ thì không vẽ
@@ -78,6 +108,9 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     });
+
+
+
 }
 );
 function editProfile(role, id) {
@@ -347,6 +380,7 @@ function editVoucher(voucherId) {
 
     const codeName = row.getAttribute('data-voucher-code') || '';
     const description = row.getAttribute('data-voucher-description') || '';
+    const quantity = row.getAttribute('data-voucher-quantity') || '';
     const discountType = row.getAttribute('data-voucher-discount-type') || '';
     const discountValue = row.getAttribute('data-voucher-discount-value') || '';
     const minOrderAmount = row.getAttribute('data-voucher-min-order') || '';
@@ -365,8 +399,9 @@ function editVoucher(voucherId) {
     };
 
     document.getElementById('editVoucherId').value = voucherId;
-    document.getElementById('editDescription').value = description;
     document.getElementById('editCodeName').value = codeName;
+    document.getElementById('editDescription').value = description;
+    document.getElementById('editQuantity').value = quantity;
     document.getElementById('editDiscountType').value = discountType;
     document.getElementById('editDiscountValue').value = discountValue;
     document.getElementById('editMinOrderAmount').value = minOrderAmount;

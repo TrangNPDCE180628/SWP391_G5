@@ -22,22 +22,24 @@ public class Voucher {
     private Date startDate;
     private Date endDate;
     private boolean voucherActive;
+    private int quantity;
 
     public Voucher() {
     }
 
-    public Voucher(int voucherId, String codeName, String voucherDescription,
-            String discountType, BigDecimal discountValue, BigDecimal minOrderAmount,
-            Date startDate, Date endDate, boolean voucherActive) {
-        this.voucherId = voucherId;
+    public Voucher(int id, String codeName, String description, String discountType,
+            BigDecimal discountValue, BigDecimal minOrderAmount, Date startDate,
+            Date endDate, boolean active, int quantity) {
+        this.voucherId = id;
         this.codeName = codeName;
-        this.voucherDescription = voucherDescription;
+        this.voucherDescription = description;
         this.discountType = discountType;
         this.discountValue = discountValue;
         this.minOrderAmount = minOrderAmount;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.voucherActive = voucherActive;
+        this.voucherActive = active;
+        this.quantity = quantity;
     }
 
     public int getVoucherId() {
@@ -112,4 +114,11 @@ public class Voucher {
         this.voucherActive = voucherActive;
     }
 
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
 }

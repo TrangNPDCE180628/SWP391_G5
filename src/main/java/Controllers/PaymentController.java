@@ -238,7 +238,21 @@ public class PaymentController extends HttpServlet {
             if (!dao.updateOrder(order)) {
                 throw new RuntimeException("Order update failed.");
             }
+            /* giảm quantity voucher (nếu có)*/
+            if (order.getVoucherId() != null) {
+                VoucherDAO vDao = new VoucherDAO();
+                Voucher usedV = vDao.getById(order.getVoucherId());
+                if (usedV != null && usedV.getQuantity() > 0) {
+                    int newQty = usedV.getQuantity() - 1;
+                    vDao.updateQuantity(usedV.getVoucherId(), newQty);
 
+                    if (newQty == 0) {
+                        usedV.setQuantity(0); // Đảm bảo đồng bộ
+                        usedV.setVoucherActive(false);
+                        vDao.update(usedV);  // update trạng thái inactive
+                    }
+                }
+            }
             /* 8. Lấy chi tiết đơn và xóa khỏi giỏ hàng */
             List<OrderDetail> details = new OrderDetailDAO().getByOrderId(orderId);
             ProductDAO productDAO = new ProductDAO();

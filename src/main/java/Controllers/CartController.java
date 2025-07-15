@@ -116,10 +116,10 @@ public class CartController extends HttpServlet {
                 return;
             }
 
-            // ❗❗ Thêm vào DB (dùng addToCart để tránh trùng lỗi)
+            // Thêm vào DB (dùng addToCart để tránh trùng lỗi)
             cartDAO.addToCart(cusId, productId, 1);
 
-            // 🔄 Load lại toàn bộ cart từ DB
+            // Load lại toàn bộ cart từ DB
             List<ViewCartCustomer> cartList = cartDAO.getViewCartByCusId(cusId);
 
             // Cập nhật session
@@ -240,7 +240,7 @@ public class CartController extends HttpServlet {
         VoucherDAO voucherDAO = new VoucherDAO();
         List<Voucher> vouchers = null;
         try {
-            vouchers = voucherDAO.getAll();
+            vouchers = voucherDAO.getAllActive();
         } catch (SQLException ex) {
             Logger.getLogger(CartController.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {

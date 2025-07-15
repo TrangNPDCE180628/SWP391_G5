@@ -244,7 +244,7 @@ public class AdminController extends HttpServlet {
             Map<String, BigDecimal> monthlyRevenue = ordDao.getMonthlyRevenueInYear(currentYear);
             request.setAttribute("monthlyRevenueMap", monthlyRevenue);
             request.setAttribute("revenueYear", currentYear);
-            
+
             System.out.println(monthlyRevenue);
 
             // Load profile info
@@ -355,11 +355,13 @@ public class AdminController extends HttpServlet {
         return "";
     }
 
+    // ----------------- ADD VOUCHER -----------------
     private void addVoucher(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             String codeName = request.getParameter("codeName");
             String description = request.getParameter("voucherDescription");
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
             String discountType = request.getParameter("discountType");
             BigDecimal discountValue = new BigDecimal(request.getParameter("discountValue"));
             BigDecimal minOrderAmount = new BigDecimal(request.getParameter("minOrderAmount"));
@@ -367,38 +369,68 @@ public class AdminController extends HttpServlet {
             Date endDate = Date.valueOf(request.getParameter("endDate"));
             boolean isActive = Boolean.parseBoolean(request.getParameter("voucherActive"));
 
+            // Validate start < end
+            if (!startDate.before(endDate)) {
+                request.getSession().setAttribute("error", "Start date must be before end date.");
+                response.sendRedirect("AdminController?tab=vouchers");
+                return;
+            }
+
+            // Nếu hết hạn thì inactive
+            if (endDate.toLocalDate().isBefore(LocalDate.now())) {
+                isActive = false;
+            }
+
             Voucher voucher = new Voucher(0, codeName, description, discountType,
-                    discountValue, minOrderAmount, startDate, endDate, isActive);
+                    discountValue, minOrderAmount, startDate, endDate, isActive, quantity);
 
-            VoucherDAO dao = new VoucherDAO();
-            dao.create(voucher);
-
+            new VoucherDAO().create(voucher);
             response.sendRedirect("AdminController?tab=vouchers");
+
         } catch (Exception e) {
             throw new ServletException(e);
         }
     }
 
+    // ----------------- UPDATE VOUCHER -----------------
     private void updateVoucher(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             int id = Integer.parseInt(request.getParameter("voucherId"));
             String codeName = request.getParameter("codeName");
-            String description = request.getParameter("voucherDescription"); // Optional, null nếu không có
+            String description = request.getParameter("voucherDescription");
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
             String discountType = request.getParameter("discountType");
             BigDecimal discountValue = new BigDecimal(request.getParameter("discountValue"));
             BigDecimal minOrderAmount = new BigDecimal(request.getParameter("minOrderAmount"));
             Date startDate = Date.valueOf(request.getParameter("startDate"));
             Date endDate = Date.valueOf(request.getParameter("endDate"));
             boolean isActive = Boolean.parseBoolean(request.getParameter("voucherActive"));
+          
+            if (quantity < 0) {
+                request.getSession().setAttribute("error", "Quantity cannot be negative.");
+                response.sendRedirect("AdminController?tab=vouchers");
+                return;
+            }
+
+            // Validate start < end
+            if (!startDate.before(endDate)) {
+                request.getSession().setAttribute("error", "Start date must be before end date.");
+                response.sendRedirect("AdminController?tab=vouchers");
+                return;
+            }
+
+            // Nếu đã hết hạn thì inactive
+            if (endDate.toLocalDate().isBefore(LocalDate.now())) {
+                isActive = false;
+            }
 
             Voucher voucher = new Voucher(id, codeName, description, discountType,
-                    discountValue, minOrderAmount, startDate, endDate, isActive);
+                    discountValue, minOrderAmount, startDate, endDate, isActive, quantity);
 
-            VoucherDAO dao = new VoucherDAO();
-            dao.update(voucher);
-
+            new VoucherDAO().update(voucher);
             response.sendRedirect("AdminController?tab=vouchers");
+
         } catch (Exception e) {
             throw new ServletException(e);
         }
