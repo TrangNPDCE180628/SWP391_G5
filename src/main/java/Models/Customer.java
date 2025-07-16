@@ -53,9 +53,14 @@ public class Customer {
         this.cusPassword = cusPassword;
     }
 
-    public String getCusFullName() {
+    public String getFullName() {
         return cusFullName;
     }
+
+    public String getcusFullName() {
+        return cusFullName;
+    }
+
 
     public void setCusFullName(String cusFullName) {
         this.cusFullName = cusFullName;
