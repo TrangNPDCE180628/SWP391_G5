@@ -52,6 +52,12 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a href="#products" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fa-solid fa-box me-2"></i>Product
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
                                 <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
                                     <i class="fa-solid fa-ticket me-2"></i>Voucher
                                 </a>
@@ -254,6 +260,12 @@
                                 </table>
                             </div>
                         </div>
+                        <!-- Product Tab -->
+                        <div class="tab-pane fade" id="products">
+                            <h2>Product Management</h2>
+                            <jsp:include page="productManager.jsp" />
+                        </div>
+
 
                         <!-- Vouchers Tab -->
                         <div class="tab-pane fade" id="vouchers">

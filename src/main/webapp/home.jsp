@@ -200,7 +200,7 @@
                                         <i class="fas fa-user"></i> ${sessionScope.LOGIN_USER.fullName}
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="#">Profile</a></li>
+                                        <li><a class="dropdown-item" href="ProfileCustomerController">Profile</a></li>
 
                                         <!-- Orders (moved below Cart) -->
                                         <li class="nav-item">

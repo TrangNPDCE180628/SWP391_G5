@@ -12,7 +12,7 @@ public class EmailUtility {
     public static void sendEmail(String toEmail, String subject, String messageContent)
             throws MessagingException, UnsupportedEncodingException {
         
-        // Cấu hình thông tin SMTP
+        // Cấu hình thông tin SMTP  
         final String fromEmail = "DuanNTCE171842@fpt.edu.vn";           // Gmail của bạn
         final String appPassword = "xfkw oghu hdkq cjuk";            // App password (bắt buộc dùng khi bật 2FA)
 
