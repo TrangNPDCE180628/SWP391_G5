@@ -66,6 +66,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
     /* ---- Hết kiểm tra ngày Voucher ---- */
+    
+    /* ---- Vẽ chart revenue ---- */
     const canvas = document.getElementById("revenueChart");
     if (!canvas)
         return; // Không có biểu đồ thì không vẽ

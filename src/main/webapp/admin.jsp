@@ -28,6 +28,10 @@
                 background-color: #dc3545;
                 border-color: #dc3545;
             }
+            .container {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
         </style>
     </head>
 
