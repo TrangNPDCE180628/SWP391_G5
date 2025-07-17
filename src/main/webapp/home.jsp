@@ -9,6 +9,7 @@
         <title>Tech Store - Your Ultimate Tech Destination</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+ 
         <style>
             body {
                 background-color: #f8f9fa;
@@ -254,7 +255,7 @@
 
             <!-- Category Filter -->
             <div class="category-filter shadow-sm p-4 mb-5 bg-white rounded" id="categories">
-                <h4 class="category-title text-center mb-4">🛍️ Browse by Category</h4>
+                <h4 class="category-title text-center mb-4">Browse by Category</h4>
                 <div class="d-flex flex-wrap justify-content-center gap-3">
                     <a href="HomeController"
                        class="btn ${selectedTypeId == 0 ? 'btn-dark' : 'btn-outline-dark'} px-4 py-2 rounded-pill shadow-sm">
