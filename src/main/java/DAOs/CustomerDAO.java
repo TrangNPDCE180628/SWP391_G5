@@ -21,7 +21,7 @@ public class CustomerDAO {
             stmt.setString(1, customer.getCusId());
             stmt.setString(2, customer.getUsername());
             stmt.setString(3, customer.getCusPassword());
-            stmt.setString(4, customer.getCusFullName());
+            stmt.setString(4, customer.getFullName());
             stmt.setString(5, customer.getCusGender());
             stmt.setString(6, customer.getCusImage());
             stmt.setString(7, customer.getCusGmail());
@@ -86,7 +86,7 @@ public class CustomerDAO {
 
             stmt.setString(1, customer.getUsername());
             stmt.setString(2, customer.getCusPassword());
-            stmt.setString(3, customer.getCusFullName());
+            stmt.setString(3, customer.getFullName());
             stmt.setString(4, customer.getCusGender());
             stmt.setString(5, customer.getCusImage());
             stmt.setString(6, customer.getCusGmail());

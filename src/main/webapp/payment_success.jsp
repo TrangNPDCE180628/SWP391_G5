@@ -1,22 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ page import="Models.Order" %>
-<%@ page import="Models.OrderDetail" %>
-<%@ page import="java.util.List" %>
-<%
-    String message = (String) session.getAttribute("message");
-    Order order = (Order) session.getAttribute("order");
-    List<OrderDetail> details = (List<OrderDetail>) session.getAttribute("orderDetails");
-%>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Thanh toán thành công</title>
+        <title>Payment successful</title>
         <meta charset="UTF-8">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="css/payment.css" rel="stylesheet" />
-
     </head>
     <body>
         <!-- Navbar -->
@@ -68,66 +59,68 @@
                 </div>
             </div>
         </nav>
-        <div class="container py-5 text-center">
 
+        <div class="container py-5 text-center">
             <div class="alert alert-success">
-                <h2>Thanh toán thành công!</h2>
-                <p><%= message != null ? message : "Cảm ơn bạn đã mua hàng!"%></p>
-                <p>Mã đơn hàng: <%= order != null ? order.getOrderId() : "?"%></p>
+                <h2>Payment successful!</h2>
+                <p>${sessionScope.message != null ? sessionScope.message : "Thank you for your purchase!"}</p>
+                <p>Order code: ${sessionScope.order != null ? sessionScope.order.orderId : "?"}</p>
                 <a href="${pageContext.request.contextPath}/CartController?action=view" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>Quay lại giỏ hàng
+                    <i class="fas fa-arrow-left me-2"></i>Back to cart
                 </a>
             </div>
 
-            <% if (details != null && !details.isEmpty()) { %>
-            <h4 class="mt-4">Chi tiết đơn hàng</h4>
-            <table class="table table-bordered mt-3">
-                <thead>
-                    <tr>
-                        <th>Mã sản phẩm</th>
-                        <th>Số lượng</th>
-                        <th>Đơn giá</th>
-                        <th>Thành tiền</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <%
-                        double total = 0;
-                        for (OrderDetail d : details) {
-                            double lineTotal = d.getUnitPrice() * d.getQuantity();
-                            total += lineTotal;
-                    %>
-                    <tr>
-                        <td><%= d.getProId()%></td>
-                        <td><%= d.getQuantity()%></td>
-                        <td><%= String.format("%,.0f₫", d.getUnitPrice())%></td>
-                        <td><%= String.format("%,.0f₫", lineTotal)%></td>
-                    </tr>
-                    <% }%>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <th colspan="3" class="text-end">Tổng:</th>
-                        <th><%= String.format("%,.0f₫", total)%></th>
-                    </tr>
-                    <tr>
-                        <th colspan="3" class="text-end">Giảm giá:</th>
-                        <th><%= order != null ? String.format("%,.0f₫", order.getDiscountAmount()) : "0₫"%></th>
-                    </tr>
-                    <tr>
-                        <th colspan="3" class="text-end">Thành tiền:</th>
-                        <th><%= order != null ? String.format("%,.0f₫", order.getFinalAmount()) : "?"%></th>
-                    </tr>
-                </tfoot>
-            </table>
-            <% } %>
+            <c:if test="${not empty sessionScope.orderDetails}">
+                <h4 class="mt-4">Order details</h4>
+                <table class="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>Product name</th>
+                            <th>Quantity</th>
+                            <th>Unit price</th>
+                            <th>Total amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:set var="total" value="0" />
+                        <c:forEach var="d" items="${sessionScope.orderDetails}">
+                            <c:set var="lineTotal" value="${d.unitPrice * d.quantity}" />
+                            <c:set var="total" value="${total + lineTotal}" />
+                            <tr>
+                                <td>${sessionScope.productNames[d.proId]}</td>
+                                <td>${d.quantity}</td>
+                                <td><fmt:formatNumber value="${d.unitPrice}" type="number" groupingUsed="true" maxFractionDigits="0"/>₫</td>
+                                <td><fmt:formatNumber value="${lineTotal}" type="number" groupingUsed="true" maxFractionDigits="0"/>₫</td>
+                            </tr>
+                        </c:forEach>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="3" class="text-end">Total:</th>
+                            <th><fmt:formatNumber value="${total}" type="number" groupingUsed="true" maxFractionDigits="0"/>₫</th>
+                        </tr>
+                        <tr>
+                            <th colspan="3" class="text-end">Discount:</th>
+                            <th>
+                                <fmt:formatNumber value="${sessionScope.order.discountAmount}" type="number" groupingUsed="true" maxFractionDigits="0"/>₫
+                            </th>
+                        </tr>
+                        <tr>
+                            <th colspan="3" class="text-end">Total amount:</th>
+                            <th>
+                                <fmt:formatNumber value="${sessionScope.order.finalAmount}" type="number" groupingUsed="true" maxFractionDigits="0"/>₫
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </c:if>
         </div>
 
-        <%
-            session.removeAttribute("message");
-            session.removeAttribute("order");
-            session.removeAttribute("orderDetails");
-        %>
+        <c:remove var="message" scope="session"/>
+        <c:remove var="order" scope="session"/>
+        <c:remove var="orderDetails" scope="session"/>
+        <c:remove var="productNames" scope="session"/>
+
 
         <!-- Footer -->
         <footer class="bg-dark text-light py-4 mt-5">

@@ -83,6 +83,15 @@ public class CartDAO {
         return list;
     }
 
+    public int getTotalQuantityByCusId(String cusId) throws SQLException, ClassNotFoundException {
+        List<ViewCartCustomer> cartList = getViewCartByCusId(cusId);
+        int totalQuantity = 0;
+        for (ViewCartCustomer item : cartList) {
+            totalQuantity += item.getQuantity();
+        }
+        return totalQuantity;
+    }
+
     // Kiểm tra xem sản phẩm đã tồn tại trong giỏ chưa (dùng để insert/update logic)
     public Cart getCartItem(String cusId, String proId) throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM Cart WHERE cusId = ? AND proId = ?";

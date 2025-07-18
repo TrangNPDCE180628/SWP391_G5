@@ -1,5 +1,6 @@
 package Controllers;
 
+import DAOs.CartDAO;
 import DAOs.FeedbackDAO;
 import DAOs.ProductDAO;
 import DAOs.ProductTypeDAO;
@@ -8,6 +9,7 @@ import Models.Feedback;
 import Models.Product;
 import Models.ProductTypes;
 import Models.ReplyFeedback;
+import Models.User;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -57,18 +59,24 @@ public class HomeController extends HttpServlet {
             }
 
             int totalPages = (int) Math.ceil((double) totalProducts / PRODUCTS_PER_PAGE);
-                        
+
             request.setAttribute("products", products);
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("totalProducts", totalProducts);
 
             HttpSession session = request.getSession();
-            Integer cartSize = (Integer) session.getAttribute("cartSize");
-            if (cartSize == null) {
-                session.setAttribute("cartSize", 0);
-            }
+            User loginUser = (User) session.getAttribute("LOGIN_USER");
 
+            if (loginUser != null) {
+                CartDAO cartdao = new CartDAO();
+                session.setAttribute("cartSize", cartdao.getTotalQuantityByCusId(loginUser.getId()));
+            } else {
+                Integer cartSize = (Integer) session.getAttribute("cartSize");
+                if (cartSize == null) {
+                    session.setAttribute("cartSize", 0);
+                }
+            }
             request.getRequestDispatcher("home.jsp").forward(request, response);
 
         } catch (Exception e) {

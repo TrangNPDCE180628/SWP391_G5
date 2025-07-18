@@ -5,7 +5,7 @@
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
-        <title>Thanh toán đơn hàng</title>
+        <title>Order Payment</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
@@ -68,7 +68,7 @@
             <div class="row justify-content-center">
                 <div class="col-md-8">
                     <h2 class="mb-4 text-center">
-                        <i class="fas fa-credit-card me-2"></i>Thanh toán đơn hàng
+                        <i class="fas fa-credit-card me-2"></i>Order Payment
                     </h2>
 
                     <!-- Display error messages -->
@@ -91,9 +91,9 @@
                     <c:if test="${empty order}">
                         <div class="alert alert-warning text-center">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            Không tìm thấy thông tin đơn hàng. Vui lòng kiểm tra giỏ hàng hoặc liên hệ hỗ trợ.
-                            <a href="HomeController" class="btn btn-primary ms-2">Quay về trang chủ</a>
-                            <a href="CartController?action=view" class="btn btn-secondary ms-2">Xem giỏ hàng</a>
+                            Order information not found. Please check your cart or contact support.
+                            <a href="HomeController" class="btn btn-primary ms-2">Back to home page</a>
+                            <a href="CartController?action=view" class="btn btn-secondary ms-2">View cart</a>
                         </div>
                     </c:if>
 
@@ -102,23 +102,23 @@
                         <div class="card mb-4">
                             <div class="card-header bg-primary text-white">
                                 <h5 class="mb-0">
-                                    <i class="fas fa-receipt me-2"></i>Thông tin đơn hàng
+                                    <i class="fas fa-receipt me-2"></i>Order information
                                 </h5>
                             </div>
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <p><strong>Mã đơn hàng:</strong> #${order.orderId}</p>
-                                        <p><strong>Ngày đặt:</strong> 
+                                        <p><strong>Order code:</strong> #${order.orderId}</p>
+                                        <p><strong>Date booked:</strong> 
                                             <fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/>
                                         </p>
-                                        <p><strong>Trạng thái:</strong>
+                                        <p><strong>Status:</strong>
                                             <c:choose>
                                                 <c:when test="${order.orderStatus == 'pending'}">
-                                                    <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                                                    <span class="badge bg-warning text-dark">Waiting for payment</span>
                                                 </c:when>
-                                                <c:when test="${order.orderStatus == 'paid'}">
-                                                    <span class="badge bg-success">Đã thanh toán</span>
+                                                <c:when test="${order.orderStatus == 'completed'}">
+                                                    <span class="badge bg-success">Completed</span>
                                                 </c:when>
                                                 <c:otherwise>
                                                     <span class="badge bg-secondary">${order.orderStatus}</span>
@@ -127,13 +127,13 @@
                                         </p>
                                     </div>
                                     <div class="col-md-6">
-                                        <p><strong>Tổng tiền hàng:</strong>
+                                        <p><strong>Total:</strong>
                                             <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol=""/> ₫
                                         </p>
-                                        <p><strong>Giảm giá:</strong>
+                                        <p><strong>Discount:</strong>
                                             <fmt:formatNumber value="${order.discountAmount}" type="currency" currencySymbol=""/> ₫
                                         </p>
-                                        <p><strong>Thành tiền:</strong>
+                                        <p><strong>Total amount:</strong>
                                             <span class="final-amount">
                                                 <fmt:formatNumber value="${order.totalAmount - order.discountAmount}" type="currency" currencySymbol=""/> ₫
                                             </span>
@@ -147,7 +147,7 @@
                         <div class="card">
                             <div class="card-header bg-success text-white">
                                 <h5 class="mb-0">
-                                    <i class="fas fa-money-bill-wave me-2"></i>Thông tin thanh toán
+                                    <i class="fas fa-money-bill-wave me-2"></i>Payment information
                                 </h5>
                             </div>
                             <div class="card-body">
@@ -157,77 +157,71 @@
 
                                     <!-- Payment Method Selection -->
                                     <div class="mb-4">
-                                        <label class="form-label fw-bold">Chọn phương thức thanh toán:</label>
+                                        <label class="form-label fw-bold">Select payment method:</label>
 
                                         <div class="payment-method" onclick="selectPaymentMethod('creditcard')">
                                             <input class="form-check-input" type="radio" name="paymentMethod" id="creditcard" value="creditcard" checked>
                                             <label class="form-check-label ms-2" for="creditcard">
-                                                <i class="fas fa-credit-card me-2"></i>Thẻ tín dụng/Thẻ ghi nợ
+                                                <i class="fas fa-credit-card me-2"></i>Credit Card/Debit Card
                                             </label>
                                         </div>
 
-                                        <div class="payment-method" onclick="selectPaymentMethod('paypal')">
-                                            <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="paypal">
+                                        <div class="payment-method" onclick="selectPaymentMethod('upon-receipt')">
+                                            <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="upon-receipt">
                                             <label class="form-check-label ms-2" for="paypal">
-                                                <i class="fab fa-paypal me-2"></i>PayPal
+                                                <i class="fab fa-paypal me-2"></i>Cash on Delivery
                                             </label>
                                         </div>
 
-                                        <div class="payment-method" onclick="selectPaymentMethod('momo')">
-                                            <input class="form-check-input" type="radio" name="paymentMethod" id="momo" value="momo">
-                                            <label class="form-check-label ms-2" for="momo">
-                                                <i class="fas fa-mobile-alt me-2"></i>Ví MoMo
-                                            </label>
-                                        </div>
                                     </div>
 
                                     <!-- Credit Card Information -->
                                     <div id="creditCardFields" class="mb-4">
-                                        <label for="cardNumber" class="form-label fw-bold">Số thẻ tín dụng <span class="text-danger">*</span></label>
+                                        <label for="cardNumber" class="form-label fw-bold">Credit card number <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="cardNumber" name="cardNumber" 
                                                maxlength="19" placeholder="XXXX XXXX XXXX XXXX" 
                                                pattern="[0-9\s]{8,19}" title="Vui lòng nhập 8-16 chữ số">
-                                        <div class="form-text">Nhập từ 8-16 chữ số</div>
+                                        <div class="form-text">Enter 8-16 digits</div>
 
                                         <div class="row mt-3">
                                             <div class="col-md-6">
-                                                <label for="expiryDate" class="form-label fw-bold">Ngày hết hạn <span class="text-danger">*</span></label>
+                                                <label for="expiryDate" class="form-label fw-bold">Expiration date <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" id="expiryDate" name="expiryDate" 
                                                        placeholder="MM/YY" maxlength="5" pattern="(0[1-9]|1[0-2])\/[0-9]{2}">
-                                                <div class="form-text">Định dạng: MM/YY</div>
+                                                <div class="form-text">Format: MM/YY</div>
                                             </div>
                                             <div class="col-md-6">
-                                                <label for="cvv" class="form-label fw-bold">Mã CVV <span class="text-danger">*</span></label>
+                                                <label for="cvv" class="form-label fw-bold">CVV code <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" id="cvv" name="cvv" 
                                                        maxlength="4" placeholder="XXX" pattern="[0-9]{3,4}">
-                                                <div class="form-text">3 hoặc 4 chữ số ở mặt sau thẻ</div>
+                                                <div class="form-text">3 or 4 digits on the back of the card</div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Shipping Address -->
                                     <div class="mb-4">
-                                        <label for="shippingAddress" class="form-label fw-bold">Địa chỉ giao hàng <span class="text-danger">*</span></label>
+                                        <label for="shippingAddress" class="form-label fw-bold">Shipping address <span class="text-danger">*</span></label>
                                         <textarea class="form-control" id="shippingAddress" name="shippingAddress" 
-                                                  rows="3" required placeholder="Nhập địa chỉ giao hàng chi tiết (số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố)">${order.shippingAddress}</textarea>
-                                        <div class="form-text">Vui lòng nhập địa chỉ giao hàng chi tiết</div>
+                                                  rows="3" required placeholder="Enter detailed delivery address (house number, street, ward/commune, district, province/city)">${order.shippingAddress}</textarea>
+                                        <div class="form-text">Please enter detailed shipping address</div>
                                     </div>
 
                                     <!-- Order Summary -->
                                     <div class="card bg-light mb-4">
                                         <div class="card-body">
-                                            <h6 class="card-title">Tóm tắt đơn hàng</h6>
+                                            <h6 class="card-title">Order Summary</h6>
                                             <div class="d-flex justify-content-between mb-2">
-                                                <span>Tổng tiền hàng:</span>
+                                                <span>Total cost of goods:</span>
                                                 <span><fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol=""/> ₫</span>
                                             </div>
                                             <div class="d-flex justify-content-between mb-2">
-                                                <span>Giảm giá:</span>
+                                                <span>Discount:</span>
                                                 <span class="text-success">-<fmt:formatNumber value="${order.discountAmount}" type="currency" currencySymbol=""/> ₫</span>
                                             </div>
                                             <hr>
                                             <div class="d-flex justify-content-between">
-                                                <strong>Tổng cộng:</strong>
+                                                <strong>Total:</strong>
                                                 <strong class="text-danger">
                                                     <fmt:formatNumber value="${order.totalAmount - order.discountAmount}" type="currency" currencySymbol=""/> ₫
                                                 </strong>
@@ -238,10 +232,10 @@
                                     <!-- Action Buttons -->
                                     <div class="d-flex justify-content-between">
                                         <a href="${pageContext.request.contextPath}/CartController?action=view" class="btn btn-secondary">
-                                            <i class="fas fa-arrow-left me-2"></i>Quay lại giỏ hàng
+                                            <i class="fas fa-arrow-left me-2"></i>Back to cart
                                         </a>
                                         <button type="submit" class="btn btn-success btn-lg">
-                                            <i class="fas fa-check me-2"></i>Xác nhận thanh toán
+                                            <i class="fas fa-check me-2"></i>Payment Confirmation
                                         </button>
                                     </div>
                                 </form>
@@ -358,24 +352,24 @@
                                                 if (paymentMethod === 'creditcard') {
                                                     const cleanCardNumber = cardNumber.replace(/\s+/g, '');
                                                     if (cleanCardNumber.length < 8 || cleanCardNumber.length > 16) {
-                                                        alert('Số thẻ tín dụng phải có từ 8-16 chữ số');
+                                                        alert('Credit card number must be 8-16 digits');
                                                         document.getElementById('cardNumber').focus();
                                                         return false;
                                                     }
                                                     if (!/^\d+$/.test(cleanCardNumber)) {
-                                                        alert('Số thẻ tín dụng chỉ được chứa chữ số');
+                                                        alert('Credit card numbers must contain only digits.');
                                                         document.getElementById('cardNumber').focus();
                                                         return false;
                                                     }
 
                                                     if (!/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(expiryDate)) {
-                                                        alert('Ngày hết hạn không hợp lệ. Vui lòng nhập theo định dạng MM/YY');
+                                                        alert('Expiration date is invalid. Please enter in MM/YY format');
                                                         document.getElementById('expiryDate').focus();
                                                         return false;
                                                     }
 
                                                     if (!/^\d{3,4}$/.test(cvv)) {
-                                                        alert('Mã CVV phải có 3 hoặc 4 chữ số');
+                                                        alert('CVV code must be 3 or 4 digits');
                                                         document.getElementById('cvv').focus();
                                                         return false;
                                                     }
@@ -383,7 +377,7 @@
 
                                                 // Validate shipping address
                                                 if (shippingAddress.trim().length < 10) {
-                                                    alert('Vui lòng nhập địa chỉ giao hàng chi tiết (ít nhất 10 ký tự)');
+                                                    alert('Please enter detailed delivery address (at least 10 characters)');
                                                     document.getElementById('shippingAddress').focus();
                                                     return false;
                                                 }

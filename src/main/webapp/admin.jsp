@@ -28,6 +28,10 @@
                 background-color: #dc3545;
                 border-color: #dc3545;
             }
+            .container {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
         </style>
     </head>
 
@@ -51,6 +55,12 @@
                                     <i class="fas fa-user me-2"></i>Profile
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="#products" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fa-solid fa-box me-2"></i>Product
+                                </a>
+                            </li>
+
                             <li class="nav-item">
                                 <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
                                     <i class="fa-solid fa-ticket me-2"></i>Voucher
@@ -254,6 +264,12 @@
                                 </table>
                             </div>
                         </div>
+                        <!-- Product Tab -->
+                        <div class="tab-pane fade" id="products">
+                            <h2>Product Management</h2>
+                            <jsp:include page="productManager.jsp" />
+                        </div>
+
 
                         <!-- Vouchers Tab -->
                         <div class="tab-pane fade" id="vouchers">
@@ -267,6 +283,7 @@
                                         <tr>
                                             <th>ID</th>
                                             <th>Code</th>
+                                            <th>Quantity</th>
                                             <th>Type</th>
                                             <th>Value</th>
                                             <th>Start Date</th>
@@ -281,6 +298,7 @@
                                                 data-voucher-id="${voucher.voucherId}"
                                                 data-voucher-code="${voucher.codeName}"
                                                 data-voucher-description="${voucher.voucherDescription}"
+                                                data-voucher-quantity="${voucher.quantity}"
                                                 data-voucher-discount-type="${voucher.discountType}"
                                                 data-voucher-discount-value="${voucher.discountValue}"
                                                 data-voucher-min-order="${voucher.minOrderAmount}"
@@ -289,6 +307,7 @@
                                                 data-voucher-status="${voucher.voucherActive}">
                                                 <td>${voucher.voucherId}</td>
                                                 <td>${voucher.codeName}</td>
+                                                <td>${voucher.quantity}</td>
                                                 <td>${voucher.discountType}</td>
                                                 <td>
                                                     <c:choose>
@@ -600,7 +619,7 @@
                         <h5 class="modal-title">Add New Voucher</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <form action="AdminController" method="post">
+                    <form id="addVoucherForm" action="AdminController" method="post">
                         <div class="modal-body">
                             <input type="hidden" name="action" value="addVoucher">
                             <input type="hidden" name="tab" value="vouchers">
@@ -613,7 +632,10 @@
                                 <label for="voucherDescription" class="form-label">Description</label>
                                 <textarea class="form-control" id="voucherDescription" name="voucherDescription"></textarea>
                             </div>
-
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" min="0" required>
+                            </div>
                             <div class="mb-3">
                                 <label for="discountType" class="form-label">Discount Type</label>
                                 <select class="form-select" id="discountType" name="discountType" required>
@@ -673,7 +695,6 @@
                         <input type="hidden" name="tab" value="vouchers">
                         <div class="modal-body">
                             <input type="hidden" id="editVoucherId" name="voucherId">
-                            <input type="hidden" name="action" value="updateVoucher">
 
                             <div class="mb-3">
                                 <label for="editCodeName" class="form-label">Voucher Code</label>
@@ -684,7 +705,10 @@
                                 <label for="editDescription" class="form-label">Description</label>
                                 <textarea class="form-control" id="editDescription" name="voucherDescription" rows="3"></textarea>
                             </div>
-
+                            <div class="mb-3">
+                                <label for="editQuantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="editQuantity" name="quantity" min="0" required>
+                            </div>
                             <div class="mb-3">
                                 <label for="editDiscountType" class="form-label">Discount Type</label>
                                 <select class="form-select" id="editDiscountType" name="discountType">

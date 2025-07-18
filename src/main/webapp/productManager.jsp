@@ -67,26 +67,37 @@
                     </tr>
                 </thead>
                 <tbody>
-                <c:forEach var="product" items="${products}">
-                    <tr data-product-id="${product.proId}"
-                        data-product-name="${product.proName}"
-                        data-product-description="${product.proDescription}"
-                        data-product-price="${product.proPrice}"
-                        data-product-image="${product.proImageMain}"
-                        data-product-category="${product.proTypeId}">
-                        <td>${product.proId}</td>
-                        <td>${product.proName}</td>
-                        <td>${product.proPrice}</td>
-                        <td>${product.proDescription}</td>
-                        <td><img src="images/products/${product.proImageMain}" alt="Image" class="product-image"/></td>
-                        <td>${product.proTypeId}</td>
-                        <td>
-                            <button class="btn btn-info btn-sm view-product-btn">👁️ View</button>
-                            <button class="btn btn-warning btn-sm edit-product-btn">✏️ Edit</button>
-                            <button class="btn btn-danger btn-sm delete-product-btn">🗑️ Delete</button>
-                        </td>
-                    </tr>
-                </c:forEach>
+                    <c:forEach var="product" items="${products}">
+                        <tr data-product-id="${product.proId}"
+                            data-product-name="${product.proName}"
+                            data-product-description="${product.proDescription}"
+                            data-product-price="${product.proPrice}"
+                            data-product-image="${product.proImageMain}"
+                            data-product-category="${product.proTypeId}">
+                            <td>${product.proId}</td>
+                            <td>${product.proName}</td>
+                            <td>${product.proPrice}</td>
+                            <td>${product.proDescription}</td>
+                            <td>
+                                <img src="images/products/${product.proImageMain}" 
+                                     alt="Image" 
+                                     style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px; border: 1px solid #ccc;" />
+                            </td>
+                            <td>
+                                <c:forEach var="type" items="${productTypes}">
+                                    <c:if test="${type.id == product.proTypeId}">
+                                        ${type.name}
+                                    </c:if>
+                                </c:forEach>
+                            </td>
+
+                            <td>
+                                <button class="btn btn-info btn-sm view-product-btn">👁️ View</button>
+                                <button class="btn btn-warning btn-sm edit-product-btn">✏️ Edit</button>
+                                <button class="btn btn-danger btn-sm delete-product-btn">🗑️ Delete</button>
+                            </td>
+                        </tr>
+                    </c:forEach>
                 </tbody>
             </table>
 
@@ -104,7 +115,7 @@
         <!-- Add/Edit Product Modal (dùng chung) -->
         <div class="modal fade" id="addProductModal" tabindex="-1">
             <div class="modal-dialog">
-                <form class="modal-content" action="ProductManagerController" method="post">
+                <form class="modal-content" action="ProductManagerController" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="add"/>
                     <div class="modal-header">
                         <h5 class="modal-title">📝 Product Form</h5>
@@ -128,13 +139,16 @@
                             <input type="number" step="0.01" name="proPrice" class="form-control" required/>
                         </div>
                         <div class="mb-2">
-                            <label>Image Filename</label>
-                            <input type="text" name="proImageMain" class="form-control"/>
+                            <label>Upload Image</label>
+                            <input type="file" name="proImageMain" class="form-control" accept="image/*"/>
                         </div>
+
                         <div class="mb-2">
-                            <label>Category ID</label>
-                            <input type="number" name="proTypeId" class="form-control" required/>
+                            <label>Type ID</label>
+                            <input type="number" name="proTypeId" class="form-control" min="1" required/>
                         </div>
+
+
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

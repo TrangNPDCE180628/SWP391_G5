@@ -1,7 +1,9 @@
 package Controllers;
 
 import DAOs.ProductDAO;
+import DAOs.ProductTypeDAO;
 import Models.Product;
+import Models.ProductTypes;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -12,13 +14,23 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.http.Part;
+import java.nio.file.Paths;
+import java.io.File;
 
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024, // 1MB
+        maxFileSize = 1024 * 1024 * 5, // 5MB
+        maxRequestSize = 1024 * 1024 * 10 // 10MB
+)
 @WebServlet(name = "ProductManagerController", urlPatterns = {"/ProductManagerController"})
 public class ProductManagerController extends HttpServlet {
 
     private static final String ERROR = "error.jsp";
     private static final String ADMIN_PAGE = "productManager.jsp";
     private final ProductDAO productDAO = new ProductDAO();
+    private final ProductTypeDAO productTypeDAO = new ProductTypeDAO();
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -69,6 +81,8 @@ public class ProductManagerController extends HttpServlet {
         }
 
         List<Product> products = productDAO.getAll(page, recordsPerPage);
+        List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes();
+        request.setAttribute("productTypes", productTypes);
         int totalRecords = productDAO.countAll();
         int totalPages = (int) Math.ceil((double) totalRecords / recordsPerPage);
 
@@ -159,6 +173,9 @@ public class ProductManagerController extends HttpServlet {
         }
 
         List<Product> products = productDAO.searchByName(searchTerm, page, recordsPerPage);
+        List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes(); // ✅ THÊM DÒNG NÀY
+        request.setAttribute("productTypes", productTypes); // ✅ THÊM DÒNG NÀY
+
         int totalRecords = productDAO.countSearchResults(searchTerm);
         int totalPages = (int) Math.ceil((double) totalRecords / recordsPerPage);
 
@@ -171,13 +188,27 @@ public class ProductManagerController extends HttpServlet {
         return ADMIN_PAGE;
     }
 
-    private Product parseProductFromRequest(HttpServletRequest request) throws NumberFormatException {
+    private Product parseProductFromRequest(HttpServletRequest request) throws NumberFormatException, IOException, ServletException {
         String proId = request.getParameter("proId");
         String proName = request.getParameter("proName");
         String proDescription = request.getParameter("proDescription");
         BigDecimal proPrice = new BigDecimal(request.getParameter("proPrice"));
-        String proImageMain = request.getParameter("proImageUrl");
         int proTypeId = Integer.parseInt(request.getParameter("proTypeId"));
+        // HANDLE FILE UPLOAD
+        Part filePart = request.getPart("proImageMain");
+        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+
+        String uploadPath = getServletContext().getRealPath("/") + "images" + File.separator + "products";
+        File uploadDir = new File(uploadPath);
+        if (!uploadDir.exists()) {
+            uploadDir.mkdirs();
+        }
+
+        if (fileName != null && !fileName.isEmpty()) {
+            filePart.write(uploadPath + File.separator + fileName);
+        }
+
+        String proImageMain = fileName;
 
         return new Product(proId, proTypeId, proName, proDescription, proPrice, proImageMain);
     }
