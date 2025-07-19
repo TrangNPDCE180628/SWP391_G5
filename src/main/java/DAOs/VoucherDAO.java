@@ -6,6 +6,8 @@ package DAOs;
 
 import Models.Voucher;
 import Ultis.DBContext;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -166,6 +168,40 @@ public class VoucherDAO {
             }
         }
         return null;
+    }
+
+// Tính số tiền được giảm từ một voucher dựa trên tổng đơn hàng
+    public BigDecimal calculateDiscountAmount(Voucher voucher, BigDecimal orderTotal) {
+        if (voucher == null || orderTotal == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal discountAmount;
+
+        switch (voucher.getDiscountType().toLowerCase()) {
+            case "percentage":
+                // Ví dụ: 10% -> discountValue = 10
+                discountAmount = orderTotal.multiply(voucher.getDiscountValue()).divide(BigDecimal.valueOf(100));
+                break;
+            case "fixed":
+                // Giảm trực tiếp 100K chẳng hạn
+                discountAmount = voucher.getDiscountValue();
+                break;
+            default:
+                return BigDecimal.ZERO;
+        }
+
+        // Giảm không vượt quá maxDiscountValue (nếu maxDiscountValue > 0)
+        if (voucher.getMaxDiscountValue() != null && voucher.getMaxDiscountValue().compareTo(BigDecimal.ZERO) > 0) {
+            discountAmount = discountAmount.min(voucher.getMaxDiscountValue());
+        }
+
+        // Nếu số tiền đơn hàng không đủ minOrderAmount thì không áp dụng
+        if (voucher.getMinOrderAmount() != null && orderTotal.compareTo(voucher.getMinOrderAmount()) < 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return discountAmount.setScale(2, RoundingMode.HALF_UP);
     }
 
     public boolean isCodeNameExists(String codeName) throws SQLException, ClassNotFoundException {
