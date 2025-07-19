@@ -35,37 +35,37 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
-    /* ---- Kiểm tra ngày Voucher ---- */
-    const addForm = document.querySelector('#addVoucherForm');
-    if (addForm) {
-        // Tạo alert lỗi và chèn vào đầu modal-body
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'alert alert-danger';
-        errorDiv.style.display = 'none';
-        addForm.querySelector('.modal-body').prepend(errorDiv);
-
-        // Xử lý submit
-        addForm.addEventListener('submit', function (e) {
-            const start = new Date(document.getElementById('startDate').value);
-            const end = new Date(document.getElementById('endDate').value);
-            if (start >= end) {
-                e.preventDefault();
-                errorDiv.textContent = 'Start date must be before end date.';
-                errorDiv.style.display = 'block';
-            } else {
-                errorDiv.style.display = 'none';
-            }
-        });
-
-        // Ẩn alert khi chỉnh lại ngày
-        document.getElementById('startDate').addEventListener('change', () => {
-            errorDiv.style.display = 'none';
-        });
-        document.getElementById('endDate').addEventListener('change', () => {
-            errorDiv.style.display = 'none';
-        });
-    }
-    /* ---- Hết kiểm tra ngày Voucher ---- */
+//    /* ---- Kiểm tra ngày Voucher ---- */
+//    const addForm = document.querySelector('#addVoucherForm');
+//    if (addForm) {
+//        // Tạo alert lỗi và chèn vào đầu modal-body
+//        const errorDiv = document.createElement('div');
+//        errorDiv.className = 'alert alert-danger';
+//        errorDiv.style.display = 'none';
+//        addForm.querySelector('.modal-body').prepend(errorDiv);
+//
+//        // Xử lý submit
+//        addForm.addEventListener('submit', function (e) {
+//            const start = new Date(document.getElementById('startDate').value);
+//            const end = new Date(document.getElementById('endDate').value);
+//            if (start >= end) {
+//                e.preventDefault();
+//                errorDiv.textContent = 'Start date must be before end date.';
+//                errorDiv.style.display = 'block';
+//            } else {
+//                errorDiv.style.display = 'none';
+//            }
+//        });
+//
+//        // Ẩn alert khi chỉnh lại ngày
+//        document.getElementById('startDate').addEventListener('change', () => {
+//            errorDiv.style.display = 'none';
+//        });
+//        document.getElementById('endDate').addEventListener('change', () => {
+//            errorDiv.style.display = 'none';
+//        });
+//    }
+//    /* ---- Hết kiểm tra ngày Voucher ---- */
     
     /* ---- Vẽ chart revenue ---- */
     const canvas = document.getElementById("revenueChart");
@@ -372,53 +372,6 @@ function togglePasswordVisibility() {
     passwordInput.type = isPassword ? 'text' : 'password';
     icon.classList.toggle('fa-eye', isPassword);
     icon.classList.toggle('fa-eye-slash', !isPassword);
-}
-
-// Voucher functions
-function editVoucher(voucherId) {
-    const row = document.querySelector(`tr[data-voucher-id="${voucherId}"]`);
-    if (!row)
-        return;
-
-    const codeName = row.getAttribute('data-voucher-code') || '';
-    const description = row.getAttribute('data-voucher-description') || '';
-    const quantity = row.getAttribute('data-voucher-quantity') || '';
-    const discountType = row.getAttribute('data-voucher-discount-type') || '';
-    const discountValue = row.getAttribute('data-voucher-discount-value') || '';
-    const minOrderAmount = row.getAttribute('data-voucher-min-order') || '';
-    const startDateRaw = row.getAttribute('data-voucher-start-date') || '';
-    const endDateRaw = row.getAttribute('data-voucher-end-date') || '';
-    const voucherActive = row.getAttribute('data-voucher-status') || '';
-
-    const formatDate = (dateStr) => {
-        if (!dateStr)
-            return '';
-        const date = new Date(dateStr);
-        const yyyy = date.getFullYear();
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const dd = String(date.getDate()).padStart(2, '0');
-        return `${yyyy}-${mm}-${dd}`;
-    };
-
-    document.getElementById('editVoucherId').value = voucherId;
-    document.getElementById('editCodeName').value = codeName;
-    document.getElementById('editDescription').value = description;
-    document.getElementById('editQuantity').value = quantity;
-    document.getElementById('editDiscountType').value = discountType;
-    document.getElementById('editDiscountValue').value = discountValue;
-    document.getElementById('editMinOrderAmount').value = minOrderAmount;
-    document.getElementById('editStartDate').value = formatDate(startDateRaw);
-    document.getElementById('editEndDate').value = formatDate(endDateRaw);
-    document.getElementById('editVoucherActive').value = voucherActive;
-
-    new bootstrap.Modal(document.getElementById('editVoucherModal')).show();
-}
-
-
-function deleteVoucher(id) {
-    if (confirm('Are you sure you want to delete this voucher?')) {
-        window.location.href = '/AdminController?action=deleteVoucher&id=' + id;
-    }
 }
 
 function editStaff(staffId) {

@@ -18,6 +18,7 @@ public class Voucher {
     private String voucherDescription;
     private String discountType;
     private BigDecimal discountValue;
+    private BigDecimal maxDiscountValue;
     private BigDecimal minOrderAmount;
     private Date startDate;
     private Date endDate;
@@ -27,18 +28,17 @@ public class Voucher {
     public Voucher() {
     }
 
-    public Voucher(int id, String codeName, String description, String discountType,
-            BigDecimal discountValue, BigDecimal minOrderAmount, Date startDate,
-            Date endDate, boolean active, int quantity) {
-        this.voucherId = id;
+    public Voucher(int voucherId, String codeName, String voucherDescription, String discountType, BigDecimal discountValue, BigDecimal maxDiscountValue, BigDecimal minOrderAmount, Date startDate, Date endDate, boolean voucherActive, int quantity) {
+        this.voucherId = voucherId;
         this.codeName = codeName;
-        this.voucherDescription = description;
+        this.voucherDescription = voucherDescription;
         this.discountType = discountType;
         this.discountValue = discountValue;
+        this.maxDiscountValue = maxDiscountValue;
         this.minOrderAmount = minOrderAmount;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.voucherActive = active;
+        this.voucherActive = voucherActive;
         this.quantity = quantity;
     }
 
@@ -82,6 +82,14 @@ public class Voucher {
         this.discountValue = discountValue;
     }
 
+    public BigDecimal getMaxDiscountValue() {
+        return maxDiscountValue;
+    }
+
+    public void setMaxDiscountValue(BigDecimal maxDiscountValue) {
+        this.maxDiscountValue = maxDiscountValue;
+    }
+
     public BigDecimal getMinOrderAmount() {
         return minOrderAmount;
     }
@@ -121,4 +129,5 @@ public class Voucher {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
+
 }
