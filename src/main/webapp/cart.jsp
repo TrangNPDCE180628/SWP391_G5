@@ -48,7 +48,7 @@
     </head>
     <body>
         <div class="page-wrapper">
-            <!-- Navbar -->
+            <!-- Navigation Bar -->
             <nav class="navbar navbar-expand-lg navbar-light sticky-top mb-4">
                 <div class="container py-2">
                     <a class="navbar-brand" href="HomeController">
@@ -66,8 +66,9 @@
                             </button>
                         </form>
                         <ul class="navbar-nav ms-auto">
+                            <!-- Cart icon (moved up) -->
                             <li class="nav-item">
-                                <a class="nav-link position-relative" href="CartController?action=view" title="View Cart">
+                                <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
                                     <i class="fas fa-shopping-cart fa-lg"></i>
                                     <c:if test="${sessionScope.cartSize > 0}">
                                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -76,6 +77,8 @@
                                     </c:if>
                                 </a>
                             </li>
+
+                            <!-- Account dropdown -->
                             <c:choose>
                                 <c:when test="${not empty sessionScope.LOGIN_USER}">
                                     <li class="nav-item dropdown">
@@ -84,9 +87,15 @@
                                             <i class="fas fa-user"></i> ${sessionScope.LOGIN_USER.fullName}
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="#">Profile</a></li>
-                                            <li><a class="dropdown-item" href="OrderController?action=view">My Orders</a></li>
-                                                <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                            <li><a class="dropdown-item" href="ProfileCustomerController">Profile</a></li>
+
+                                            <!-- Orders (moved below Cart) -->
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="OrderController?action=view">
+                                                    My Orders
+                                                </a>
+                                            </li>
+                                            <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
                                                 <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                                 </c:if>
                                             <li><hr class="dropdown-divider"></li>

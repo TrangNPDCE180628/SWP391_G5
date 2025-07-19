@@ -29,6 +29,15 @@ public class CartController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         String action = request.getParameter("action");
+        HttpSession session = request.getSession(false);
+        String cusId = (session != null) ? (String) session.getAttribute("cusId") : null;
+
+        if (cusId == null) {
+            session = request.getSession(); // tạo session nếu chưa có
+            session.setAttribute("LOGIN_MESSAGE", "You must login to access your cart.");
+            response.sendRedirect("login.jsp");
+            return;
+        }
 
         try {
             if (action == null) {

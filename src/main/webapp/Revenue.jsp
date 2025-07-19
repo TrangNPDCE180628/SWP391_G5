@@ -7,7 +7,7 @@
 <html>
     <head>
         <title>Monthly Revenue</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </head>
     <body>
@@ -50,10 +50,7 @@
                 <canvas id="revenueChart" width="400" height="200"></canvas>
             </c:if>
 
-
         </div>
-
-
 
     </body>
 </html>
