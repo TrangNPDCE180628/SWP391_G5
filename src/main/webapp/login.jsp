@@ -5,7 +5,7 @@
         <meta charset="UTF-8">
         <title>Login</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <style>
             body {
                 background-color: #e9ecef;
@@ -39,12 +39,27 @@
         <div class="card">
             <h3 class="text-center mb-4">Login</h3>
 
+            <%-- Hiển thị lỗi đăng nhập --%>
             <% if (request.getAttribute("ERROR") != null) {%>
             <div class="alert alert-danger">
                 <%= request.getAttribute("ERROR")%>
             </div>
             <% } %>
 
+            <%-- Hiển thị cảnh báo khi truy cập giỏ hàng mà chưa đăng nhập --%>
+            <%
+                String loginMsg = (String) session.getAttribute("LOGIN_MESSAGE");
+                if (loginMsg != null) {
+                    session.removeAttribute("LOGIN_MESSAGE");
+            %>
+            <div class="alert alert-warning">
+                <%= loginMsg%>
+            </div>
+            <%
+                }
+            %>
+
+            <%-- Hiển thị thông báo thành công (ví dụ đăng ký xong) --%>
             <%
                 String successMsg = (String) session.getAttribute("SUCCESS");
                 if (successMsg != null) {
@@ -54,7 +69,12 @@
                 <%= successMsg%>
             </div>
             <% }%>
-            <div class="mt-3 text-success"><%= request.getAttribute("message") != null ? request.getAttribute("message") : ""%></div>
+
+            <%-- Hiển thị message thông thường (nếu có) --%>
+            <div class="mt-3 text-success">
+                <%= request.getAttribute("message") != null ? request.getAttribute("message") : ""%>
+            </div>
+
             <form action="MainController" method="post">
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
@@ -76,6 +96,6 @@
             </form>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

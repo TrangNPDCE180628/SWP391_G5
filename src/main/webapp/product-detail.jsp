@@ -7,7 +7,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Tech Store - Product Detail</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <style>
             body {
@@ -163,7 +163,7 @@
     <body>
         <!-- Navigation Bar -->
         <nav class="navbar navbar-expand-lg navbar-light sticky-top mb-4">
-            <div class="container">
+            <div class="container py-2">
                 <a class="navbar-brand" href="HomeController">
                     <i class="fas fa-microchip me-2"></i>Tech Store
                 </a>
@@ -179,21 +179,36 @@
                         </button>
                     </form>
                     <ul class="navbar-nav ms-auto">
+                        <!-- Cart icon (moved up) -->
                         <li class="nav-item">
-                            <a class="nav-link" href="OrderController?action=view">
-                                <i class="fas fa-shopping-cart"></i> Orders
+                            <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
+                                <i class="fas fa-shopping-cart fa-lg"></i>
+                                <c:if test="${sessionScope.cartSize > 0}">
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        ${sessionScope.cartSize}
+                                    </span>
+                                </c:if>
                             </a>
                         </li>
+
+                        <!-- Account dropdown -->
                         <c:choose>
                             <c:when test="${not empty sessionScope.LOGIN_USER}">
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                       data-bs-toggle="dropdown">
                                         <i class="fas fa-user"></i> ${sessionScope.LOGIN_USER.fullName}
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="#">Profile</a></li>
-                                        <li><a class="dropdown-item" href="cart.jsp">View Cart</a></li>
-                                            <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                        <li><a class="dropdown-item" href="ProfileCustomerController">Profile</a></li>
+
+                                        <!-- Orders (moved below Cart) -->
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="OrderController?action=view">
+                                                My Orders
+                                            </a>
+                                        </li>
+                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
@@ -430,6 +445,6 @@
             </div>
         </footer>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>
