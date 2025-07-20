@@ -34,9 +34,13 @@ public class PaymentController extends HttpServlet {
                 case "confirm":
                     confirmPayment(request, response);
                     break;
+                case "cancel":
+                    cancelOrder(request, response);
+                    break;
                 default:
                     response.sendRedirect("CartController?action=view");
             }
+
         } catch (Exception ex) {
             Logger.getLogger(PaymentController.class.getName()).log(Level.SEVERE, null, ex);
             request.getSession().setAttribute("error", "System error:" + ex.getMessage());
@@ -190,9 +194,18 @@ public class PaymentController extends HttpServlet {
             String cardNumber = request.getParameter("cardNumber");
             String expiryDate = request.getParameter("expiryDate");
             String cvv = request.getParameter("cvv");
+            String receiverName = request.getParameter("receiverName");
+            String receiverPhone = request.getParameter("receiverPhone");
             String shippingAddress = request.getParameter("shippingAddress");
 
             /* 3. Validate đầu vào */
+            if (receiverName == null || receiverName.trim().length() < 2) {
+                throw new IllegalArgumentException("Please enter receiver's name (at least 2 characters).");
+            }
+            if (receiverPhone == null || !receiverPhone.matches("\\d{10,15}")) {
+                throw new IllegalArgumentException("Invalid receiver's phone number (10–15 digits).");
+            }
+
             if (paymentMethod == null || paymentMethod.trim().isEmpty()) {
                 throw new IllegalArgumentException("Please select payment method.");
             }
@@ -236,6 +249,8 @@ public class PaymentController extends HttpServlet {
 
             /* 7. Cập nhật đơn hàng -> paid */
             order.setPaymentMethod(paymentMethod);
+            order.setReceiverName(receiverName);
+            order.setReceiverPhone(receiverPhone);
             order.setShippingAddress(shippingAddress);
             order.setOrderStatus("completed");
 
@@ -316,6 +331,60 @@ public class PaymentController extends HttpServlet {
             request.getRequestDispatcher("payment.jsp").forward(request, response);
         }
 
+    }
+
+    private void cancelOrder(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        try {
+            int orderId = Integer.parseInt(request.getParameter("orderId"));
+            OrderDAO dao = new OrderDAO();
+            Order order = dao.getOrderById(orderId);
+
+            if (order == null) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+
+            // Nếu gọi từ sendBeacon mà không có session thì bỏ qua check user
+            User user = session != null ? (User) session.getAttribute("LOGIN_USER") : null;
+            if (user != null) {
+                // Kiểm tra quyền sở hữu nếu có user
+                if (!order.getCusId().equals(user.getId())) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+            }
+
+            // Chỉ huỷ đơn nếu trạng thái là pending
+            if (!"pending".equals(order.getOrderStatus())) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+
+            // Huỷ đơn
+            order.setOrderStatus("cancel");
+            if (!dao.updateOrder(order)) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                return;
+            }
+
+            // Cộng lại tồn kho
+            List<OrderDetail> details = new OrderDetailDAO().getByOrderId(orderId);
+            StockDAO stockDAO = new StockDAO();
+            for (OrderDetail d : details) {
+                stockDAO.increaseStockAfterCancel(d.getProId(), d.getQuantity());
+            }
+
+            // Trả HTTP 200 OK + redirect
+            session.setAttribute("message", "Order #" + orderId + " has been cancelled successfully.");
+            response.sendRedirect("CartController?action=view");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

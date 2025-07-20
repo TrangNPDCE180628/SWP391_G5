@@ -77,6 +77,82 @@ body {
 footer {
     font-size: 0.9rem;
 }
+.progress-wrapper {
+    margin-top: 20px;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    padding: 0 20px;
+    margin-top: 10px;
+}
+
+.step-line {
+    position: absolute;
+    top: 18px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #dee2e6;
+    z-index: 0;
+}
+
+.step-item {
+    text-align: center;
+    z-index: 1;
+    width: 33.33%;
+}
+
+.step-circle {
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    border-radius: 50%;
+    background-color: #dee2e6;
+    color: #495057;
+    display: inline-block;
+    font-weight: bold;
+}
+
+.step-label {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.step-item.completed .step-circle {
+    background-color: #00C78C;
+    color: white;
+}
+
+.step-item.completed .step-label {
+    color: #00C78C;
+    font-weight: bold;
+}
+
+.step-item.active .step-circle {
+    background-color: #ffc107;
+    color: black;
+}
+
+.step-item.active .step-label {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.back-link {
+    font-weight: bold;
+    text-decoration: none;
+    color: #333;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+    color: #00C78C;
+}
+
 
 @media (max-width: 576px) {
     .final-amount {

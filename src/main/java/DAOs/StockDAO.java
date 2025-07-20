@@ -33,7 +33,7 @@ public class StockDAO {
         }
         return false;
     }
-  
+
     public List<Stock> getAllStocks() throws SQLException, ClassNotFoundException {
         List<Stock> stockList = new ArrayList<>();
         String sql = "SELECT proId, stockQuantity, lastUpdated FROM Stock";
@@ -168,6 +168,15 @@ public class StockDAO {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public void increaseStockAfterCancel(String proId, int quantityOrdered) throws SQLException, ClassNotFoundException {
+        String sql = "UPDATE Stock SET stockQuantity = stockQuantity + ? WHERE proId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, quantityOrdered);
+            stmt.setString(2, proId);
+            stmt.executeUpdate();
         }
     }
 

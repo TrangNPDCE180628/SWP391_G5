@@ -1,13 +1,9 @@
 package Controllers;
 
 import DAOs.CartDAO;
-import DAOs.OrderDAO;
-import DAOs.OrderDetailDAO;
-import DAOs.ProductDAO;
 import DAOs.StockDAO;
+import DAOs.ProductDAO;
 import DAOs.VoucherDAO;
-import Models.Order;
-import Models.OrderDetail;
 import Models.Product;
 import Models.ViewCartCustomer;
 import Models.Voucher;
@@ -17,7 +13,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,10 +42,15 @@ public class CartController extends HttpServlet {
 
             switch (action) {
                 case "view":
+                    // Kiểm tra đăng nhập
+                    if (!isLoggedIn(request)) {
+                        request.setAttribute("error", "You must login to access your cart.");
+                        request.getRequestDispatcher("login.jsp").forward(request, response);
+                        return;
+                    }
                     loadCartFromDatabase(request);
                     request.getRequestDispatcher("cart.jsp").forward(request, response);
                     break;
-
                 case "add":
                     addToCart(request, response);
                     break;
@@ -70,9 +70,25 @@ public class CartController extends HttpServlet {
         }
     }
 
+    // Hàm kiểm tra đăng nhập
+    private boolean isLoggedIn(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return false;
+        }
+        String cusId = (String) session.getAttribute("cusId");
+        return cusId != null && !cusId.isEmpty();
+    }
+
     private void loadCartFromDatabase(HttpServletRequest request) {
         HttpSession session = request.getSession();
         String cusId = (String) session.getAttribute("cusId");
+        // Nếu chưa đăng nhập thì reset cart
+        if (cusId == null) {
+            session.setAttribute("cart", null);
+            session.setAttribute("cartTotalQuantity", 0);
+            return;
+        }
 
         try {
             CartDAO cartDAO = new CartDAO();
@@ -92,6 +108,9 @@ public class CartController extends HttpServlet {
             session.setAttribute("stockMap", stockMap);
             session.setAttribute("cartSize", cartMap.size());
 
+            int totalQty = cartDAO.getTotalQuantityByCusId(cusId);
+            session.setAttribute("cartTotalQuantity", totalQty);
+
         } catch (Exception e) {
             e.printStackTrace();
             session.setAttribute("error", "Unable to load cart from database!");
@@ -101,7 +120,6 @@ public class CartController extends HttpServlet {
     private void addToCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
-
         String productId = request.getParameter("productId");
         String cusId = (String) session.getAttribute("cusId");
 
@@ -125,13 +143,25 @@ public class CartController extends HttpServlet {
                 return;
             }
 
-            // Thêm vào DB (dùng addToCart để tránh trùng lỗi)
+            // Kiểm tra số lượng sản phẩm đã có trong giỏ
+            int currentCartQty = 0;
+            List<ViewCartCustomer> cartList = cartDAO.getViewCartByCusId(cusId);
+            for (ViewCartCustomer item : cartList) {
+                if (item.getProId().equals(productId)) {
+                    currentCartQty = item.getQuantity();
+                    break;
+                }
+            }
+            if (currentCartQty + 1 > stockQuantity) {
+                session.setAttribute("error", "Product '" + product.getProName() + "' exceeds stock quantity (" + stockQuantity + ")");
+                response.sendRedirect("HomeController");
+                return;
+            }
+
             cartDAO.addToCart(cusId, productId, 1);
 
-            // Load lại toàn bộ cart từ DB
-            List<ViewCartCustomer> cartList = cartDAO.getViewCartByCusId(cusId);
+            cartList = cartDAO.getViewCartByCusId(cusId);
 
-            // Cập nhật session
             LinkedHashMap<String, ViewCartCustomer> updatedCart = new LinkedHashMap<>();
             for (ViewCartCustomer item : cartList) {
                 updatedCart.put(item.getProId(), item);
@@ -140,6 +170,10 @@ public class CartController extends HttpServlet {
             session.setAttribute("cart", updatedCart);
             session.setAttribute("cartSize", updatedCart.size());
             session.setAttribute("message", "Product added to cart!");
+
+            int totalQty = cartDAO.getTotalQuantityByCusId(cusId);
+            session.setAttribute("cartTotalQuantity", totalQty);
+
             response.sendRedirect("HomeController");
 
         } catch (Exception e) {
@@ -167,6 +201,12 @@ public class CartController extends HttpServlet {
             LinkedHashMap<String, ViewCartCustomer> cart
                     = (LinkedHashMap<String, ViewCartCustomer>) session.getAttribute("cart");
 
+            if (cart == null) {
+                session.setAttribute("error", "Không tìm thấy giỏ hàng để cập nhật!");
+                response.sendRedirect("cart.jsp");
+                return;
+            }
+
             ViewCartCustomer item = null;
             for (Map.Entry<String, ViewCartCustomer> entry : cart.entrySet()) {
                 if (entry.getKey().trim().equals(productId.trim())) {
@@ -183,17 +223,16 @@ public class CartController extends HttpServlet {
 
                 CartDAO cartDAO = new CartDAO();
 
-                if (newQuantity > 0 && newQuantity <= stock) {
+                if (newQuantity > stock) {
+                    session.setAttribute("error", "Product '" + item.getProName() + "' exceeds stock quantity (" + stock + ")");
+                } else if (newQuantity > 0) {
                     cartDAO.updateQuantity(item.getCartId(), newQuantity);
                     session.setAttribute("message", "Quantity update successful!");
                 } else if (newQuantity <= 0) {
                     cartDAO.deleteCartItem(item.getCartId());
                     session.setAttribute("message", "Product removed!");
-                } else {
-                    session.setAttribute("error", "Quantity exceeds inventory!");
                 }
 
-                // Cập nhật lại cart
                 List<ViewCartCustomer> updatedCartList = cartDAO.getViewCartByCusId(cusId);
                 LinkedHashMap<String, ViewCartCustomer> updatedCart = new LinkedHashMap<>();
                 for (ViewCartCustomer vc : updatedCartList) {
@@ -202,6 +241,9 @@ public class CartController extends HttpServlet {
 
                 session.setAttribute("cart", updatedCart);
                 session.setAttribute("cartSize", updatedCart.size());
+
+                int totalQty = cartDAO.getTotalQuantityByCusId(cusId);
+                session.setAttribute("cartTotalQuantity", totalQty);
 
             } else {
                 session.setAttribute("error", "No products found in the cart!");
@@ -219,6 +261,7 @@ public class CartController extends HttpServlet {
             throws IOException {
         HttpSession session = request.getSession();
         Map<String, ViewCartCustomer> cart = (Map<String, ViewCartCustomer>) session.getAttribute("cart");
+        String cusId = (String) session.getAttribute("cusId");
 
         if (cart != null) {
             try {
@@ -230,6 +273,9 @@ public class CartController extends HttpServlet {
                     cartDAO.deleteCartItem(item.getCartId());
                     cart.remove(productId);
                     session.setAttribute("message", "Product removed from cart!");
+
+                    int totalQty = cartDAO.getTotalQuantityByCusId(cusId);
+                    session.setAttribute("cartTotalQuantity", totalQty);
                 }
 
                 session.setAttribute("cart", cart);
@@ -250,9 +296,7 @@ public class CartController extends HttpServlet {
         List<Voucher> vouchers = null;
         try {
             vouchers = voucherDAO.getAllActive();
-        } catch (SQLException ex) {
-            Logger.getLogger(CartController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+        } catch (SQLException | ClassNotFoundException ex) {
             Logger.getLogger(CartController.class.getName()).log(Level.SEVERE, null, ex);
         }
         request.getSession().setAttribute("vouchers", vouchers);

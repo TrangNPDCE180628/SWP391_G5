@@ -10,7 +10,6 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
         <link href="css/payment.css" rel="stylesheet" />
-
     </head>
     <body>
         <!-- Navigation Bar -->
@@ -82,9 +81,33 @@
 
             <div class="row justify-content-center">
                 <div class="col-md-8">
-                    <h2 class="mb-4 text-center">
-                        <i class="fas fa-credit-card me-2"></i>Order Payment
-                    </h2>
+                    <!-- Back to home -->
+                    <a href="${pageContext.request.contextPath}/HomeController" class="back-link mb-3 d-inline-flex align-items-center">
+                        <i class="fas fa-arrow-left me-2"></i>Home
+                    </a>
+
+                    <!-- Progress Steps -->
+                    <div class="progress-wrapper mb-4">
+                        <div class="progress-steps">
+                            <div class="step-line"></div>
+
+                            <div class="step-item completed">
+                                <div class="step-circle">1</div>
+                                <div class="step-label">Cart</div>
+                            </div>
+
+                            <div class="step-item completed">
+                                <div class="step-circle">2</div>
+                                <div class="step-label">Waiting for payment</div>
+                            </div>
+
+                            <div class="step-item active">
+                                <div class="step-circle">3</div>
+                                <div class="step-label">Order Successful</div>
+                            </div>
+                        </div>
+                    </div>
+
 
                     <!-- Display error messages -->
                     <c:if test="${not empty error}">
@@ -113,6 +136,7 @@
                     </c:if>
 
                     <c:if test="${not empty order}">
+
                         <!-- Order Information -->
                         <div class="card mb-4">
                             <div class="card-header bg-primary text-white">
@@ -213,6 +237,36 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- Receiver Name -->
+                                    <div class="mb-4">
+                                        <label for="receiverName" class="form-label fw-bold">Receiver's Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="receiverName" name="receiverName"
+                                               required placeholder="Enter receiver's full name" value="${order.receiverName != null ? order.receiverName : ''}">
+                                    </div>
+
+                                    <!-- Receiver Phone -->
+                                    <div class="mb-4">
+                                        <label for="receiverPhone" class="form-label fw-bold">
+                                            Receiver's Phone <span class="text-danger">*</span>
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            class="form-control"
+                                            id="receiverPhone"
+                                            name="receiverPhone"
+                                            required
+                                            placeholder="Enter phone number"
+                                            value="${order.receiverPhone != null ? order.receiverPhone : ''}"
+                                            pattern="0\d{9,14}"
+                                            maxlength="15"
+                                            inputmode="numeric"
+                                            title="Phone number must start with 0 and contain 10–15 digits"
+                                            >
+                                        <div class="form-text">
+                                            Phone number must start with 0 and contain 10–15 digits.
+                                        </div>
+                                    </div>
+
 
                                     <!-- Shipping Address -->
                                     <div class="mb-4">
@@ -245,15 +299,20 @@
                                     </div>
 
                                     <!-- Action Buttons -->
-                                    <div class="d-flex justify-content-between">
-                                        <a href="${pageContext.request.contextPath}/CartController?action=view" class="btn btn-secondary">
-                                            <i class="fas fa-arrow-left me-2"></i>Back to cart
-                                        </a>
+                                    <div class="d-flex justify-content-end">
                                         <button type="submit" class="btn btn-success btn-lg">
                                             <i class="fas fa-check me-2"></i>Payment Confirmation
                                         </button>
                                     </div>
+
                                 </form>
+                                <div class="d-flex justify-content-start">
+                                    <form action="PaymentController" method="post">
+                                        <input type="hidden" name="action" value="cancel" />
+                                        <input type="hidden" name="orderId" value="${order.orderId}" />
+                                        <button type="submit" class="btn btn-danger">Cancel Order</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </c:if>
@@ -292,113 +351,6 @@
             </div>
         </footer>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-                                            document.addEventListener('DOMContentLoaded', function () {
-                                                const creditCardFields = document.getElementById('creditCardFields');
-                                                const cardNumberInput = document.getElementById('cardNumber');
-                                                const expiryDateInput = document.getElementById('expiryDate');
-                                                const cvvInput = document.getElementById('cvv');
-                                                const paymentMethods = document.querySelectorAll('.payment-method');
-
-                                                // Format card number input
-                                                cardNumberInput.addEventListener('input', function (e) {
-                                                    let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-                                                    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
-                                                    if (formattedValue.length <= 19) {
-                                                        e.target.value = formattedValue;
-                                                    }
-                                                });
-
-                                                // Format expiry date input
-                                                expiryDateInput.addEventListener('input', function (e) {
-                                                    let value = e.target.value.replace(/[^0-9]/g, '');
-                                                    if (value.length > 2) {
-                                                        e.target.value = value.slice(0, 2) + '/' + value.slice(2, 4);
-                                                    } else {
-                                                        e.target.value = value;
-                                                    }
-                                                });
-
-                                                // Restrict CVV to numbers only
-                                                cvvInput.addEventListener('input', function (e) {
-                                                    e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
-                                                });
-
-                                                // Toggle credit card fields based on payment method
-                                                function toggleCardFields() {
-                                                    const selectedMethod = document.querySelector('input[name=paymentMethod]:checked').value;
-                                                    const isCreditCard = selectedMethod === 'creditcard';
-
-                                                    creditCardFields.style.display = isCreditCard ? 'block' : 'none';
-                                                    cardNumberInput.required = isCreditCard;
-                                                    expiryDateInput.required = isCreditCard;
-                                                    cvvInput.required = isCreditCard;
-
-                                                    paymentMethods.forEach(method => {
-                                                        method.classList.remove('active');
-                                                    });
-
-                                                    const activeMethod = document.querySelector('input[name=paymentMethod]:checked').closest('.payment-method');
-                                                    if (activeMethod) {
-                                                        activeMethod.classList.add('active');
-                                                    }
-                                                }
-
-                                                document.querySelectorAll('input[name=paymentMethod]').forEach(radio => {
-                                                    radio.addEventListener('change', toggleCardFields);
-                                                });
-
-                                                toggleCardFields();
-                                            });
-
-                                            function selectPaymentMethod(method) {
-                                                document.getElementById(method).checked = true;
-                                                document.getElementById(method).dispatchEvent(new Event('change'));
-                                            }
-
-                                            function validateForm() {
-                                                const paymentMethod = document.querySelector('input[name=paymentMethod]:checked').value;
-                                                const cardNumber = document.getElementById('cardNumber').value;
-                                                const expiryDate = document.getElementById('expiryDate').value;
-                                                const cvv = document.getElementById('cvv').value;
-                                                const shippingAddress = document.getElementById('shippingAddress').value;
-
-                                                // Validate credit card fields
-                                                if (paymentMethod === 'creditcard') {
-                                                    const cleanCardNumber = cardNumber.replace(/\s+/g, '');
-                                                    if (cleanCardNumber.length < 8 || cleanCardNumber.length > 16) {
-                                                        alert('Credit card number must be 8-16 digits');
-                                                        document.getElementById('cardNumber').focus();
-                                                        return false;
-                                                    }
-                                                    if (!/^\d+$/.test(cleanCardNumber)) {
-                                                        alert('Credit card numbers must contain only digits.');
-                                                        document.getElementById('cardNumber').focus();
-                                                        return false;
-                                                    }
-
-                                                    if (!/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(expiryDate)) {
-                                                        alert('Expiration date is invalid. Please enter in MM/YY format');
-                                                        document.getElementById('expiryDate').focus();
-                                                        return false;
-                                                    }
-
-                                                    if (!/^\d{3,4}$/.test(cvv)) {
-                                                        alert('CVV code must be 3 or 4 digits');
-                                                        document.getElementById('cvv').focus();
-                                                        return false;
-                                                    }
-                                                }
-
-                                                // Validate shipping address
-                                                if (shippingAddress.trim().length < 10) {
-                                                    alert('Please enter detailed delivery address (at least 10 characters)');
-                                                    document.getElementById('shippingAddress').focus();
-                                                    return false;
-                                                }
-
-                                                return true;
-                                            }
-        </script>
+        <script src="/js/payment.js"></script>
     </body>
 </html>
