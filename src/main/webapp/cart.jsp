@@ -44,6 +44,11 @@
             .search-form {
                 width: 300px;
             }
+            .selected-voucher {
+                background-color: #f0f0f0;
+                border: 2px solid #6c757d;
+            }
+
         </style>
     </head>
     <body>
@@ -70,9 +75,9 @@
                             <li class="nav-item">
                                 <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
                                     <i class="fas fa-shopping-cart fa-lg"></i>
-                                    <c:if test="${sessionScope.cartSize > 0}">
+                                    <c:if test="${sessionScope.cartTotalQuantity > 0}">
                                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                            ${sessionScope.cartSize}
+                                            ${sessionScope.cartTotalQuantity}
                                         </span>
                                     </c:if>
                                 </a>
@@ -117,16 +122,6 @@
             <div class="container content">
                 <h2 class="mb-4"><i class="fas fa-cart-shopping"></i> Your Shopping Cart</h2>
 
-                <c:if test="${not empty sessionScope.error}">
-                    <div class="alert alert-danger">${sessionScope.error}</div>
-                    <% session.removeAttribute("error"); %>
-                </c:if>
-
-                <c:if test="${not empty sessionScope.message}">
-                    <div class="alert alert-success">${sessionScope.message}</div>
-                    <% session.removeAttribute("message");%>
-                </c:if>
-
                 <c:if test="${empty sessionScope.cart}">
                     <div class="alert alert-info">
                         Your cart is currently empty.
@@ -167,7 +162,7 @@
                                             <div class="d-inline-flex align-items-center">
                                                 <button type="button" class="btn btn-sm btn-outline-secondary update-btn" data-id="${item.key}" data-change="-1" aria-label="Giảm số lượng">−</button>
                                                 <input type="text" readonly class="form-control form-control-sm mx-2 text-center" 
-                                                       style="width: 100px; user-select:none;" value="${item.value.quantity} / ${stockMap[item.key] - item.value.quantity}" />
+                                                       style="width: 100px; user-select:none;" value="${item.value.quantity}" />
                                                 <button type="button" class="btn btn-sm btn-outline-secondary update-btn" data-id="${item.key}" data-change="1" aria-label="Tăng số lượng">+</button>
                                             </div>
                                         </td>
@@ -175,12 +170,11 @@
                                             <fmt:formatNumber value="${item.value.proPrice * item.value.quantity}" type="currency" currencySymbol="" /> ₫
                                         </td>
                                         <td>
-                                            <form method="post" action="CartController" style="display:inline;">
-                                                <input type="hidden" name="action" value="remove"/>
-                                                <input type="hidden" name="productId" value="${item.key}"/>
-                                                <button class="btn btn-sm btn-danger" type="submit" title="Xóa sản phẩm"><i class="fas fa-trash"></i></button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="${item.key}" title="Xóa sản phẩm">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         </td>
+
                                     </tr>
                                 </c:forEach>
                             </tbody>
@@ -207,7 +201,6 @@
                 </c:if>
             </div>
 
-            <!-- Voucher Modal -->
             <!-- Voucher Modal -->
             <div class="modal fade" id="voucherModal" tabindex="-1" aria-labelledby="voucherModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-scrollable modal-lg">
@@ -237,13 +230,23 @@
                                                         </c:otherwise>
                                                     </c:choose><br>
                                                     Minimum order:
-                                                    <fmt:formatNumber value="${voucher.minOrderAmount}" type="currency" currencySymbol="" /> ₫
+                                                    <fmt:formatNumber value="${voucher.minOrderAmount}" type="currency" currencySymbol="" /> ₫<br>
+                                                    Max Discount Value: 
+                                                    <fmt:formatNumber value="${voucher.maxDiscountValue}" type="currency" currencySymbol=""/> ₫
+                                                    <br>
+                                                    <span style="color:#ed7b2f;">
+                                                        End Date: 
+                                                        <fmt:formatDate value="${voucher.endDate}" pattern="dd/MM/yyyy"/>
+                                                    </span>
+
                                                 </p>
                                                 <button type="button" class="btn btn-outline-success select-voucher-btn"
                                                         data-code="${voucher.codeName}" 
+                                                        data-name="${voucher.codeName}"
                                                         data-type="${voucher.discountType}" 
                                                         data-value="${voucher.discountValue}" 
-                                                        data-min="${voucher.minOrderAmount}">
+                                                        data-min="${voucher.minOrderAmount}"
+                                                        data-max="${voucher.maxDiscountValue}">
                                                     Select Voucher
                                                 </button>
                                             </div>
@@ -261,6 +264,11 @@
                 <input type="hidden" name="productId" id="updateProductId"/>
                 <input type="hidden" name="change" id="updateChange"/>
             </form>
+            <form id="deleteForm" method="post" action="CartController" style="display:none;">
+                <input type="hidden" name="action" value="remove"/>
+                <input type="hidden" name="productId" id="deleteProductId"/>
+            </form>
+
             <!-- Footer -->
             <footer class="bg-dark text-light py-4 mt-5">
                 <div class="container">
@@ -293,9 +301,68 @@
                 </div>
             </footer>
         </div>
+        <!-- Toast Container -->
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999">
+            <div id="toastMessage" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div id="toastBody" class="toast-body">
+                        <!-- Message content -->
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
+
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
+            // Khôi phục trạng thái đã chọn khi load lại trang
+            function restoreSelectedProducts() {
+
+                const selected = JSON.parse(localStorage.getItem('selectedProductIds') || '\[]');
+                document.querySelectorAll('input\[name="selectedProductIds"]').forEach(cb => {
+
+                    cb.checked = selected.includes(cb.value);
+                });
+            }
+
+            restoreSelectedProducts();
+            // Khi tick chọn sản phẩm, lưu vào localStorage
+            function saveSelectedProducts() {
+
+                const selected = Array.from(document.querySelectorAll('input\[name="selectedProductIds"]:checked'))
+
+                        .map(cb => cb.value);
+                localStorage.setItem('selectedProductIds', JSON.stringify(selected));
+                updateCheckoutButton();
+                updateTotal();
+            }
+            document.addEventListener("DOMContentLoaded", function () {
+            <% if (session.getAttribute("message") != null) {%>
+                showToast("<%= session.getAttribute("message")%>", true);
+            <% session.removeAttribute("message"); %>
+            <% } else if (session.getAttribute("error") != null) {%>
+                showToast("<%= session.getAttribute("error")%>", false);
+            <% session.removeAttribute("error"); %>
+            <% }%>
+            });
+
+            function showToast(message, isSuccess = true) {
+                const toastEl = document.getElementById('toastMessage');
+                const toastBody = document.getElementById('toastBody');
+                toastBody.textContent = message;
+                toastEl.classList.remove("bg-success", "bg-danger");
+                toastEl.classList.add(isSuccess ? "bg-success" : "bg-danger");
+
+                const toast = new bootstrap.Toast(toastEl);
+                toast.show();
+            }
+
+            document.querySelectorAll('input\[name="selectedProductIds"]').forEach(cb => {
+
+                cb.addEventListener('change', saveSelectedProducts);
+            });
             document.addEventListener("DOMContentLoaded", () => {
                 const checkboxes = document.querySelectorAll('input[name="selectedProductIds"]');
                 const selectedTotal = document.getElementById('selectedTotal');
@@ -305,9 +372,7 @@
                 const cartForm = document.getElementById('cartForm');
                 let voucher = null;
                 const currencyFormatter = new Intl.NumberFormat('vi-VN');
-
                 const formatCurrency = (number) => currencyFormatter.format(number) + " ₫";
-
                 const updateTotal = () => {
                     let subtotal = 0;
                     checkboxes.forEach(cb => {
@@ -318,40 +383,69 @@
                             subtotal += price;
                         }
                     });
-
                     let discount = 0;
                     if (voucher && subtotal >= voucher.minOrder) {
                         discount = voucher.type === "percentage"
                                 ? subtotal * voucher.value / 100
                                 : voucher.value;
+                        if (voucher.maxDiscountValue && voucher.maxDiscountValue > 0 && discount >= voucher.maxDiscountValue) {
+
+                            discount = voucher.maxDiscountValue;
+                        }
                     }
 
                     subtotalEl.textContent = formatCurrency(subtotal);
                     discountEl.textContent = formatCurrency(discount);
                     selectedTotal.textContent = formatCurrency(subtotal - discount);
                 };
-
                 checkboxes.forEach(cb => cb.addEventListener("change", updateTotal));
                 updateTotal();
-
                 document.querySelectorAll(".select-voucher-btn").forEach(btn => {
                     btn.addEventListener("click", () => {
-                        const subtotal = parseInt(subtotalEl.textContent.replace(/\D/g, '') || '0');
-                        const code = btn.dataset.code;
-                        const type = btn.dataset.type;
-                        const value = parseFloat(btn.dataset.value);
-                        const minOrder = parseFloat(btn.dataset.min);
+                        const card = btn.closest(".card");
 
-                        if (subtotal < minOrder) {
-                            alert(`Cannot select voucher '${code}'. Minimum order must be from ${currencyFormatter.format(minOrder)} ₫`);
+                        // Nếu đã chọn và đang là "Cancel Voucher"
+                        if (card.classList.contains("selected-voucher")) {
+                            card.classList.remove("selected-voucher");
+                            btn.textContent = "Select Voucher";
+                            voucher = null;
+                            appliedVoucher.textContent = "";
+                            updateTotal();
                             return;
                         }
 
-                        voucher = {code, type, value, minOrder};
-                        appliedVoucher.textContent = `Selected ${voucher.code}`;
+                        const subtotal = parseInt(subtotalEl.textContent.replace(/\D/g, '') || '0');
+                        const code = btn.dataset.code;
+                        const name = btn.dataset.name;
+                        const type = btn.dataset.type;
+                        const value = parseFloat(btn.dataset.value);
+                        const minOrder = parseFloat(btn.dataset.min);
+                        const maxDiscountValue = parseFloat(btn.dataset.max);
+                        if (subtotal < minOrder) {
+                            showToast(
+                                    `❌ Voucher "${name}" cannot be applied. Minimum order: ${currencyFormatter.format(minOrder)} ₫`,
+                                    false // isSuccess = false ⇒ sẽ có class bg-danger
+                                    );
+                            return;
+                        }
+
+                        // Đặt voucher
+                        voucher = {code, type, value, minOrder, maxDiscountValue, name};
+
+                        // Xóa chọn các card khác
+                        document.querySelectorAll(".select-voucher-btn").forEach(b => {
+                            b.closest(".card").classList.remove("selected-voucher");
+                            b.textContent = "Select Voucher";
+                        });
+
+                        // Đặt nút hiện tại là đã chọn
+                        card.classList.add("selected-voucher");
+                        btn.textContent = "Cancel Voucher";
+//                        appliedVoucher.textContent = `Applied: ${voucher.name}`;
                         bootstrap.Modal.getInstance(document.getElementById('voucherModal')).hide();
                         updateTotal();
                     });
+
                 });
 
                 cartForm.addEventListener("submit", (e) => {
@@ -363,13 +457,12 @@
                     const checkedBoxes = document.querySelectorAll('input[name="selectedProductIds"]:checked');
                     if (checkedBoxes.length === 0) {
                         e.preventDefault();
-                        alert('Please select at least one product to checkout.');
+                        showToast('Please select at least one product to checkout.');
                         return;
                     }
 
                     cartForm.querySelectorAll("input[name='selectedProductIds']").forEach(el => el.remove());
                     cartForm.querySelectorAll("input[name='voucherCode']").forEach(el => el.remove());
-
                     checkedBoxes.forEach(cb => {
                         const hidden = document.createElement("input");
                         hidden.type = "hidden";
@@ -377,7 +470,6 @@
                         hidden.value = cb.value;
                         cartForm.appendChild(hidden);
                     });
-
                     if (voucher) {
                         const hiddenVoucher = document.createElement("input");
                         hiddenVoucher.type = "hidden";
@@ -389,20 +481,27 @@
                     // Form will submit automatically after this
                 });
             });
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const productId = btn.dataset.id;
+                    const deleteForm = document.getElementById("deleteForm");
+                    const deleteProductId = document.getElementById("deleteProductId");
+                    deleteProductId.value = productId;
+                    deleteForm.submit();
+                });
+            });
+
             document.querySelectorAll(".update-btn").forEach(btn => {
                 btn.addEventListener("click", () => {
                     const productId = btn.dataset.id;
                     const change = btn.dataset.change;
-
                     // Lấy form ẩn chung
                     const updateForm = document.getElementById("updateForm");
                     const updateProductId = document.getElementById("updateProductId");
                     const updateChange = document.getElementById("updateChange");
-
                     // Gán giá trị
                     updateProductId.value = productId;
                     updateChange.value = change;
-
                     // Submit form
                     updateForm.submit();
                 });

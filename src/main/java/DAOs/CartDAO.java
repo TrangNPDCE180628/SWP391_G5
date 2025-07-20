@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CartDAO {
-// Thêm sản phẩm vào giỏ: nếu đã có thì cộng thêm số lượng
 
+    // Thêm sản phẩm vào giỏ: nếu đã có thì cộng thêm số lượng
     public void addToCart(String cusId, String proId, int quantity) throws SQLException, ClassNotFoundException {
         Cart existing = getCartItem(cusId, proId);
         if (existing != null) {
@@ -83,6 +83,7 @@ public class CartDAO {
         return list;
     }
 
+    // Tổng số lượng sản phẩm (tính cả số lượng từng loại)
     public int getTotalQuantityByCusId(String cusId) throws SQLException, ClassNotFoundException {
         List<ViewCartCustomer> cartList = getViewCartByCusId(cusId);
         int totalQuantity = 0;
@@ -120,5 +121,4 @@ public class CartDAO {
             stmt.executeUpdate();
         }
     }
-
 }

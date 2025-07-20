@@ -82,18 +82,6 @@ public class AdminController extends HttpServlet {
                 case "editProfile":
                     editProfile(request, response);
                     break;
-                case "addVoucher":
-                    addVoucher(request, response);
-                    break;
-                case "updateVoucher":
-                    updateVoucher(request, response);
-                    break;
-                case "deleteVoucher":
-                    deleteVoucher(request, response);
-                    break;
-                case "getVoucherDetails":
-                    getVoucherDetails(request, response);
-                    break;
                 case "addStaff":
                     addStaff(request, response);
                     break;
@@ -213,7 +201,7 @@ public class AdminController extends HttpServlet {
             List<Stock> stocks = stockDAO.getAllStocks();
             BigDecimal totalRevenue = ordDao.getTotalRevenue();
 
-// === NEW: Load từ VIEW ===
+            // === NEW: Load từ VIEW ===
             Connection conn = DBContext.getConnection();
             ViewProductAttributeDAO viewProductAttributeDAO = new ViewProductAttributeDAO(conn);
             List<ViewProductAttribute> viewProductAttributes = viewProductAttributeDAO.getAll();
@@ -355,128 +343,7 @@ public class AdminController extends HttpServlet {
         }
         return "";
     }
-
-    // ----------------- ADD VOUCHER -----------------
-    private void addVoucher(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String codeName = request.getParameter("codeName");
-            String description = request.getParameter("voucherDescription");
-            int quantity = Integer.parseInt(request.getParameter("quantity"));
-            String discountType = request.getParameter("discountType");
-            BigDecimal discountValue = new BigDecimal(request.getParameter("discountValue"));
-            BigDecimal minOrderAmount = new BigDecimal(request.getParameter("minOrderAmount"));
-            Date startDate = Date.valueOf(request.getParameter("startDate"));
-            Date endDate = Date.valueOf(request.getParameter("endDate"));
-            boolean isActive = Boolean.parseBoolean(request.getParameter("voucherActive"));
-
-            // Validate start < end
-            if (!startDate.before(endDate)) {
-                request.getSession().setAttribute("error", "Start date must be before end date.");
-                response.sendRedirect("AdminController?tab=vouchers");
-                return;
-            }
-
-            // Nếu hết hạn thì inactive
-            if (endDate.toLocalDate().isBefore(LocalDate.now())) {
-                isActive = false;
-            }
-
-            Voucher voucher = new Voucher(0, codeName, description, discountType,
-                    discountValue, minOrderAmount, startDate, endDate, isActive, quantity);
-
-            new VoucherDAO().create(voucher);
-            response.sendRedirect("AdminController?tab=vouchers");
-
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
-    }
-
-    // ----------------- UPDATE VOUCHER -----------------
-    private void updateVoucher(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("voucherId"));
-            String codeName = request.getParameter("codeName");
-            String description = request.getParameter("voucherDescription");
-            int quantity = Integer.parseInt(request.getParameter("quantity"));
-            String discountType = request.getParameter("discountType");
-            BigDecimal discountValue = new BigDecimal(request.getParameter("discountValue"));
-            BigDecimal minOrderAmount = new BigDecimal(request.getParameter("minOrderAmount"));
-            Date startDate = Date.valueOf(request.getParameter("startDate"));
-            Date endDate = Date.valueOf(request.getParameter("endDate"));
-            boolean isActive = Boolean.parseBoolean(request.getParameter("voucherActive"));
-
-            if (quantity < 0) {
-                request.getSession().setAttribute("error", "Quantity cannot be negative.");
-                response.sendRedirect("AdminController?tab=vouchers");
-                return;
-            }
-
-            // Validate start < end
-            if (!startDate.before(endDate)) {
-                request.getSession().setAttribute("error", "Start date must be before end date.");
-                response.sendRedirect("AdminController?tab=vouchers");
-                return;
-            }
-
-            // Nếu đã hết hạn thì inactive
-            if (endDate.toLocalDate().isBefore(LocalDate.now())) {
-                isActive = false;
-            }
-
-            Voucher voucher = new Voucher(id, codeName, description, discountType,
-                    discountValue, minOrderAmount, startDate, endDate, isActive, quantity);
-
-            new VoucherDAO().update(voucher);
-            response.sendRedirect("AdminController?tab=vouchers");
-
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
-    }
-
-    private void deleteVoucher(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            VoucherDAO dao = new VoucherDAO();
-            dao.delete(id);
-
-            response.sendRedirect("AdminController?tab=vouchers");
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
-    }
-
-    private void getVoucherDetails(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            VoucherDAO dao = new VoucherDAO();
-            Voucher voucher = dao.getById(id);
-
-            if (voucher == null) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                if (!response.isCommitted()) {
-                    response.getWriter().write("Voucher not found");
-                }
-                return;
-            }
-
-            response.setContentType("application/json");
-            PrintWriter out = response.getWriter();
-            out.print(new Gson().toJson(voucher));
-            out.flush();
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            if (!response.isCommitted()) {
-                response.getWriter().write("Error fetching voucher: " + e.getMessage());
-            }
-        }
-    }
-
+  
     private void addStaff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 

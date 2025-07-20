@@ -171,8 +171,6 @@
                             </div>
                         </c:if>
 
-
-
                         <!-- Profile Tab -->
                         <div class="tab-pane fade" id="profile">
                             <h2>My Profile</h2>
@@ -270,82 +268,10 @@
                             <jsp:include page="productManager.jsp" />
                         </div>
 
-
                         <!-- Vouchers Tab -->
                         <div class="tab-pane fade" id="vouchers">
-                            <h2>Vouchers Management</h2>
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addVoucherModal">
-                                <i class="fas fa-plus"></i> Add New Voucher
-                            </button>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Code</th>
-                                            <th>Quantity</th>
-                                            <th>Type</th>
-                                            <th>Value</th>
-                                            <th>Start Date</th>
-                                            <th>End Date</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach items="${vouchers}" var="voucher">
-                                            <tr 
-                                                data-voucher-id="${voucher.voucherId}"
-                                                data-voucher-code="${voucher.codeName}"
-                                                data-voucher-description="${voucher.voucherDescription}"
-                                                data-voucher-quantity="${voucher.quantity}"
-                                                data-voucher-discount-type="${voucher.discountType}"
-                                                data-voucher-discount-value="${voucher.discountValue}"
-                                                data-voucher-min-order="${voucher.minOrderAmount}"
-                                                data-voucher-start-date="<fmt:formatDate value='${voucher.startDate}' pattern='yyyy-MM-dd' />"
-                                                data-voucher-end-date="<fmt:formatDate value='${voucher.endDate}' pattern='yyyy-MM-dd' />"
-                                                data-voucher-status="${voucher.voucherActive}">
-                                                <td>${voucher.voucherId}</td>
-                                                <td>${voucher.codeName}</td>
-                                                <td>${voucher.quantity}</td>
-                                                <td>${voucher.discountType}</td>
-                                                <td>
-                                                    <c:choose>
-                                                        <c:when test="${voucher.discountType == 'percentage'}">
-                                                            ${voucher.discountValue}%
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            $${voucher.discountValue}
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </td>
-                                                <td><fmt:formatDate value="${voucher.startDate}" pattern="yyyy-MM-dd" /></td>
-                                                <td><fmt:formatDate value="${voucher.endDate}" pattern="yyyy-MM-dd" /></td>
-                                                <td>
-                                                    <c:choose>
-                                                        <c:when test="${voucher.voucherActive}">
-                                                            Active
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            Inactive
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </td>
-                                                <td class="action-buttons">
-                                                    <button class="btn btn-sm btn-warning" onclick="editVoucher('${voucher.voucherId}')">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteVoucher('${voucher.voucherId}')">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <jsp:include page="voucher-manager.jsp" />
                         </div>
-
                         <!-- Feedback Tab -->
                         <div class="tab-pane fade" id="feedbacks">
                             <h2>Feedback Management</h2>
@@ -608,150 +534,6 @@
                     </div>
                 </form>
 
-            </div>
-        </div>
-
-        <!-- Add Voucher Modal -->
-        <div class="modal fade" id="addVoucherModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add New Voucher</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <form id="addVoucherForm" action="AdminController" method="post">
-                        <div class="modal-body">
-                            <input type="hidden" name="action" value="addVoucher">
-                            <input type="hidden" name="tab" value="vouchers">
-                            <div class="mb-3">
-                                <label for="codeName" class="form-label">Voucher Code</label>
-                                <input type="text" class="form-control" id="codeName" name="codeName" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="voucherDescription" class="form-label">Description</label>
-                                <textarea class="form-control" id="voucherDescription" name="voucherDescription"></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label for="quantity" class="form-label">Quantity</label>
-                                <input type="number" class="form-control" id="quantity" name="quantity" min="0" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="discountType" class="form-label">Discount Type</label>
-                                <select class="form-select" id="discountType" name="discountType" required>
-                                    <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed Amount ($)</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="discountValue" class="form-label">Discount Value</label>
-                                <input type="number" step="0.01" class="form-control" id="discountValue" name="discountValue" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="minOrderAmount" class="form-label">Min Order Amount</label>
-                                <input type="number" step="0.01" class="form-control" id="minOrderAmount" name="minOrderAmount" value="0">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="startDate" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="startDate" name="startDate" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="endDate" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="endDate" name="endDate" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="voucherActive" class="form-label">Status</label>
-                                <select class="form-select" id="voucherActive" name="voucherActive" required>
-                                    <option value="true">Active</option>
-                                    <option value="false">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Edit Voucher Modal -->
-        <div class="modal fade" id="editVoucherModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form action="AdminController" method="post">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Edit Voucher</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <input type="hidden" name="action" value="updateVoucher">
-                        <input type="hidden" name="tab" value="vouchers">
-                        <div class="modal-body">
-                            <input type="hidden" id="editVoucherId" name="voucherId">
-
-                            <div class="mb-3">
-                                <label for="editCodeName" class="form-label">Voucher Code</label>
-                                <input type="text" class="form-control" id="editCodeName" name="codeName" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editDescription" class="form-label">Description</label>
-                                <textarea class="form-control" id="editDescription" name="voucherDescription" rows="3"></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editQuantity" class="form-label">Quantity</label>
-                                <input type="number" class="form-control" id="editQuantity" name="quantity" min="0" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editDiscountType" class="form-label">Discount Type</label>
-                                <select class="form-select" id="editDiscountType" name="discountType">
-                                    <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed Amount ($)</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editDiscountValue" class="form-label">Discount Value</label>
-                                <input type="number" class="form-control" id="editDiscountValue" name="discountValue" step="0.01" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editMinOrderAmount" class="form-label">Minimum Order Amount</label>
-                                <input type="number" class="form-control" id="editMinOrderAmount" name="minOrderAmount" step="0.01" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editStartDate" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="editStartDate" name="startDate" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editEndDate" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="editEndDate" name="endDate" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editVoucherActive" class="form-label">Status</label>
-                                <select class="form-select" id="editVoucherActive" name="voucherActive" required>
-                                    <option value="true">Active</option>
-                                    <option value="false">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Update</button>
-                        </div>
-                    </form>
-                </div>
             </div>
         </div>
 
