@@ -43,17 +43,23 @@ public class OrderDAO {
     }
 
     public int createOrder(Order order) throws SQLException, ClassNotFoundException {
-        String sql = "INSERT INTO [Order] (cusId, orderDate, totalAmount, discountAmount, finalAmount, orderStatus, paymentMethod, shippingAddress, voucherId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql = "INSERT INTO [Order] (cusId, orderDate, totalAmount, discountAmount, finalAmount, orderStatus, paymentMethod, shippingAddress, voucherId, receiverName, receiverPhone) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+        try (
+                 Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, order.getCusId());
             stmt.setTimestamp(2, order.getOrderDate());
             stmt.setBigDecimal(3, order.getTotalAmount());
-            stmt.setBigDecimal(4, order.getDiscountAmount());
+            stmt.setBigDecimal(4, order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
 
-            // FinalAmount = total - discount
-            order.setFinalAmount(order.getTotalAmount().subtract(order.getDiscountAmount()));
-            stmt.setBigDecimal(5, order.getFinalAmount());
+            // Tính finalAmount = totalAmount - discountAmount
+            BigDecimal finalAmount = order.getTotalAmount().subtract(
+                    order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO
+            );
+            order.setFinalAmount(finalAmount);
+            stmt.setBigDecimal(5, finalAmount);
+
             stmt.setString(6, order.getOrderStatus());
             stmt.setString(7, order.getPaymentMethod());
             stmt.setString(8, order.getShippingAddress());
@@ -64,15 +70,20 @@ public class OrderDAO {
                 stmt.setNull(9, Types.INTEGER);
             }
 
+            stmt.setString(10, order.getReceiverName());
+            stmt.setString(11, order.getReceiverPhone());
+
             stmt.executeUpdate();
+
             try ( ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
-                    int id = rs.getInt(1);
-                    order.setOrderId(id);
-                    return id;
+                    int generatedId = rs.getInt(1);
+                    order.setOrderId(generatedId);
+                    return generatedId;
                 }
             }
         }
+
         return -1;
     }
 
@@ -280,7 +291,7 @@ public class OrderDAO {
         return BigDecimal.ZERO;
     }
 
-    public Map<String, BigDecimal> getMonthlyRevenueInYear(int year) throws SQLException,ClassNotFoundException {
+    public Map<String, BigDecimal> getMonthlyRevenueInYear(int year) throws SQLException, ClassNotFoundException {
         Map<String, BigDecimal> revenueMap = new LinkedHashMap<>();
 
         String sql = "SELECT MONTH(orderDate) AS month, SUM(finalAmount) AS revenue "
@@ -299,9 +310,10 @@ public class OrderDAO {
             }
         }
         return revenueMap;
-       }
+    }
+
     public boolean checkOrderStatus(String cusId, String proId) throws Exception {
-        String sql ="SELECT COUNT(*) "
+        String sql = "SELECT COUNT(*) "
                 + "AS total FROM [Order] o "
                 + "JOIN OrderDetail od ON o.orderId = od.orderId "
                 + "WHERE o.cusId = ? AND od.proId = ? "

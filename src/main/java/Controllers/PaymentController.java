@@ -119,6 +119,10 @@ public class PaymentController extends HttpServlet {
                 discount = "percentage".equalsIgnoreCase(v.getDiscountType())
                         ? totalAmount.multiply(v.getDiscountValue()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
                         : v.getDiscountValue();
+                if (v.getMaxDiscountValue() != null && v.getMaxDiscountValue().compareTo(BigDecimal.ZERO) > 0
+                        && discount.compareTo(v.getMaxDiscountValue()) >= 0) {
+                    discount = v.getMaxDiscountValue();
+                }
             }
 
             /* 5. Tạo Order */

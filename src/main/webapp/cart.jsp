@@ -24,205 +24,31 @@
             body {
                 background-color: #f8f9fa;
             }
-            /* Custom cart style */
-            .cart-section-title {
-                font-weight: 600;
-                font-size: 1.2rem;
-                color: #333;
-                background: #fff;
-                padding: 20px 24px 10px 24px;
-                border-radius: 8px 8px 0 0;
-                border-bottom: 1px solid #eee;
-                margin-bottom: 0;
+            .table th, .table td {
+                vertical-align: middle;
+                text-align: center;
             }
-            .cart-header-row {
-                background: #f5f5f5;
-                padding: 12px 24px;
-                border-radius: 0 0 0 0;
-                font-weight: 500;
-                margin-bottom: 0px;
-                border-bottom: 1px solid #eee;
-            }
-            .cart-product-group {
-                background: #fff;
-                margin-bottom: 1.5rem;
-                border-radius: 10px;
-                box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-                padding: 0 0 10px 0;
-                border: 1px solid #eee;
-            }
-            .cart-product-title-bar {
-                background: #fff7f3;
-                padding: 8px 32px;
-                color: #ee4d2d;
-                font-size: 1rem;
-                border-radius: 10px 10px 0 0;
-                border-bottom: 1px solid #ffe1d2;
-                margin-bottom: 0;
-            }
-            .cart-product-item-row {
-                display: flex;
-                align-items: center;
-                padding: 20px 32px;
-                border-bottom: 1px solid #f1f1f1;
-                gap: 18px;
-            }
-            .cart-product-img {
-                width: 70px;
-                height: 70px;
+            img.product-img {
+                width: 60px;
+                height: 60px;
                 object-fit: cover;
-                border-radius: 6px;
-                border: 1px solid #eee;
             }
-            .cart-product-info {
-                flex: 2 1 220px;
-                text-align: left;
+            .navbar {
+                background-color: #fff;
+                box-shadow: 0 2px 4px rgba(0,0,0,.1);
             }
-            .cart-product-name {
-                font-weight: 500;
-                font-size: 1.08rem;
-                color: #212529;
-                margin-bottom: 3px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .cart-product-category {
-                font-size: 0.92rem;
-                color: #6c757d;
-                margin-bottom: 2px;
-            }
-            .cart-product-price, .cart-product-total, .cart-product-action {
-                flex: 1 1 120px;
-                text-align: center;
-                font-size: 1.08rem;
-            }
-            .cart-product-qty {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-            }
-            .cart-product-qty input[type="text"] {
-                width: 42px;
-                text-align: center;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                padding: 2px 0;
-                font-size: 1rem;
-                background: #f9f9f9;
-            }
-            .cart-product-qty button {
-                width: 28px;
-                height: 28px;
-                border: 1px solid #ddd;
-                background: #fff;
-                border-radius: 4px;
-                font-size: 1rem;
-                color: #444;
-                transition: background .15s;
-            }
-            .cart-product-qty button:hover {
-                background: #f5f5f5;
-            }
-            .cart-product-total {
-                color: #ee4d2d;
+            .navbar-brand {
                 font-weight: 600;
+                color: #333;
             }
-            .cart-product-action .btn-danger {
-                color: #ee4d2d;
-                background: none;
-                border: none;
-            }
-            .cart-product-action .btn-danger:hover {
-                text-decoration: underline;
-                background: none;
-            }
-            .cart-empty-box {
-                background: #fff;
-                border-radius: 10px;
-                text-align: center;
-                padding: 70px 0;
-                margin-top: 40px;
-                box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-            }
-            /* Voucher Card Shopee Style */
-            .voucher-card {
-                min-height: 110px;
-                box-shadow: 0 2px 8px rgba(56,56,56,0.07);
-                border-radius: 16px;
-                background: #fff;
-                overflow: hidden;
-                border: none;
-                position: relative;
-                display: flex;
-            }
-            .voucher-ticket-shape {
-                min-width: 80px;
-                background: #c1e5e0;
-                border-radius: 16px 0 0 16px;
-                text-align: center;
-                padding: 0;
-                border-right: 1px dashed #d6f3eb;
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
-            .voucher-main {
-                background: #fff;
-                border-radius: 0 16px 16px 0;
-                border-left: none;
-                min-width: 220px;
-                padding: 18px 18px 18px 18px;
-                flex-grow: 1;
-                position: relative;
-            }
-            .voucher-quantity {
-                position: absolute;
-                top: 8px;
-                right: 12px;
-                background: #ff6842;
-                color: #fff;
-                font-weight: 600;
-                font-size: 1.08em;
-                border-radius: 0 10px 0 14px;
-                padding: 2px 10px;
-                z-index: 2;
-            }
-            .voucher-radio {
-                position: absolute;
-                right: 18px;
-                top: 50%;
-                transform: translateY(-50%);
-            }
-            .voucher-radio span {
-                display: inline-block;
-                width: 14px;
-                height: 14px;
-                border: 1px solid #c2c2c2;
-                border-radius: 50%;
-                background: #fff;
-            }
-            .voucher-progress-bar div {
-                height: 5px;
-                background: #ffe6d2;
-                border-radius: 3px;
-                overflow: hidden;
-                margin-right: 24px;
-                margin-top: 2px;
-            }
-            .voucher-progress-bar div > div {
-                background: #ffb357;
-                border-radius: 3px;
-                height: 100%;
+            .search-form {
+                width: 300px;
             }
         </style>
     </head>
     <body>
         <div class="page-wrapper">
-            <!-- Navbar -->
+            <!-- Navigation Bar -->
             <nav class="navbar navbar-expand-lg navbar-light sticky-top mb-4">
                 <div class="container py-2">
                     <a class="navbar-brand" href="HomeController">
@@ -240,16 +66,19 @@
                             </button>
                         </form>
                         <ul class="navbar-nav ms-auto">
+                            <!-- Cart icon (moved up) -->
                             <li class="nav-item">
-                                <a class="nav-link position-relative" href="CartController?action=view" title="View Cart">
+                                <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
                                     <i class="fas fa-shopping-cart fa-lg"></i>
-                                    <c:if test="${sessionScope.cartTotalQuantity > 0}">
+                                    <c:if test="${sessionScope.cartSize > 0}">
                                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                            ${sessionScope.cartTotalQuantity}
+                                            ${sessionScope.cartSize}
                                         </span>
                                     </c:if>
                                 </a>
                             </li>
+
+                            <!-- Account dropdown -->
                             <c:choose>
                                 <c:when test="${not empty sessionScope.LOGIN_USER}">
                                     <li class="nav-item dropdown">
@@ -258,9 +87,15 @@
                                             <i class="fas fa-user"></i> ${sessionScope.LOGIN_USER.fullName}
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="#">Profile</a></li>
-                                            <li><a class="dropdown-item" href="OrderController?action=view">My Orders</a></li>
-                                                <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                            <li><a class="dropdown-item" href="ProfileCustomerController">Profile</a></li>
+
+                                            <!-- Orders (moved below Cart) -->
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="OrderController?action=view">
+                                                    My Orders
+                                                </a>
+                                            </li>
+                                            <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
                                                 <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                                 </c:if>
                                             <li><hr class="dropdown-divider"></li>
@@ -279,7 +114,7 @@
             </nav>
 
             <!-- Main content -->
-            <div class="container content py-4">
+            <div class="container content">
                 <h2 class="mb-4"><i class="fas fa-cart-shopping"></i> Your Shopping Cart</h2>
 
                 <c:if test="${not empty sessionScope.error}">
@@ -293,65 +128,64 @@
                 </c:if>
 
                 <c:if test="${empty sessionScope.cart}">
-                    <div class="cart-empty-box">
-                        <p class="mb-3">Your cart is currently empty.</p>
-                        <a href="HomeController" class="btn btn-primary">Continue Shopping</a>
+                    <div class="alert alert-info">
+                        Your cart is currently empty.
+                        <a href="HomeController" class="btn btn-sm btn-primary ms-3">Continue Shopping</a>
                     </div>
                 </c:if>
 
                 <c:if test="${not empty sessionScope.cart}">
-                    <form id="cartForm" action="PaymentController" method="post" class="mb-5">
+                    <form id="cartForm" action="PaymentController" method="post">
                         <input type="hidden" name="action" value="create"/>
-                        <!-- Cart header (only once) -->
-                        <div class="cart-header-row d-flex align-items-center mb-2" style="border-radius:10px 10px 0 0;">
-                            <div class="flex-shrink-0" style="width:40px;"><input type="checkbox" disabled></div>
-                            <div class="flex-grow-2" style="min-width:510px;">Product</div>
-                            <div class="flex-grow-1 text-center" style="min-width:110px;">Đơn Giá</div>
-                            <div class="flex-grow-1 text-center" style="min-width:100px;">Số Lượng</div>
-                            <div class="flex-grow-1 text-center" style="min-width:100px;">Số Tiền</div>
-                            <div class="flex-grow-1 text-center" style="min-width:90px;">Thao Tác</div>
-                        </div>
-                        <!-- Each product as a card-like box -->
-                        <c:forEach var="item" items="${sessionScope.cart}">
-                            <div class="cart-product-group mb-3 p-0">
-                                <div class="cart-product-title-bar d-flex align-items-center">
-                                    <span class="badge bg-danger me-2" style="font-size:0.93em;">Mall</span>
-                                    <span style="font-weight:500;">Tech Store</span>
-                                </div>
-                                <div class="cart-product-item-row">
-                                    <div class="flex-shrink-0" style="width:40px;">
-                                        <input type="checkbox" name="selectedProductIds" value="${item.key}" />
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <img src="${item.value.proImageUrl}" class="cart-product-img" alt="${item.value.proName}">
-                                    </div>
-                                    <div class="cart-product-info">
-                                        <div class="cart-product-name">${item.value.proName}</div>
-                                        <div class="cart-product-category">Phân Loại Hàng: Combo ${item.value.quantity} cuốn</div>
-                                    </div>
-                                    <div class="cart-product-price">
-                                        <span style="font-weight:600;color:#222;">
-                                            <fmt:formatNumber value="${item.value.proPrice}" type="currency" currencySymbol="₫"/>
-                                        </span>
-                                    </div>
-                                    <div class="cart-product-qty">
-                                        <button type="button" class="update-btn" data-id="${item.key}" data-change="-1" aria-label="Giảm số lượng">−</button>
-                                        <input type="text" readonly value="${item.value.quantity}" />
-                                        <button type="button" class="update-btn" data-id="${item.key}" data-change="1" aria-label="Tăng số lượng">+</button>
-                                    </div>
-                                    <div class="cart-product-total">
-                                        <fmt:formatNumber value="${item.value.proPrice * item.value.quantity}" type="currency" currencySymbol="₫"/>
-                                    </div>
-                                    <div class="cart-product-action">
-                                        <form method="post" action="CartController" style="display:inline;">
-                                            <input type="hidden" name="action" value="remove"/>
-                                            <input type="hidden" name="productId" value="${item.key}"/>
-                                            <button class="btn btn-danger" type="submit" title="Xóa sản phẩm">Delete</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </c:forEach>
+
+                        <table class="table table-bordered table-hover bg-white align-middle text-center">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 5%;">Select</th>
+                                    <th style="width: 10%;">Image</th>
+                                    <th style="width: 30%;">Product ame</th>
+                                    <th style="width: 15%;">Price</th>
+                                    <th style="width: 15%;">Quantity</th>
+                                    <th style="width: 15%;">Total amount</th>
+                                    <th style="width: 10%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="item" items="${sessionScope.cart}">
+                                    <tr class="align-middle" style="vertical-align: middle;">
+                                        <td>
+                                            <input type="checkbox" name="selectedProductIds" value="${item.key}" />
+                                        </td>
+                                        <td>
+                                            <img src="${item.value.proImageUrl}" class="product-img rounded" alt="${item.value.proName}">
+                                        </td>
+                                        <td class="text-start">${item.value.proName}</td>
+                                        <td>
+                                            <fmt:formatNumber value="${item.value.proPrice}" type="currency" currencySymbol="" /> ₫
+                                        </td>
+                                        <td>
+                                            <div class="d-inline-flex align-items-center">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary update-btn" data-id="${item.key}" data-change="-1" aria-label="Giảm số lượng">−</button>
+                                                <input type="text" readonly class="form-control form-control-sm mx-2 text-center" 
+                                                       style="width: 100px; user-select:none;" value="${item.value.quantity} / ${stockMap[item.key] - item.value.quantity}" />
+                                                <button type="button" class="btn btn-sm btn-outline-secondary update-btn" data-id="${item.key}" data-change="1" aria-label="Tăng số lượng">+</button>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <fmt:formatNumber value="${item.value.proPrice * item.value.quantity}" type="currency" currencySymbol="" /> ₫
+                                        </td>
+                                        <td>
+                                            <form method="post" action="CartController" style="display:inline;">
+                                                <input type="hidden" name="action" value="remove"/>
+                                                <input type="hidden" name="productId" value="${item.key}"/>
+                                                <button class="btn btn-sm btn-danger" type="submit" title="Xóa sản phẩm"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+
                         <!-- Checkout Bar -->
                         <div class="fixed-bottom bg-white border-top shadow-sm p-3 d-flex justify-content-between align-items-center">
                             <div>
@@ -385,49 +219,31 @@
                             <div class="row">
                                 <c:forEach var="voucher" items="${sessionScope.vouchers}">
                                     <div class="col-md-6 mb-3">
-                                        <div class="voucher-card d-flex position-relative">
-                                            <div class="voucher-ticket-shape d-flex flex-column align-items-center justify-content-center">
-                                                <img src="https://i.imgur.com/2DPxq3j.png" alt="Làm Đẹp" style="width:44px; opacity:0.4; margin-bottom:6px;">
-                                                <div style="font-size:0.93em; color:#fff; font-weight:500;">All forms of payment</div>
-                                            </div>
-                                            <div class="voucher-main flex-grow-1 p-3">
-                                                <div class="voucher-title fw-bold" style="font-size: 1.12em; color:#464646;">
+                                        <div class="card shadow-sm position-relative">
+                                            <!-- Quantity Badge at top-right -->
+                                            <span class="badge bg-primary position-absolute top-0 end-0 m-2">
+                                                x${voucher.quantity}
+                                            </span>
+
+                                            <div class="card-body">
+                                                <h5 class="card-title text-primary">${voucher.codeName}</h5>
+                                                <p class="card-text">
+                                                    Discount:
                                                     <c:choose>
-                                                        <c:when test="${voucher.discountType == 'percentage'}">
-                                                            Discount ${voucher.discountValue}%
-                                                        </c:when>
+                                                        <c:when test="${voucher.discountType == 'percentage'}">${voucher.discountValue}%</c:when>
                                                         <c:otherwise>
-                                                            Max Discount <fmt:formatNumber value="${voucher.discountValue}" type="currency" currencySymbol="₫"/>
+                                                            <fmt:formatNumber value="${voucher.discountValue}" type="currency" currencySymbol="" /> ₫
                                                         </c:otherwise>
-                                                    </c:choose>
-                                                </div>
-                                                <div class="voucher-min-order" style="font-size:0.97em; color:#8d8d8d;">
-                                                    Min Order Amout <fmt:formatNumber value="${voucher.minOrderAmount}" type="currency" currencySymbol="₫"/>
-                                                </div>
-                                                <input type="text" value="${voucher.codeName}" class="form-control form-control-sm my-1" style="max-width: 160px; background: #f6f6f6; border:none; color:#b1b1b1;" readonly>
-                                                <div class="voucher-progress-bar mt-2 mb-1">
-                                                    <div>
-                                                        <div style="width:86%;"></div>
-                                                    </div>
-                                                </div>
-                                                <div class="voucher-meta d-flex justify-content-between align-items-center" style="font-size:0.93em;">
-                                                    <span style="color:#ed7b2f;">
-                                                        <!-- Replace this with the voucher's expiry date as formatted string -->
-                                                        End Date: 
-                                                        <fmt:formatDate value="${voucher.endDate}" pattern="dd/MM/yyyy"/>
-                                                    </span>
-                                                    <a href="#" class="text-primary text-decoration-none fw-bold" style="font-size:0.95em;">Prerequisite</a>
-                                                </div>
-                                            </div>
-                                            <span class="voucher-quantity">x${voucher.quantity}</span>
-                                            <div class="voucher-radio">
-                                                <button type="button" 
-                                                        class="btn btn-inline-success select-voucher-btn"
+                                                    </c:choose><br>
+                                                    Minimum order:
+                                                    <fmt:formatNumber value="${voucher.minOrderAmount}" type="currency" currencySymbol="" /> ₫
+                                                </p>
+                                                <button type="button" class="btn btn-outline-success select-voucher-btn"
                                                         data-code="${voucher.codeName}" 
                                                         data-type="${voucher.discountType}" 
                                                         data-value="${voucher.discountValue}" 
                                                         data-min="${voucher.minOrderAmount}">
-                                                    <span></span>
+                                                    Select Voucher
                                                 </button>
                                             </div>
                                         </div>
@@ -495,8 +311,8 @@
                     let subtotal = 0;
                     checkboxes.forEach(cb => {
                         if (cb.checked) {
-                            const row = cb.closest(".cart-product-item-row");
-                            const priceText = row.querySelector(".cart-product-total").textContent.trim();
+                            const row = cb.closest("tr");
+                            const priceText = row.querySelector("td:nth-child(6)").textContent.trim();
                             const price = parseInt(priceText.replace(/\D/g, ''));
                             subtotal += price;
                         }
@@ -538,9 +354,9 @@
                 });
 
                 cartForm.addEventListener("submit", (e) => {
-                    const submitter = e.submitter;
+                    const submitter = e.submitter; // <-- Lấy nút đã nhấn
                     if (!submitter || !submitter.innerText.includes("Checkout")) {
-                        return;
+                        return; // nếu không phải nút Checkout thì bỏ qua
                     }
 
                     const checkedBoxes = document.querySelectorAll('input[name="selectedProductIds"]:checked');
@@ -568,17 +384,25 @@
                         hiddenVoucher.value = voucher.code;
                         cartForm.appendChild(hiddenVoucher);
                     }
+
+                    // Form will submit automatically after this
                 });
             });
             document.querySelectorAll(".update-btn").forEach(btn => {
                 btn.addEventListener("click", () => {
                     const productId = btn.dataset.id;
                     const change = btn.dataset.change;
+
+                    // Lấy form ẩn chung
                     const updateForm = document.getElementById("updateForm");
                     const updateProductId = document.getElementById("updateProductId");
                     const updateChange = document.getElementById("updateChange");
+
+                    // Gán giá trị
                     updateProductId.value = productId;
                     updateChange.value = change;
+
+                    // Submit form
                     updateForm.submit();
                 });
             });
