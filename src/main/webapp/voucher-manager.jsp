@@ -54,12 +54,13 @@
                             <strong>Value:</strong>
                             <c:choose>
                                 <c:when test="${voucher.discountType == 'percentage'}">
-                                    ${voucher.discountValue}%
+                                    <fmt:formatNumber value="${voucher.discountValue}" maxFractionDigits="2" minFractionDigits="0"/>%
                                 </c:when>
                                 <c:otherwise>
-                                    $${voucher.discountValue}
+                                    <fmt:formatNumber value="${voucher.discountValue}" maxFractionDigits="2" minFractionDigits="0"/>₫
                                 </c:otherwise>
                             </c:choose><br>
+
                             <strong>Status:</strong>
                             <span class="badge ${voucher.voucherActive ? 'bg-success' : 'bg-secondary'}">
                                 <c:choose>
@@ -278,9 +279,9 @@
                 </form>
             </div>
         </div>
-</div>
+    </div>
 
-<script src="js/voucher-manager.js"></script>
+    <script src="js/voucher-manager.js"></script>
 
 <c:if test="${not empty sessionScope.openAddModal}">
     <script>
