@@ -1,64 +1,73 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<html>
-    <head>
-        <title>Order Detail</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
-    <body>
 
-        <div class="container mt-4">
-            <h2>Order Detail - Order ID: ${order.orderId}</h2>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary">Order Detail - Order ID: ${orderInfo.orderId}</h2>
+        <a class="btn btn-outline-secondary" href="AdminController?tab=orders">← Back to Orders</a>
+    </div>
 
-            <p><strong>Customer ID:</strong> ${order.cusId}</p>
-            <p><strong>Order Date:</strong> <fmt:formatDate value="${order.orderDate}" pattern="yyyy-MM-dd HH:mm:ss"/></p>
+    <!-- Order Summary Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light fw-bold">Customer & Order Summary</div>
+        <div class="card-body">
+            <div class="row mb-2">
+                <div class="col-md-4"><strong>Customer Name:</strong> ${orderInfo.cusFullName}</div>
+                <div class="col-md-4"><strong>Order Date:</strong> ${orderInfo.orderDate}</div>
+                <div class="col-md-4"><strong>Order Status:</strong> ${orderInfo.orderStatus}</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-4"><strong>Payment Method:</strong> ${orderInfo.paymentMethod}</div>
+                <div class="col-md-4"><strong>Final Amount:</strong> <fmt:formatNumber value="${orderInfo.finalAmount}" type="number" groupingUsed="true" /> đ
+</div>
+                <div class="col-md-4"><strong>Voucher Name:</strong> ${orderInfo.codeName}</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-6"><strong>Shipping Address:</strong> ${orderInfo.shippingAddress}</div>
+                <div class="col-md-3"><strong>Receiver Name:</strong> ${orderInfo.receiverName}</div>
+                <div class="col-md-3"><strong>Receiver Phone:</strong> ${orderInfo.receiverPhone}</div>
+            </div>
+        </div>
+    </div>
 
-            <c:if test="${empty orderDetails}">
-                <p class="text-danger">No order details found for this order.</p>
-            </c:if>
-
-            <c:if test="${not empty orderDetails}">
-                <table class="table table-bordered mt-3">
-                    <thead class="thead-dark">
+    <!-- Product Detail Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light fw-bold">Product Details</div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead class="table-light text-center align-middle">
                         <tr>
-                            <th>Order Detail ID</th>
+                            <th>#</th>
                             <th>Product ID</th>
                             <th>Product Name</th>
                             <th>Quantity</th>
                             <th>Unit Price</th>
                             <th>Total Price</th>
-                            <th>Voucher ID</th>
+                            <th>Voucher Name</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <c:forEach var="detail" items="${orderDetails}">
+                        <c:forEach var="row" items="${orderDetails}" varStatus="loop">
                             <tr>
-                                <td>${detail.orderDetailId}</td>
-                                <td>${detail.proId}</td>
-                                <td>${productMap[detail.proId].proName}</td>
-                                <td>${detail.quantity}</td>
-                                <td><fmt:formatNumber value="${detail.unitPrice}" type="currency"/></td>
-                                <td><fmt:formatNumber value="${detail.totalPrice}" type="currency"/></td>
-                                <td>
-                                    <c:choose>
-                                        <c:when test="${detail.voucherId != null}">
-                                            ${detail.voucherId}
-                                        </c:when>
-                                        <c:otherwise>
-                                            N/A
-                                        </c:otherwise>
-                                    </c:choose>
+                                <td class="text-center">${loop.index + 1}</td>
+                                <td>${row.proId}</td>
+                                <td>${row.proName}</td>
+                                <td class="text-center">${row.quantity}</td>
+                                <td class="text-end"><fmt:formatNumber value="${row.unitPrice}" type="number" groupingUsed="true" /> đ
                                 </td>
+                                <td class="text-end"><fmt:formatNumber value="${row.totalPrice}" type="number" groupingUsed="true" /> đ
+                                </td>
+                                <td class="text-center">${row.codeName}</td>
                             </tr>
                         </c:forEach>
                     </tbody>
                 </table>
-            </c:if>
-
-            <a href="AdminController?action=loadAdminPage&tab=orders" class="btn btn-secondary mt-3">Back to Orders</a>
+            </div>
         </div>
+    </div>
+</div>
 
-    </body>
-</html>
