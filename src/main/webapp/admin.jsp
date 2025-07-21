@@ -60,6 +60,12 @@
                                     <i class="fa-solid fa-box me-2"></i>Product
                                 </a>
                             </li>
+                            
+                            <li class="nav-item">
+                                <a href="#productTypes" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fas fa-list-alt me-2"></i>Product Types
+                                </a>
+                            </li>
 
                             <li class="nav-item">
                                 <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
@@ -267,6 +273,48 @@
                             <h2>Product Management</h2>
                             <jsp:include page="productManager.jsp" />
                         </div>
+                        
+                        <!-- Product Types Tab -->
+                    <div class="tab-pane fade" id="productTypes">
+                        <h2>Product Type Management</h2>
+                        <c:if test="${not empty sessionScope.error}">
+                            <div class="alert alert-danger">${sessionScope.error}</div>
+                            <c:remove var="error" scope="session"/>
+                        </c:if>
+                        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductTypeModal">
+                            <i class="fas fa-plus"></i> Add New Product Type
+                        </button>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:forEach items="${productTypes}" var="type">
+                                        <tr
+                                            data-product-type-id="${type.id}"
+                                            data-product-type-name="${type.name}">
+                                            <td>${type.id}</td>
+                                            <td>${type.name}</td>
+                                            <td class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="editProductType('${type.id}', '${type.name}')"
+                                                        data-bs-toggle="modal" data-bs-target="#editProductTypeModal">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteProductType('${type.id}')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
                         <!-- Vouchers Tab -->
                         <div class="tab-pane fade" id="vouchers">
@@ -598,6 +646,55 @@
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Add Product Type Modal -->
+        <div class="modal fade" id="addProductTypeModal" tabindex="-1" aria-labelledby="addProductTypeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form action="AdminController" method="post" class="modal-content">
+                    <input type="hidden" name="action" value="addProductType">
+                    <input type="hidden" name="tab" value="productTypes">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addProductTypeModalLabel">Add New Product Type</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="proTypeName" class="form-label">Product Type Name</label>
+                            <input type="text" class="form-control" name="proTypeName" id="proTypeName" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Product Type</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Product Type Modal -->
+        <div class="modal fade" id="editProductTypeModal" tabindex="-1" aria-labelledby="editProductTypeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form action="AdminController" method="post" class="modal-content">
+                    <input type="hidden" name="action" value="updateProductType">
+                    <input type="hidden" name="tab" value="productTypes">
+                    <input type="hidden" name="proTypeId" id="editProTypeId">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editProductTypeModalLabel">Edit Product Type</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="editProTypeName" class="form-label">Product Type Name</label>
+                            <input type="text" class="form-control" name="proTypeName" id="editProTypeName" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Update Product Type</button>
+                    </div>
+                </form>
             </div>
         </div>
 
