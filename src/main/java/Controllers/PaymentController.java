@@ -191,9 +191,6 @@ public class PaymentController extends HttpServlet {
             /* 2. Lấy thông tin từ form */
             int orderId = Integer.parseInt(request.getParameter("orderId"));
             String paymentMethod = request.getParameter("paymentMethod");
-            String cardNumber = request.getParameter("cardNumber");
-            String expiryDate = request.getParameter("expiryDate");
-            String cvv = request.getParameter("cvv");
             String receiverName = request.getParameter("receiverName");
             String receiverPhone = request.getParameter("receiverPhone");
             String shippingAddress = request.getParameter("shippingAddress");
@@ -211,17 +208,6 @@ public class PaymentController extends HttpServlet {
             }
             if (shippingAddress == null || shippingAddress.trim().length() < 10) {
                 throw new IllegalArgumentException("Please enter detailed shipping address.");
-            }
-            if ("creditcard".equals(paymentMethod)) {
-                if (cardNumber == null || !cardNumber.replaceAll("\\s+", "").matches("\\d{8,16}")) {
-                    throw new IllegalArgumentException("Invalid credit card number.");
-                }
-                if (expiryDate == null || !expiryDate.matches("(0[1-9]|1[0-2])/[0-9]{2}")) {
-                    throw new IllegalArgumentException("Invalid expiration date.");
-                }
-                if (cvv == null || !cvv.matches("\\d{3,4}")) {
-                    throw new IllegalArgumentException("Invalid CVV code.");
-                }
             }
 
             /* 4. Lấy đơn hàng */
@@ -252,11 +238,29 @@ public class PaymentController extends HttpServlet {
             order.setReceiverName(receiverName);
             order.setReceiverPhone(receiverPhone);
             order.setShippingAddress(shippingAddress);
-            order.setOrderStatus("completed");
 
+            if ("vnpay".equalsIgnoreCase(paymentMethod)) {
+                order.setPaymentMethod(paymentMethod);
+                order.setReceiverName(receiverName);
+                order.setReceiverPhone(receiverPhone);
+                order.setShippingAddress(shippingAddress);
+
+                dao.updateOrder(order); // chỉ update thông tin, chưa update trạng thái
+
+                // Gửi thông tin đến ajaxServlet để xử lý redirect
+                request.setAttribute("orderId", orderId);
+                request.setAttribute("totalBill", order.getFinalAmount());
+                request.getRequestDispatcher("ajaxRedirect.jsp").forward(request, response);
+                return;
+            }
+
+            // Nếu không phải vnpay thì xử lý tiếp: COD chẳng hạn
+            order.setOrderStatus("completed");
             if (!dao.updateOrder(order)) {
+                order.setOrderStatus("failed");
                 throw new RuntimeException("Order update failed.");
             }
+
             /* giảm quantity voucher (nếu có)*/
             if (order.getVoucherId() != null) {
                 VoucherDAO vDao = new VoucherDAO();

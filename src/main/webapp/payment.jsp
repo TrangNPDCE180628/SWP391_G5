@@ -198,10 +198,10 @@
                                     <div class="mb-4">
                                         <label class="form-label fw-bold">Select payment method:</label>
 
-                                        <div class="payment-method" onclick="selectPaymentMethod('creditcard')">
-                                            <input class="form-check-input" type="radio" name="paymentMethod" id="creditcard" value="creditcard" checked>
-                                            <label class="form-check-label ms-2" for="creditcard">
-                                                <i class="fas fa-credit-card me-2"></i>Credit Card/Debit Card
+                                        <div class="payment-method" onclick="selectPaymentMethod('vnpay')">
+                                            <input class="form-check-input" type="radio" name="paymentMethod" id="vnpay" value="vnpay">
+                                            <label class="form-check-label ms-2" for="vnpay">
+                                                <i class="fas fa-university me-2"></i> VNPay
                                             </label>
                                         </div>
 
@@ -211,32 +211,8 @@
                                                 <i class="fab fa-paypal me-2"></i>Cash on Delivery
                                             </label>
                                         </div>
-
                                     </div>
 
-                                    <!-- Credit Card Information -->
-                                    <div id="creditCardFields" class="mb-4">
-                                        <label for="cardNumber" class="form-label fw-bold">Credit card number <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="cardNumber" name="cardNumber" 
-                                               maxlength="19" placeholder="XXXX XXXX XXXX XXXX" 
-                                               pattern="[0-9\s]{8,19}" title="Vui lòng nhập 8-16 chữ số">
-                                        <div class="form-text">Enter 8-16 digits</div>
-
-                                        <div class="row mt-3">
-                                            <div class="col-md-6">
-                                                <label for="expiryDate" class="form-label fw-bold">Expiration date <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="expiryDate" name="expiryDate" 
-                                                       placeholder="MM/YY" maxlength="5" pattern="(0[1-9]|1[0-2])\/[0-9]{2}">
-                                                <div class="form-text">Format: MM/YY</div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label for="cvv" class="form-label fw-bold">CVV code <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="cvv" name="cvv" 
-                                                       maxlength="4" placeholder="XXX" pattern="[0-9]{3,4}">
-                                                <div class="form-text">3 or 4 digits on the back of the card</div>
-                                            </div>
-                                        </div>
-                                    </div>
                                     <!-- Receiver Name -->
                                     <div class="mb-4">
                                         <label for="receiverName" class="form-label fw-bold">Receiver's Name <span class="text-danger">*</span></label>
@@ -300,6 +276,10 @@
 
                                     <!-- Action Buttons -->
                                     <div class="d-flex justify-content-end">
+                                        <input type="hidden" name="bankCode" value="" />
+                                        <input type="hidden" name="language" value="vn" />
+                                        <input type="hidden" name="totalBill" value="${order.totalAmount - order.discountAmount}" />
+
                                         <button type="submit" class="btn btn-success btn-lg">
                                             <i class="fas fa-check me-2"></i>Payment Confirmation
                                         </button>
