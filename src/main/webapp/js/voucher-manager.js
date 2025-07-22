@@ -77,24 +77,24 @@ document.addEventListener("DOMContentLoaded", function () {
             const statusBadge = status === 'true' ? 'bg-success' : 'bg-secondary';
 
             document.getElementById('voucherDetailBody').innerHTML = `
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><strong>ID:</strong> ${voucherId}</li>
-                    <li class="list-group-item"><strong>Code:</strong> ${codeName}</li>
-                    <li class="list-group-item"><strong>Description:</strong> ${description}</li>
-                    <li class="list-group-item"><strong>Quantity:</strong> ${quantity}</li>
-                    <li class="list-group-item"><strong>Type:</strong> ${typeText}</li>
-                    <li class="list-group-item"><strong>Value:</strong> ${valueText}</li>
-                    <li class="list-group-item"><strong>Max Discount:</strong> ${formatMoney(maxDiscount)}₫</li>
-                    <li class="list-group-item"><strong>Min Order:</strong> ${formatMoney(minOrder)}₫</li>
-                    <li class="list-group-item"><strong>Start Date:</strong> ${startDate}</li>
-                    <li class="list-group-item"><strong>End Date:</strong> ${endDate}</li>
-                    <li class="list-group-item"><strong>Status:</strong> <span class="badge ${statusBadge}">${statusText}</span></li>
-                </ul>
-            `;
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>ID:</strong> ${voucherId}</li>
+                        <li class="list-group-item"><strong>Code:</strong> ${codeName}</li>
+                        <li class="list-group-item"><strong>Description:</strong> ${description}</li>
+                        <li class="list-group-item"><strong>Quantity:</strong> ${quantity}</li>
+                        <li class="list-group-item"><strong>Type:</strong> ${typeText}</li>
+                        <li class="list-group-item"><strong>Value:</strong> ${valueText}</li>
+                        <li class="list-group-item"><strong>Max Discount:</strong> ${formatMoney(maxDiscount)}₫</li>
+                        <li class="list-group-item"><strong>Min Order:</strong> ${formatMoney(minOrder)}₫</li>
+                        <li class="list-group-item"><strong>Start Date:</strong> ${startDate}</li>
+                        <li class="list-group-item"><strong>End Date:</strong> ${endDate}</li>
+                        <li class="list-group-item"><strong>Status:</strong> <span class="badge ${statusBadge}">${statusText}</span></li>
+                    </ul>
+                `;
             document.getElementById('voucherDetailFooter').innerHTML = `
-                <button type="button" class="btn btn-warning edit-btn-modal" data-voucher-id="${voucherId}"><i class="fas fa-edit"></i> Edit</button>
-                <button type="button" class="btn btn-danger" onclick="deleteVoucher('${voucherId}')"><i class="fas fa-trash"></i> Delete</button>
-            `;
+                    <button type="button" class="btn btn-warning edit-btn-modal" data-voucher-id="${voucherId}"><i class="fas fa-edit"></i> Edit</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteVoucher('${voucherId}')"><i class="fas fa-trash"></i> Delete</button>
+                `;
             var modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('voucherDetailModal'));
             modal.show();
         });
