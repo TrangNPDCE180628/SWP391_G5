@@ -423,7 +423,7 @@
                         const maxDiscountValue = parseFloat(btn.dataset.max);
                         if (subtotal < minOrder) {
                             showToast(
-                                    `❌ Voucher "${name}" cannot be applied. Minimum order: ${currencyFormatter.format(minOrder)} ₫`,
+                                    `❌ Voucher cannot be applied.`,
                                     false // isSuccess = false ⇒ sẽ có class bg-danger
                                     );
                             return;

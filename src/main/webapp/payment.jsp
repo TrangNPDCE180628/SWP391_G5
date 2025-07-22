@@ -199,15 +199,14 @@
                                         <label class="form-label fw-bold">Select payment method:</label>
 
                                         <div class="payment-method" onclick="selectPaymentMethod('vnpay')">
-                                            <input class="form-check-input" type="radio" name="paymentMethod" id="vnpay" value="vnpay">
-                                            <label class="form-check-label ms-2" for="vnpay">
+                                            <input class="form-check-input" type="radio" name="paymentMethod" id="vnpay" value="vnpay" required> <label class="form-check-label ms-2" for="vnpay">
                                                 <i class="fas fa-university me-2"></i> VNPay
                                             </label>
                                         </div>
 
                                         <div class="payment-method" onclick="selectPaymentMethod('upon-receipt')">
-                                            <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="upon-receipt">
-                                            <label class="form-check-label ms-2" for="paypal">
+                                            <input class="form-check-input" type="radio" name="paymentMethod" id="upon-receipt" value="upon-receipt">
+                                            <label class="form-check-label ms-2" for="upon-receipt">
                                                 <i class="fab fa-paypal me-2"></i>Cash on Delivery
                                             </label>
                                         </div>
