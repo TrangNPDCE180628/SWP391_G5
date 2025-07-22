@@ -1,27 +1,51 @@
 <%-- 
-    Document   : voucher-manager-card
-    Created on : Jul 19, 2025, 12:33:10 PM
-    Author     : SE18-CE180628-Nguyen Pham Doan Trang
+    Document   : voucher-manager-table
+    Created on : Jul 22, 2025, 11:45:00 AM
+    Author     : SE18-CE180628-Nguyen Pham Doan Trang (refactored to table view by Copilot, Toast notifications added)
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-<!-- Voucher Manager (Card View) -->
+<!-- Voucher Manager (Table View) -->
 
 <div id="vouchers">
+    <!-- Toast notification for error -->
     <c:if test="${not empty sessionScope.error}">
-        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
-            <strong>Error:</strong> ${sessionScope.error}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="toast align-items-center text-bg-danger border-0 show" role="alert" aria-live="assertive" aria-atomic="true" id="errorToast" style="position: fixed; top: 20px; right: 20px; z-index: 1080;">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>Error:</strong> ${sessionScope.error}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
         </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var errorToastEl = document.getElementById('errorToast');
+                var errorToast = new bootstrap.Toast(errorToastEl, {delay: 4000});
+                errorToast.show();
+            });
+        </script>
         <c:remove var="error" scope="session"/>
     </c:if>
 
+    <!-- Toast notification for success -->
     <c:if test="${not empty sessionScope.success}">
-        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-            <strong>Success:</strong> ${sessionScope.success}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="toast align-items-center text-bg-success border-0 show" role="alert" aria-live="assertive" aria-atomic="true" id="successToast" style="position: fixed; top: 20px; right: 20px; z-index: 1080;">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>Success:</strong> ${sessionScope.success}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
         </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var successToastEl = document.getElementById('successToast');
+                var successToast = new bootstrap.Toast(successToastEl, {delay: 4000});
+                successToast.show();
+            });
+        </script>
         <c:remove var="success" scope="session"/>
     </c:if>
 
@@ -30,28 +54,53 @@
         <i class="fas fa-plus"></i> Add New Voucher
     </button>
 
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        <c:forEach items="${vouchers}" var="voucher">
-            <div class="col">
-                <div class="card h-100 voucher-card" 
-                     style="cursor:pointer;"
-                     data-voucher-id="${voucher.voucherId}"
-                     data-voucher-code="${voucher.codeName}"
-                     data-voucher-description="${voucher.voucherDescription}"
-                     data-voucher-quantity="${voucher.quantity}"
-                     data-voucher-discount-type="${voucher.discountType}"
-                     data-voucher-discount-value="${voucher.discountValue}"
-                     data-voucher-max-discount="${voucher.maxDiscountValue}"
-                     data-voucher-min-order="${voucher.minOrderAmount}"
-                     data-voucher-start-date="<fmt:formatDate value='${voucher.startDate}' pattern='yyyy-MM-dd' />"
-                     data-voucher-end-date="<fmt:formatDate value='${voucher.endDate}' pattern='yyyy-MM-dd' />"
-                     data-voucher-status="${voucher.voucherActive}">
-                    <div class="card-body">
-                        <h5 class="card-title">${voucher.codeName}</h5>
-                        <p class="card-text">
-                            <strong>Description:</strong> <span class="text-truncate" style="max-width: 200px; display: inline-block;">${voucher.voucherDescription}</span><br>
-                            <strong>Type:</strong> ${voucher.discountType == 'percentage' ? 'Percentage (%)' : 'Fixed (đ)'}<br>
-                            <strong>Value:</strong>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Code Name</th>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Discount Type</th>
+                    <th>Discount Value</th>
+                    <th>Max Discount</th>
+                    <th>Min Order</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <c:forEach items="${vouchers}" var="voucher" varStatus="loop">
+                    <tr 
+                        style="cursor:pointer;"
+                        class="voucher-card"
+                        data-voucher-id="${voucher.voucherId}"
+                        data-voucher-code="${voucher.codeName}"
+                        data-voucher-description="${voucher.voucherDescription}"
+                        data-voucher-quantity="${voucher.quantity}"
+                        data-voucher-discount-type="${voucher.discountType}"
+                        data-voucher-discount-value="${voucher.discountValue}"
+                        data-voucher-max-discount="${voucher.maxDiscountValue}"
+                        data-voucher-min-order="${voucher.minOrderAmount}"
+                        data-voucher-start-date="<fmt:formatDate value='${voucher.startDate}' pattern='yyyy-MM-dd' />"
+                        data-voucher-end-date="<fmt:formatDate value='${voucher.endDate}' pattern='yyyy-MM-dd' />"
+                        data-voucher-status="${voucher.voucherActive}"
+                        >
+                        <td>${loop.index + 1}</td>
+                        <td>${voucher.codeName}</td>
+                        <td>
+                            <span class="text-truncate" style="max-width: 200px; display: inline-block;">
+                                ${voucher.voucherDescription}
+                            </span>
+                        </td>
+                        <td>${voucher.quantity}</td>
+                        <td>
+                            ${voucher.discountType == 'percentage' ? 'Percentage (%)' : 'Fixed (₫)'}
+                        </td>
+                        <td>
                             <c:choose>
                                 <c:when test="${voucher.discountType == 'percentage'}">
                                     <fmt:formatNumber value="${voucher.discountValue}" maxFractionDigits="2" minFractionDigits="0"/>%
@@ -59,9 +108,21 @@
                                 <c:otherwise>
                                     <fmt:formatNumber value="${voucher.discountValue}" maxFractionDigits="2" minFractionDigits="0"/>₫
                                 </c:otherwise>
-                            </c:choose><br>
-
-                            <strong>Status:</strong>
+                            </c:choose>
+                        </td>
+                        <td>
+                            <fmt:formatNumber value="${voucher.maxDiscountValue}" maxFractionDigits="2" minFractionDigits="0"/>
+                        </td>
+                        <td>
+                            <fmt:formatNumber value="${voucher.minOrderAmount}" maxFractionDigits="2" minFractionDigits="0"/>
+                        </td>
+                        <td>
+                            <fmt:formatDate value="${voucher.startDate}" pattern="yyyy-MM-dd"/>
+                        </td>
+                        <td>
+                            <fmt:formatDate value="${voucher.endDate}" pattern="yyyy-MM-dd"/>
+                        </td>
+                        <td>
                             <span class="badge ${voucher.voucherActive ? 'bg-success' : 'bg-secondary'}">
                                 <c:choose>
                                     <c:when test="${voucher.voucherActive}">
@@ -72,19 +133,19 @@
                                     </c:otherwise>
                                 </c:choose>
                             </span>
-                        </p>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between">
-                        <button type="button" class="btn btn-sm btn-warning edit-btn" data-voucher-id="${voucher.voucherId}">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteVoucher('${voucher.voucherId}'); event.stopPropagation();">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </c:forEach>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-warning edit-btn" data-voucher-id="${voucher.voucherId}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteVoucher('${voucher.voucherId}'); event.stopPropagation();">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </c:forEach>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -282,13 +343,12 @@
     </div>
 
     <script src="js/voucher-manager.js"></script>
-
 <c:if test="${not empty sessionScope.openAddModal}">
     <script>
-                            document.addEventListener("DOMContentLoaded", function () {
-                                var addModal = new bootstrap.Modal(document.getElementById('addVoucherModal'));
-                                addModal.show();
-                            });
+                                document.addEventListener("DOMContentLoaded", function () {
+                                    var addModal = new bootstrap.Modal(document.getElementById('addVoucherModal'));
+                                    addModal.show();
+                                });
     </script>
     <c:remove var="openAddModal" scope="session"/>
 </c:if>
