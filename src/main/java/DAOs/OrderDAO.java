@@ -348,4 +348,28 @@ public class OrderDAO {
         return false;
     }
 
+    public boolean updateOrderReceiverInfo(Order order) throws SQLException, ClassNotFoundException {
+        String sql = "UPDATE [Order] SET receiverName = ?, receiverPhone = ?, shippingAddress = ?, orderStatus = ?, paymentMethod = ? WHERE orderId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, order.getReceiverName());
+            ps.setString(2, order.getReceiverPhone());
+            ps.setString(3, order.getShippingAddress());
+            ps.setString(4, order.getOrderStatus());
+            ps.setString(5, order.getPaymentMethod());
+            ps.setInt(6, order.getOrderId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean updateStatus(Order order) {
+        String sql = "UPDATE [Order] SET orderStatus = ? WHERE orderId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, order.getOrderStatus());
+            stmt.setInt(2, order.getOrderId());
+            return stmt.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
