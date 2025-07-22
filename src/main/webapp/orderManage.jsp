@@ -52,13 +52,10 @@
                     <td>${row.receiverPhone}</td>
                     <td>
                         <div class="d-flex gap-2">
-                            <form method="get" action="AdminController">
-                                <input type="hidden" name="action" value="viewOrderDetails"/>
-                                <input type="hidden" name="orderId" value="${row.orderId}"/>
-                                <button type="submit" class="btn btn-sm btn-info">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-info" onclick="loadOrderDetails(${row.orderId})">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+
                             <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" onclick="openEditModal('${row.orderId}', '${row.orderStatus}')">
                                 <i class="fas fa-edit"></i> Edit
                             </button>
@@ -76,6 +73,7 @@
         </tbody>
     </table>
 </div>
+
 
 <!-- Edit Order Status Modal -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -110,10 +108,33 @@
     </div>
 </div>
 
+<!-- Order Detail Modal -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderDetailModalLabel">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="orderDetailContent">
+                <!-- Order detail will be loaded here via AJAX -->
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="${pageContext.request.contextPath}/js/ScriptAdminDashboard.js"></script>
+
 <!-- Script mở modal -->
 <script>
-    function openEditModal(orderId, currentStatus) {
-        document.getElementById("modalOrderId").value = orderId;
-        document.getElementById("modalStatusSelect").value = currentStatus;
-    }
+//    function openEditModal(orderId, currentStatus) {
+//        document.getElementById("modalOrderId").value = orderId;
+//        document.getElementById("modalStatusSelect").value = currentStatus;
+//    }
+
+    
 </script>

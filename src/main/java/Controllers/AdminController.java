@@ -42,9 +42,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import javax.servlet.http.HttpSession;
 import Ultis.DBContext;
+import Ultis.ExcelUtils;
+import Ultis.LogUtil;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.nio.file.Paths;
@@ -52,10 +56,12 @@ import java.sql.Date;
 import java.util.List;
 import java.sql.Connection;
 import java.time.LocalDate;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.ServletContext;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
@@ -158,9 +164,9 @@ public class AdminController extends HttpServlet {
                 case "viewStockList":
                     viewStockList(request, response);
                     return;
-                //case "addStockQuantity":
-                //  addStockQuantity(request, response);
-                //   return;
+                case "ImportStockQuantity":
+                    importStockQuantity(request, response);
+                    return;
                 case "deleteStock":
                     deleteStock(request, response);
                     return;
@@ -170,11 +176,14 @@ public class AdminController extends HttpServlet {
                 case "listStocks":
                     listStocks(request, response);
                     return;
-                case "updateStockQuantity":
-                    updateStockQuantity(request, response);
+                case "ExportStockQuantity":
+                    exportStockQuantity(request, response);
                     return;
                 case "RevenueByMonth":
                     handleRevenueByMonth(request, response);
+                    return;
+                case "excelcreate":
+                    generateInventoryExcel(request, response);
                     return;
                 default:
                     loadAdminPage(request, response);
@@ -205,7 +214,6 @@ public class AdminController extends HttpServlet {
             AttributeDAO attributeDAO = new AttributeDAO();
             ProductAttributeDAO paDAO = new ProductAttributeDAO();
             OrderDAO ordDao = new OrderDAO();
-            StockDAO stockDAO = new StockDAO();
 
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
@@ -214,7 +222,6 @@ public class AdminController extends HttpServlet {
             List<FeedbackReplyView> viewFeedbacks = viewfeedbackDAO.getAllFeedbackReplies();
             List<Attribute> attributes = attributeDAO.getAll();
             List<ProductAttribute> productAttributes = paDAO.getAll();
-            List<Stock> stocks = stockDAO.getAllStocks();
             BigDecimal totalRevenue = ordDao.getTotalRevenue();
 
             // 2. Load ViewProductAttributes
@@ -231,8 +238,14 @@ public class AdminController extends HttpServlet {
             request.setAttribute("viewFeedbacks", viewFeedbacks);
             request.setAttribute("attributes", attributes);
             request.setAttribute("productAttributes", productAttributes);
-            request.setAttribute("stocks", stocks);
             request.setAttribute("totalRevenue", totalRevenue);
+
+            StockDAO dao = new StockDAO();
+            List<Map<String, Object>> productStockList = dao.getAllProductStockData();
+            request.setAttribute("productStockList", productStockList);
+            StockDAO stockDAO = new StockDAO();
+            List<String> noStockProIds = stockDAO.getProductsWithoutStock();
+            request.setAttribute("noStockProIds", noStockProIds);
 
             // 4. Load danh sách đơn hàng nếu không có filter trạng thái
             if (request.getParameter("sortByOrderStatus") == null) {
@@ -274,6 +287,7 @@ public class AdminController extends HttpServlet {
         } catch (Exception e) {
             throw new ServletException(e);
         }
+
     }
 
     private void editProfile(HttpServletRequest request, HttpServletResponse response)
@@ -810,6 +824,13 @@ public class AdminController extends HttpServlet {
         try {
             String proId = request.getParameter("proId");
             StockDAO stockDAO = new StockDAO();
+            // Có thể kiểm tra số lượng hiện tại tại đây nếu muốn
+            int current = stockDAO.getStockByProductId(proId).getStockQuantity();
+
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Deleted] " + current + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + current + " [Ending Inventory] " + "0");
+
             stockDAO.deleteStock(proId);
             response.sendRedirect("AdminController?tab=inventory");
         } catch (Exception e) {
@@ -835,7 +856,14 @@ public class AdminController extends HttpServlet {
             String proId = request.getParameter("proId");
             int quantity = Integer.parseInt(request.getParameter("quantity"));
             StockDAO stockDAO = new StockDAO();
+
             stockDAO.createStock(proId, quantity);
+
+            int finalstock = stockDAO.getStockByProductId(proId).getStockQuantity();
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Created] " + quantity + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + "0" + " [Ending Inventory] " + finalstock);
+
             response.sendRedirect("AdminController?tab=inventory");
         } catch (Exception e) {
             log("Error in createStock: " + e.getMessage());
@@ -846,18 +874,30 @@ public class AdminController extends HttpServlet {
         }
     }
 
-    private void updateStockQuantity(HttpServletRequest request, HttpServletResponse response)
+    private void exportStockQuantity(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             String proId = request.getParameter("proId");
-            int newQuantity = Integer.parseInt(request.getParameter("newQuantity"));
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+
+            if (quantity <= 0) {
+                throw new IllegalArgumentException("Quantity must be greater than 0.");
+            }
+
             StockDAO stockDAO = new StockDAO();
-            stockDAO.updateStockQuantity(proId, newQuantity);
+            // Có thể kiểm tra số lượng hiện tại tại đây nếu muốn
+            int current = stockDAO.getStockByProductId(proId).getStockQuantity();
+            stockDAO.exportStockQuantity(proId, quantity);
+            int finalstock = stockDAO.getStockByProductId(proId).getStockQuantity();
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Exported] " + quantity + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + current + " [Ending Inventory] " + finalstock);
+
             response.sendRedirect("AdminController?tab=inventory");
         } catch (Exception e) {
-            log("Error in updateStockQuantity: " + e.getMessage());
+            log("Error in exportStockQuantity: " + e.getMessage());
             if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Unable to update stock quantity: " + e.getMessage());
+                request.setAttribute("ERROR", "Unable to export stock: " + e.getMessage());
                 request.getRequestDispatcher("error.jsp").forward(request, response);
             }
         }
@@ -929,13 +969,13 @@ public class AdminController extends HttpServlet {
         try {
             String status = request.getParameter("sortByOrderStatus");
             OrderDAO dao = new OrderDAO();
-            System.out.println(status);
             if (status.equals("All")) {
                 List<Map<String, Object>> filteredOrders = dao.getOrderDetailsAll();
                 request.setAttribute("orders", filteredOrders);
             } else {
                 List<Map<String, Object>> filteredOrders = dao.getOrderDetailsByStatus(status);
                 request.setAttribute("orders", filteredOrders);
+                System.out.println(filteredOrders);
             }
 
             // Set attributes for displaying in JSP
@@ -945,10 +985,7 @@ public class AdminController extends HttpServlet {
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
             log("Error in filterOrdersByStatus: " + e.getMessage());
-           
-            request.setAttribute("ERROR", "Unable to filter orders: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
-            
+
         }
     }
 
@@ -1055,6 +1092,83 @@ public class AdminController extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error loading order details");
+        }
+    }
+
+    private void importStockQuantity(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+
+            if (quantity <= 0) {
+                throw new IllegalArgumentException("Quantity must be greater than 0.");
+            }
+
+            StockDAO stockDAO = new StockDAO();
+            int current = stockDAO.getStockByProductId(proId).getStockQuantity();
+            stockDAO.importStockQuantity(proId, quantity);
+            int finalstock = stockDAO.getStockByProductId(proId).getStockQuantity();
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Imported] " + quantity + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + current + " [Ending Inventory] " + finalstock);
+
+            response.sendRedirect("AdminController?tab=inventory");
+        } catch (Exception e) {
+            log("Error in importStockQuantity: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Unable to import stock: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
+        }
+    }
+
+    private void generateInventoryExcel(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String startDateStr = request.getParameter("startDate");
+            String endDateStr = request.getParameter("endDate");
+
+            SimpleDateFormat dateOnlyFormat = new SimpleDateFormat("yyyy-MM-dd");
+            java.util.Date startDate = new java.sql.Date(dateOnlyFormat.parse(startDateStr).getTime());
+            java.util.Date endDate = new java.sql.Date(dateOnlyFormat.parse(endDateStr).getTime());
+            
+            System.out.println(startDate + " " + endDate);
+            // Validate: startDate must not be after endDate
+            if (startDate.after(endDate)) {
+                request.setAttribute("ERROR", "Start date must not be after end date.");
+                request.setAttribute("activeTab", "inventory");
+                request.getRequestDispatcher("admin.jsp").forward(request, response);
+                return;
+            }
+
+            // Gọi ExcelUtils với ServletContext và log file path
+            ServletContext context = request.getServletContext();
+            
+            String logFilePath = context.getRealPath("/logs/inventory_log.txt");
+            System.out.println(logFilePath);
+            File excelFile = ExcelUtils.generateInventoryReport(context, startDate, endDate, logFilePath);
+
+            // Thiết lập response để tải file về
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=" + excelFile.getName());
+
+            try ( FileInputStream fis = new FileInputStream(excelFile);  OutputStream out = response.getOutputStream()) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = fis.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            }
+
+            // Xoá file tạm sau khi tải
+            excelFile.delete();
+        } catch (Exception e) {
+            log("Error in generateInventoryExcel: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Failed to generate inventory report: " + e.getMessage());
+                request.getRequestDispatcher("inventory.jsp").forward(request, response);
+            }
         }
     }
 

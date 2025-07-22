@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
     /* ---- Hết kiểm tra ngày Voucher ---- */
-    
+
     /* ---- Vẽ chart revenue ---- */
     const canvas = document.getElementById("revenueChart");
     if (!canvas)
@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-
+    initStockSearch();
 
 }
 );
@@ -563,6 +563,41 @@ function viewProductAttribute(productId, attributeId) {
 
     new bootstrap.Modal(document.getElementById('viewProductAttributeModal')).show();
 }
+
+function loadOrderDetails(orderId) {
+    const modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+    const content = document.getElementById('orderDetailContent');
+    content.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+    fetch(`AdminController?action=viewOrderDetails&orderId=${orderId}`)
+            .then(response => response.text())
+            .then(data => {
+                content.innerHTML = data;
+            })
+            .catch(error => {
+                content.innerHTML = `<div class="alert alert-danger">Error loading order details.</div>`;
+            });
+
+    modal.show();
+}
+
+function initStockSearch() {
+    const input = document.getElementById("stockSearchInput");
+    const table = document.getElementById("stockTable");
+    if (!input || !table)
+        return;
+
+    const rows = table.querySelector("tbody").getElementsByTagName("tr");
+
+    input.addEventListener("keyup", function () {
+        const filter = input.value.toLowerCase();
+        Array.from(rows).forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? "" : "none";
+        });
+    });
+}
+
 
 
 
