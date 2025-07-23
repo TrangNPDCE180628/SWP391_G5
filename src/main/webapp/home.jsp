@@ -212,7 +212,8 @@
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="MainController?action=Logout">Logout</a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
                                     </ul>
                                 </li>
                             </c:when>

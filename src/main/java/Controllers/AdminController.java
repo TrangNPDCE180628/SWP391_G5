@@ -62,7 +62,7 @@ import java.util.Map;
         maxFileSize = 1024 * 1024 * 10,
         maxRequestSize = 1024 * 1024 * 100
 )
-public class AdminController extends HttpServlet {
+public class AdminController extends BaseController {
 
     private static final String UPLOAD_DIR = "images/products";
 
@@ -70,6 +70,37 @@ public class AdminController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
+        
+        // Check authentication manually first
+        HttpSession session = request.getSession(false);
+        User loginUser = null;
+        if (session != null) {
+            loginUser = (User) session.getAttribute("LOGIN_USER");
+        }
+        
+        // If not authenticated, store current URL and redirect to login
+        if (loginUser == null) {
+            String originalURL = request.getRequestURI();
+            String queryString = request.getQueryString();
+            if (queryString != null) {
+                originalURL += "?" + queryString;
+            }
+            
+            // Create session to store redirect URL
+            session = request.getSession(true);
+            session.setAttribute("REDIRECT_URL", originalURL);
+            
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
+        }
+        
+        // Check if user has admin/staff role
+        String role = loginUser.getRole();
+        if (!"Admin".equals(role) && !"Staff".equals(role)) {
+            response.sendRedirect(request.getContextPath() + "/HomeController?error=access_denied");
+            return;
+        }
+        
         String action = request.getParameter("action");
 
         try {
@@ -501,6 +532,8 @@ public class AdminController extends HttpServlet {
             }
         }
     }
+
+    
 
     // Helper classes for JSON response
     private static class OrderDetailsResponse {
