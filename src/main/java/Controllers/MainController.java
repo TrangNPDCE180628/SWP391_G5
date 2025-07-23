@@ -24,7 +24,8 @@ public class MainController extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        String url = ERROR;
+//        String url = ERROR;
+        String url = LOGIN_CONTROLLER;
         try {
             String action = request.getParameter("action");
             System.out.println("Action: " + action);

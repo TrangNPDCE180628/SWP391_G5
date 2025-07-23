@@ -9,6 +9,7 @@ import DAOs.AttributeDAO;
 import DAOs.OrderDetailDAO;
 import DAOs.ProductAttributeDAO;
 import DAOs.ProductDAO;
+import DAOs.ProductTypeDAO;
 import DAOs.ReplyFeedbackDAO;
 import DAOs.StaffDAO;
 import DAOs.StockDAO;
@@ -24,6 +25,7 @@ import Models.Attribute;
 import Models.OrderDetail;
 import Models.Product;
 import Models.ProductAttribute;
+import Models.ProductTypes;
 import Models.ReplyFeedback;
 import Models.Staff;
 import Models.Stock;
@@ -51,6 +53,7 @@ import java.nio.file.Paths;
 import java.sql.Date;
 import java.util.List;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
 
 import java.util.HashMap;
@@ -160,6 +163,21 @@ public class AdminController extends HttpServlet {
                 case "RevenueByMonth":
                     handleRevenueByMonth(request, response);
                     return;
+                case "add":
+                    addProduct(request, response);
+                    return;
+                case "searchPrd":
+                    searchProduct(request, response);
+                    return;
+                case "editProduct":
+                    editProduct(request, response);
+                    return;
+                case "deleteProduct":
+                    deleteProduct(request, response);
+                    return;
+                case "viewProductDetail":
+                    viewProductDetail(request, response);
+                    return;
                 default:
                     loadAdminPage(request, response);
             }
@@ -199,6 +217,11 @@ public class AdminController extends HttpServlet {
             List<ProductAttribute> productAttributes = paDAO.getAll();
             List<Order> orders = ordDao.getAll();
             List<Stock> stocks = stockDAO.getAllStocks();
+            // Add: Load all products for product tab
+            ProductDAO productDAO = new ProductDAO();
+            List<Product> products = productDAO.getAllProducts();
+            ProductTypeDAO typeDAO = new ProductTypeDAO();
+            List<ProductTypes> types = typeDAO.getAllProductTypes();
             BigDecimal totalRevenue = ordDao.getTotalRevenue();
 
             // === NEW: Load từ VIEW ===
@@ -215,6 +238,8 @@ public class AdminController extends HttpServlet {
             request.setAttribute("attributes", attributes);
             request.setAttribute("productAttributes", productAttributes);
             request.setAttribute("orders", orders);
+            request.setAttribute("prds", products);
+            request.setAttribute("types", types);
             request.setAttribute("stocks", stocks);
             request.setAttribute("totalRevenue", totalRevenue);
 
@@ -343,7 +368,7 @@ public class AdminController extends HttpServlet {
         }
         return "";
     }
-  
+
     private void addStaff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -873,6 +898,165 @@ public class AdminController extends HttpServlet {
 
             request.setAttribute("error", "Error loading revenue data: " + e.getMessage());
             request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
+    }
+
+    private void searchProduct(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String searchName = request.getParameter("searchValue");
+            ProductDAO productDAO = new ProductDAO();
+            List<Product> products;
+            if (searchName != null && !searchName.trim().isEmpty()) {
+                products = productDAO.searchByName(searchName, 1, 100); // lấy tối đa 100 sản phẩm
+            } else {
+                products = productDAO.getAllProducts();
+            }
+            request.setAttribute("prds", products);
+            request.setAttribute("searchName", searchName);
+            // Load lại các dữ liệu khác cần thiết cho admin.jsp
+//            loadAdminPage(request, response);
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void viewProductDetail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            ProductDAO productDAO = new ProductDAO();
+            Product product = productDAO.getProductDetail(proId);
+            // Return the product details as JSON
+            response.setContentType("application/json");
+            response.getWriter().write(new Gson().toJson(product));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ServletException(e);
+        }
+    }
+
+    private void editProduct(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            // Lấy các tham số từ request
+            String proId = request.getParameter("proId");
+            String proName = request.getParameter("proName");
+            String proDescription = request.getParameter("proDescription");
+            String proTypeIdStr = request.getParameter("proTypeId");
+            String proPriceStr = request.getParameter("proPrice");
+            String oldImage = request.getParameter("oldImage");
+
+            // Kiểm tra nếu các tham số quan trọng bị null hoặc rỗng
+            if (proId == null || proId.trim().isEmpty()) {
+                throw new ServletException("Product ID is required.");
+            }
+
+            // Lấy các giá trị cũ của sản phẩm từ cơ sở dữ liệu
+            ProductDAO productDAO = new ProductDAO();
+            Product existingProduct = productDAO.getById(proId);
+            if (existingProduct == null) {
+                throw new ServletException("Product not found.");
+            }
+
+            // Nếu không có giá trị mới, giữ nguyên giá trị cũ
+            String proNameToUse = (proName != null && !proName.trim().isEmpty()) ? proName : existingProduct.getProName();
+            String proDescriptionToUse = (proDescription != null && !proDescription.trim().isEmpty()) ? proDescription : existingProduct.getProDescription();
+            int proTypeId = (proTypeIdStr != null && !proTypeIdStr.trim().isEmpty()) ? Integer.parseInt(proTypeIdStr) : existingProduct.getProTypeId();
+            java.math.BigDecimal proPrice = (proPriceStr != null && !proPriceStr.trim().isEmpty()) ? new java.math.BigDecimal(proPriceStr) : existingProduct.getProPrice();
+
+            // Sử dụng hình ảnh cũ nếu không có hình ảnh mới
+            String imageFileName = oldImage;
+            javax.servlet.http.Part imagePart = request.getPart("proImageMain");
+
+            // Kiểm tra nếu có phần hình ảnh được tải lên
+            if (imagePart != null && imagePart.getSize() > 0) {
+                imageFileName = java.nio.file.Paths.get(imagePart.getSubmittedFileName()).getFileName().toString();
+                String uploadPath = getServletContext().getRealPath("/") + "images" + java.io.File.separator + "products";
+                java.io.File uploadDir = new java.io.File(uploadPath);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+                imagePart.write(uploadPath + java.io.File.separator + imageFileName);
+            }
+
+            // Cập nhật sản phẩm nếu có thay đổi
+            Product product = new Product(proId, proTypeId, proNameToUse, proDescriptionToUse, proPrice, imageFileName);
+            productDAO.updateProduct(product);
+
+            // Chuyển hướng về trang admin với tab sản phẩm
+            response.sendRedirect("AdminController?tab=products");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ServletException(e);
+        }
+    }
+
+    private void addProduct(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        try {
+            String proId = request.getParameter("proId");
+            ProductDAO productDAO = new ProductDAO();
+
+            Product product = parseProductFromRequest(request);
+            productDAO.insertProduct(product);
+            List<Product> prds = productDAO.getAllProducts();
+            request.setAttribute("SUCCESS", "Product added successfully!");
+            request.setAttribute("prds", prds);
+        } catch (NumberFormatException e) {
+            request.setAttribute("ERROR", "Invalid number format!");
+        } catch (ClassNotFoundException ex) {
+            log("CreateAccount _ ClassNotFound: " + ex.getMessage());
+        } catch (SQLException ex) {
+            String msg = ex.getMessage();
+            log("CreateAccount _ SQL: " + msg);
+            if (msg.contains("duplicate")) {
+                request.setAttribute("ERROR", "Product ID already exists!");
+            }
+        } finally {
+            HttpSession session = request.getSession();
+            if (request.getAttribute("ERROR") != null) {
+                session.setAttribute("error", (String) request.getAttribute("ERROR"));
+            } else if (request.getAttribute("SUCCESS") != null) {
+                session.setAttribute("success", (String) request.getAttribute("SUCCESS"));
+            }
+            response.sendRedirect("AdminController?tab=products");
+        }
+    }
+
+    private Product parseProductFromRequest(HttpServletRequest request) throws NumberFormatException, IOException, ServletException {
+        String proId = request.getParameter("proId");
+        String proName = request.getParameter("proName");
+        String proDescription = request.getParameter("proDescription");
+        BigDecimal proPrice = new BigDecimal(request.getParameter("proPrice"));
+        int proTypeId = Integer.parseInt(request.getParameter("proTypeId"));
+        // HANDLE FILE UPLOAD
+        Part filePart = request.getPart("proImageMain");
+        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+
+        String uploadPath = getServletContext().getRealPath("/") + "images" + File.separator + "products";
+        File uploadDir = new File(uploadPath);
+        if (!uploadDir.exists()) {
+            uploadDir.mkdirs();
+        }
+
+        if (fileName != null && !fileName.isEmpty()) {
+            filePart.write(uploadPath + File.separator + fileName);
+        }
+
+        String proImageMain = fileName;
+
+        return new Product(proId, proTypeId, proName, proDescription, proPrice, proImageMain);
+    }
+
+    private void deleteProduct(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            ProductDAO productDAO = new ProductDAO();
+            productDAO.deleteProduct(proId);
+            response.sendRedirect("AdminController?tab=products");
+        } catch (Exception e) {
+            throw new ServletException(e);
         }
     }
 

@@ -10,13 +10,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const paymentMethods = document.querySelectorAll('.payment-method');
 
     // Format card number input
-    cardNumberInput.addEventListener('input', function (e) {
-        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-        let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
-        if (formattedValue.length <= 19) {
-            e.target.value = formattedValue;
-        }
-    });
+//    cardNumberInput.addEventListener('input', function (e) {
+//        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+//        let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+//        if (formattedValue.length <= 19) {
+//            e.target.value = formattedValue;
+//        }
+//    });
 
     // Format expiry date input
     expiryDateInput.addEventListener('input', function (e) {

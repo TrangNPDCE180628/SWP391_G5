@@ -1,6 +1,9 @@
 package DAOs;
 
+import Models.Attribute;
 import Models.Product;
+import Models.ProductAttribute;
+import Models.ProductTypes;
 import Ultis.DBContext;
 
 import java.sql.*;
@@ -13,7 +16,7 @@ public class ProductDAO {
     // INSERT
     public void insertProduct(Product product) throws SQLException, ClassNotFoundException {
         String sql = "INSERT INTO Product (proId, proTypeId, proName, proDescription, proPrice, proImageUrl) VALUES (?, ?, ?, ?, ?, ?)";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, product.getProId());
             stmt.setInt(2, product.getProTypeId());
             stmt.setString(3, product.getProName());
@@ -27,7 +30,7 @@ public class ProductDAO {
     // INSERT STOCK
     public void insertStock(String proId, int stockQuantity) throws SQLException, ClassNotFoundException {
         String sql = "INSERT INTO Stock (proId, stockQuantity, lastUpdated) VALUES (?, ?, GETDATE())";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, proId);
             stmt.setInt(2, stockQuantity);
             stmt.executeUpdate();
@@ -37,7 +40,7 @@ public class ProductDAO {
     // GET STOCK QUANTITY
     public int getStockQuantity(String proId) throws SQLException, ClassNotFoundException {
         String sql = "SELECT stockQuantity FROM Stock WHERE proId = ?";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, proId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -50,7 +53,7 @@ public class ProductDAO {
     // UPDATE STOCK
     public void updateStock(String proId, int stockQuantity) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE Stock SET stockQuantity = ?, lastUpdated = GETDATE() WHERE proId = ?";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, stockQuantity);
             stmt.setString(2, proId);
             int rowsAffected = stmt.executeUpdate();
@@ -65,7 +68,7 @@ public class ProductDAO {
     public List<Product> getAllProducts() throws SQLException, ClassNotFoundException {
         List<Product> list = new ArrayList<>();
         String sql = "SELECT p.*, s.stockQuantity FROM Product p LEFT JOIN Stock s ON p.proId = s.proId";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql);  ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Product p = new Product();
                 p.setProId(rs.getString("proId"));
@@ -83,7 +86,7 @@ public class ProductDAO {
     // READ BY ID
     public Product getById(String id) throws SQLException, ClassNotFoundException {
         String sql = "SELECT p.*, s.stockQuantity FROM Product p LEFT JOIN Stock s ON p.proId = s.proId WHERE p.proId = ?";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -103,7 +106,7 @@ public class ProductDAO {
     // UPDATE
     public void updateProduct(Product product) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE Product SET proTypeId=?, proName=?, proDescription=?, proPrice=?, proImageUrl=? WHERE proId=?";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, product.getProTypeId());
             stmt.setString(2, product.getProName());
             stmt.setString(3, product.getProDescription());
@@ -117,7 +120,7 @@ public class ProductDAO {
     // DELETE
     public void deleteProduct(String id) throws SQLException, ClassNotFoundException {
         String sql = "DELETE FROM Product WHERE proId = ?";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
             stmt.executeUpdate();
         }
@@ -129,7 +132,7 @@ public class ProductDAO {
         String sql = "SELECT p.*, s.stockQuantity FROM Product p LEFT JOIN Stock s ON p.proId = s.proId ORDER BY p.proId OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         List<Product> products = new ArrayList<>();
 
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, offset);
             stmt.setInt(2, productsPerPage);
             ResultSet rs = stmt.executeQuery();
@@ -151,7 +154,7 @@ public class ProductDAO {
     // COUNT ALL
     public int countAll() throws SQLException, ClassNotFoundException {
         String sql = "SELECT COUNT(*) FROM Product";
-        try ( Connection conn = DBContext.getConnection();  Statement stmt = conn.createStatement();  ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = DBContext.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) {
                 return rs.getInt(1);
             }
@@ -165,7 +168,7 @@ public class ProductDAO {
         String sql = "SELECT p.*, s.stockQuantity FROM Product p LEFT JOIN Stock s ON p.proId = s.proId WHERE p.proName LIKE ? ORDER BY p.proId OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         List<Product> products = new ArrayList<>();
 
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, "%" + searchTerm + "%");
             stmt.setInt(2, offset);
             stmt.setInt(3, productsPerPage);
@@ -189,7 +192,7 @@ public class ProductDAO {
     // COUNT SEARCH RESULTS
     public int countSearchResults(String searchTerm) throws SQLException, ClassNotFoundException {
         String sql = "SELECT COUNT(*) FROM Product WHERE proName LIKE ?";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, "%" + searchTerm + "%");
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -205,7 +208,7 @@ public class ProductDAO {
         String sql = "SELECT p.*, s.stockQuantity FROM Product p LEFT JOIN Stock s ON p.proId = s.proId WHERE p.proTypeId = ? ORDER BY p.proId OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         List<Product> products = new ArrayList<>();
 
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, typeId);
             stmt.setInt(2, offset);
             stmt.setInt(3, productsPerPage);
@@ -225,10 +228,50 @@ public class ProductDAO {
         return products;
     }
 
+    public Product getProductDetail(String proId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT p.*, a.attributeName, pa.value, a.unit, p.proName, pt.proTypeName\n"
+                + " FROM Product p \n"
+                + "                 LEFT JOIN ProductAttribute pa ON p.proId = pa.proId\n"
+                + "                 LEFT JOIN Attribute a ON pa.attributeId = a.attributeId\n"
+                + "                 JOIN ProductType pt ON p.proTypeId = pt.proTypeId\n"
+                + "                 WHERE p.proId = ?";
+        Product product = null;
+
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, proId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                product = new Product();
+                product.setProId(rs.getString("proId"));
+                product.setProName(rs.getString("proName"));
+                product.setProTypeId(rs.getInt("proTypeId"));
+                product.setProDescription(rs.getString("proDescription"));
+                product.setProPrice(rs.getBigDecimal("proPrice"));
+                product.setProImageMain(rs.getString("proImageUrl"));
+
+                // Tạo danh sách thuộc tính cho sản phẩm
+                List<ProductAttribute> attributes = new ArrayList<>();
+                do {
+                    ProductAttribute productAttribute = new ProductAttribute();
+                    productAttribute.setAttributeName(rs.getString("attributeName"));
+                    productAttribute.setValue(rs.getString("value"));
+                    productAttribute.setUnit(rs.getString("unit"));
+                    productAttribute.setProductName(rs.getString("proName"));
+                    productAttribute.setProductType(rs.getString("proTypeName"));
+                    attributes.add(productAttribute);
+                } while (rs.next());
+
+                product.setProductAttributes(attributes);  // Gán danh sách thuộc tính vào sản phẩm
+            }
+        }
+        return product;
+    } 
     // COUNT BY CATEGORY ID
     public int countByCategoryId(int typeId) throws SQLException, ClassNotFoundException {
         String sql = "SELECT COUNT(*) FROM Product WHERE proTypeId = ?";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, typeId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
