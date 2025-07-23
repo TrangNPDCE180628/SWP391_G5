@@ -372,4 +372,77 @@ public class OrderDAO {
             return false;
         }
     }
+
+    // Get orders by customer ID
+    public List<Order> getOrdersByCustomerId(String customerId) throws SQLException, ClassNotFoundException {
+        List<Order> orders = new ArrayList<>();
+        String sql = "SELECT * FROM [Order] WHERE cusId = ? ORDER BY orderDate DESC";
+        
+        try (Connection conn = DBContext.getConnection(); 
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, customerId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    orders.add(extractOrderFromResultSet(rs));
+                }
+            }
+        }
+        return orders;
+    }
+    
+    // Get orders by customer ID and status
+    public List<Order> getOrdersByCustomerIdAndStatus(String customerId, String status) throws SQLException, ClassNotFoundException {
+        List<Order> orders = new ArrayList<>();
+        String sql = "SELECT * FROM [Order] WHERE cusId = ? AND orderStatus = ? ORDER BY orderDate DESC";
+        
+        try (Connection conn = DBContext.getConnection(); 
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, customerId);
+            stmt.setString(2, status);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    orders.add(extractOrderFromResultSet(rs));
+                }
+            }
+        }
+        return orders;
+    }
+    
+    // Get orders by customer ID with multiple statuses
+    public List<Order> getOrdersByCustomerIdAndStatuses(String customerId, List<String> statuses) throws SQLException, ClassNotFoundException {
+        if (statuses == null || statuses.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        List<Order> orders = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM [Order] WHERE cusId = ? AND orderStatus IN (");
+        
+        for (int i = 0; i < statuses.size(); i++) {
+            sql.append("?");
+            if (i < statuses.size() - 1) {
+                sql.append(",");
+            }
+        }
+        sql.append(") ORDER BY orderDate DESC");
+        
+        try (Connection conn = DBContext.getConnection(); 
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            
+            stmt.setString(1, customerId);
+            for (int i = 0; i < statuses.size(); i++) {
+                stmt.setString(i + 2, statuses.get(i));
+            }
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    orders.add(extractOrderFromResultSet(rs));
+                }
+            }
+        }
+        return orders;
+    }
 }
