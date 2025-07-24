@@ -485,7 +485,7 @@
                 </a>
 
                 <c:choose>
-                    <c:when test="${order.orderStatus == 'Pending' || order.orderStatus == 'Waiting for Payment'}">
+                    <c:when test="${order.orderStatus == 'pending' || order.orderStatus == 'Waiting for Payment'}">
                         <button class="btn btn-danger btn-lg me-3" data-order-id="${order.orderId}" onclick="cancelOrder(this.getAttribute('data-order-id'))">
                             <i class="fas fa-times me-2"></i>Hủy đơn hàng
                         </button>

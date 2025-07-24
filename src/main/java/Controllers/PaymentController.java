@@ -391,8 +391,42 @@ public class PaymentController extends HttpServlet {
         }
     }
 
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.sendRedirect("CartController?action=view");
+        try {
+            String orderIdStr = request.getParameter("orderId");
+            if (orderIdStr != null) {
+                int orderId = Integer.parseInt(orderIdStr);
+                HttpSession session = request.getSession(false);
+                User user = (User) session.getAttribute("LOGIN_USER");
+
+                if (user == null) {
+                    response.sendRedirect("login.jsp");
+                    return;
+                }
+
+                OrderDAO dao = new OrderDAO();
+                Order order = dao.getOrderById(orderId);
+
+                if (order != null && "pending".equalsIgnoreCase(order.getOrderStatus())
+                        && order.getCusId().equals(user.getId())) {
+                    request.setAttribute("order", order);
+                    request.getRequestDispatcher("payment.jsp").forward(request, response);
+                    return;
+                }
+
+                // Nếu không đúng trạng thái hoặc không thuộc về user
+                session.setAttribute("error", "Order is not valid or you are not authorized.");
+                response.sendRedirect("CartController?action=view");
+            } else {
+                response.sendRedirect("CartController?action=view");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.getSession().setAttribute("error", "Unexpected error: " + e.getMessage());
+            response.sendRedirect("CartController?action=view");
+        }
     }
+
 }
