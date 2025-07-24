@@ -35,8 +35,24 @@ public class ProductDetailServlet extends HttpServlet {
                 request.getRequestDispatcher("error.jsp").forward(request, response);
                 return;
             }
-            HttpSession session = request.getSession();
-            User loginUser = (User) session.getAttribute("LOGIN_USER");
+            // Check authentication manually first
+            HttpSession session = request.getSession(false);
+            User loginUser = null;
+            if (session != null) {
+                loginUser = (User) session.getAttribute("LOGIN_USER");
+            }
+            // If not authenticated, store current URL and redirect to login
+            if (loginUser == null) {
+                String originalURL = request.getRequestURI();
+                String queryString = request.getQueryString();
+                if (queryString != null) {
+                    originalURL += "?" + queryString;
+                }
+
+                // Create session to store redirect URL
+                session = request.getSession(true);
+                session.setAttribute("REDIRECT_URL", originalURL);
+            }
 
             if (loginUser != null) {
                 String cusId = loginUser.getId();
