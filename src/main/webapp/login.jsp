@@ -57,17 +57,7 @@
             </div>
             <% } %>
 
-            <%-- Hiển thị thông báo khi cần đăng nhập để truy cập trang được yêu cầu --%>
-            <% 
-                String redirectURL = (String) session.getAttribute("REDIRECT_URL");
-                if (redirectURL != null) {
-            %>
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                Bạn cần đăng nhập để truy cập trang này.
-                <br><small>Trang đích: <%= redirectURL %></small>
-            </div>
-            <% } %>
+            
 
             <%-- Hiển thị cảnh báo khi truy cập giỏ hàng mà chưa đăng nhập --%>
             <%

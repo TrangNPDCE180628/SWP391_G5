@@ -318,7 +318,7 @@
                                                 My Orders
                                             </a>
                                         </li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
@@ -517,7 +517,7 @@
                                                             <button class="btn btn-action btn-review" data-order-id="${order.orderId}" onclick="showReviewModal(this.getAttribute('data-order-id'))">
                                                                 <i class="fas fa-star me-1"></i>Đánh Giá
                                                             </button>
-                                                            
+
                                                         </c:when>
                                                         <c:when test="${order.orderStatus == 'Pending' || order.orderStatus == 'Waiting for Payment'}">
                                                             <button class="btn btn-action btn-review" data-order-id="${order.orderId}" onclick="cancelOrder(this.getAttribute('data-order-id'))">
@@ -678,7 +678,7 @@
                                                             }, 1000);
                                                         }
 
-                                                        
+
 
                                                         function cancelOrder(orderId) {
                                                             if (confirm('Bạn có chắc chắn muốn hủy đơn hàng #' + orderId + '?\nHành động này không thể hoàn tác.')) {

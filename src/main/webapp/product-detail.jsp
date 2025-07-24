@@ -204,11 +204,11 @@
 
                                         <!-- Orders (moved below Cart) -->
                                         <li class="nav-item">
-                                            <a class="nav-link" href="OrderController?action=view">
+                                            <a class="nav-link" href="OrderHistoryController">
                                                 My Orders
                                             </a>
                                         </li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
@@ -246,7 +246,7 @@
                                 <p class="text-danger fs-3 fw-bold mb-4">
                                     <fmt:formatNumber value="${product.proPrice}" type="currency" currencySymbol="$" maxFractionDigits="${product.proPrice % 1 == 0 ? 0 : 2}"/>
                                 </p>
-                                
+
                                 <!-- Description -->
                                 <div class="mb-4">
                                     <h5 class="fw-bold">Description</h5>

@@ -72,11 +72,11 @@
 
                                         <!-- Orders (moved below Cart) -->
                                         <li class="nav-item">
-                                            <a class="nav-link" href="OrderController?action=view">
+                                            <a class="nav-link" href="OrderHistoryController">
                                                 My Orders
                                             </a>
                                         </li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
@@ -193,6 +193,38 @@
 
             </form>
         </div>
+
+        <!-- Footer -->
+        <footer class="bg-dark text-light py-4 mt-5">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5><i class="fas fa-microchip me-2"></i>Tech Store</h5>
+                        <p>Your ultimate destination for quality tech products.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Quick Links</h5>
+                        <ul class="list-unstyled">
+                            <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>About Us</a></li>
+                            <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>Contact</a></li>
+                            <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>FAQs</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Connect With Us</h5>
+                        <div class="social-links">
+                            <a href="#" class="text-light me-3"><i class="fab fa-facebook fa-lg"></i></a>
+                            <a href="#" class="text-light me-3"><i class="fab fa-instagram fa-lg"></i></a>
+                            <a href="#" class="text-light me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <hr class="mt-4">
+                <div class="text-center">
+                    <small>© 2025 Tech Store. All rights reserved.</small>
+                </div>
+            </div>
+        </footer>
 
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

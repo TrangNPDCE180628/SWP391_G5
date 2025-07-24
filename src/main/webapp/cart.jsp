@@ -100,7 +100,7 @@
                                                     My Orders
                                                 </a>
                                             </li>
-                                            <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                            <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                                 <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                                 </c:if>
                                             <li><hr class="dropdown-divider"></li>

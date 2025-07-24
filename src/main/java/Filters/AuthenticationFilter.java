@@ -40,6 +40,7 @@ public class AuthenticationFilter implements Filter {
         "/home.jsp",
         "/product-list.jsp",
         "/product-detail.jsp",
+        "/product-detail",
         "/forgot-password.jsp",
         "/reset-password.jsp",
         "/LoginController",
