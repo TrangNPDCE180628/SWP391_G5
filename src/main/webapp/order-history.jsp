@@ -2,11 +2,11 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Lịch sử đơn hàng - Tech Store</title>
+        <title>Order History - Tech Store</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <style>
@@ -173,7 +173,11 @@
                 background-color: #d4edda;
                 color: #155724;
             }
-            .status-shipping {
+            .status-shipped {
+                background-color: #cce7ff;
+                color: #0056b3;
+            }
+            .status-processing {
                 background-color: #d1ecf1;
                 color: #0c5460;
             }
@@ -291,7 +295,7 @@
                     <ul class="navbar-nav ms-auto">
                         <!-- Cart icon (moved up) -->
                         <li class="nav-item">
-                            <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
+                            <a class="nav-link position-relative" href="CartController?action=view" title="View Cart">
                                 <i class="fas fa-shopping-cart fa-lg"></i>
                                 <c:if test="${sessionScope.cartSize > 0}">
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -323,7 +327,7 @@
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
-                                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                     </ul>
                                 </li>
                             </c:when>
@@ -342,8 +346,25 @@
                 <!-- Header -->
                 <div class="p-4 border-bottom">
                     <h2 class="mb-0">
-                        <i class="fas fa-history me-2"></i>Lịch sử đơn hàng
+                        <i class="fas fa-history me-2"></i>Order History
                     </h2>
+                    
+                    <!-- Success/Error Messages -->
+                    <c:if test="${not empty sessionScope.successMessage}">
+                        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>${sessionScope.successMessage}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <c:remove var="successMessage" scope="session"/>
+                    </c:if>
+                    
+                    <c:if test="${not empty sessionScope.errorMessage}">
+                        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>${sessionScope.errorMessage}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <c:remove var="errorMessage" scope="session"/>
+                    </c:if>
                 </div>
 
                 <!-- Tab Navigation -->
@@ -351,43 +372,43 @@
                     <li class="nav-item" role="presentation">
                         <a class="nav-link ${currentTab == 'all' ? 'active' : ''}" 
                            href="${pageContext.request.contextPath}/order-history?tab=all">
-                            Tất cả
+                            All
                             <c:if test="${allCount > 0}">
                                 <span class="badge bg-secondary ms-1">${allCount}</span>
                             </c:if>
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link ${currentTab == 'pending-payment' ? 'active' : ''}" 
-                           href="${pageContext.request.contextPath}/order-history?tab=pending-payment">
-                            Chờ thanh toán
+                        <a class="nav-link ${currentTab == 'pending' ? 'active' : ''}" 
+                           href="${pageContext.request.contextPath}/order-history?tab=pending">
+                            Pending Payment
                             <c:if test="${pendingCount > 0}">
                                 <span class="badge bg-warning ms-1">${pendingCount}</span>
                             </c:if>
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link ${currentTab == 'shipping' ? 'active' : ''}" 
-                           href="${pageContext.request.contextPath}/order-history?tab=shipping">
-                            Vận chuyển
-                            <c:if test="${shippingCount > 0}">
-                                <span class="badge bg-info ms-1">${shippingCount}</span>
+                        <a class="nav-link ${currentTab == 'processing' ? 'active' : ''}" 
+                           href="${pageContext.request.contextPath}/order-history?tab=processing">
+                            Processing
+                            <c:if test="${processingCount > 0}">
+                                <span class="badge bg-info ms-1">${processingCount}</span>
                             </c:if>
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link ${currentTab == 'delivery' ? 'active' : ''}" 
-                           href="${pageContext.request.contextPath}/order-history?tab=delivery">
-                            Chờ giao hàng
-                            <c:if test="${deliveryCount > 0}">
-                                <span class="badge bg-primary ms-1">${deliveryCount}</span>
+                        <a class="nav-link ${currentTab == 'shipped' ? 'active' : ''}" 
+                           href="${pageContext.request.contextPath}/order-history?tab=shipped">
+                            Shipped
+                            <c:if test="${shippedCount > 0}">
+                                <span class="badge bg-primary ms-1">${shippedCount}</span>
                             </c:if>
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
                         <a class="nav-link ${currentTab == 'completed' ? 'active' : ''}" 
                            href="${pageContext.request.contextPath}/order-history?tab=completed">
-                            Hoàn thành
+                            Completed
                             <c:if test="${completedCount > 0}">
                                 <span class="badge bg-success ms-1">${completedCount}</span>
                             </c:if>
@@ -396,13 +417,12 @@
                     <li class="nav-item" role="presentation">
                         <a class="nav-link ${currentTab == 'cancelled' ? 'active' : ''}" 
                            href="${pageContext.request.contextPath}/order-history?tab=cancelled">
-                            Đã hủy
+                            Cancelled
                             <c:if test="${cancelledCount > 0}">
                                 <span class="badge bg-danger ms-1">${cancelledCount}</span>
                             </c:if>
                         </a>
                     </li>
-
                 </ul>
 
                 <!-- Search Bar -->
@@ -411,7 +431,7 @@
                         <span class="input-group-text">
                             <i class="fas fa-search"></i>
                         </span>
-                        <input type="text" class="form-control" placeholder="Bạn có thể tìm kiếm theo tên Shop, ID đơn hàng hoặc Tên Sản phẩm">
+                        <input type="text" class="form-control" placeholder="You can search by Shop name, Order ID or Product name">
                     </div>
                 </div>
 
@@ -426,32 +446,37 @@
                                         <!-- Order Header -->
                                         <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light">
                                             <div class="d-flex align-items-center">
-                                                <span class="badge bg-primary me-2">Đơn hàng #${order.orderId}</span>
+                                                <span class="badge bg-primary me-2">Order #${order.orderId}</span>
                                                 <small class="text-muted">
                                                     <fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/>
                                                 </small>
                                             </div>
                                             <div class="d-flex align-items-center">
                                                 <c:choose>
-                                                    <c:when test="${order.orderStatus == 'Completed'}">
+                                                    <c:when test="${order.orderStatus == 'completed'}">
                                                         <i class="fas fa-check-circle text-success me-2"></i>
-                                                        <span class="text-success">Giao hàng thành công</span>
-                                                        <span class="status-badge status-completed ms-2">HOÀN THÀNH</span>
+                                                        <span class="text-success">Payment completed</span>
+                                                        <span class="status-badge status-completed ms-2">COMPLETED</span>
                                                     </c:when>
-                                                    <c:when test="${order.orderStatus == 'Shipping' || order.orderStatus == 'Processing'}">
+                                                    <c:when test="${order.orderStatus == 'shipped'}">
+                                                        <i class="fas fa-check-double text-primary me-2"></i>
+                                                        <span class="text-primary">Shipped</span>
+                                                        <span class="status-badge status-shipped ms-2">SHIPPED</span>
+                                                    </c:when>
+                                                    <c:when test="${order.orderStatus == 'processing'}">
                                                         <i class="fas fa-truck text-info me-2"></i>
-                                                        <span class="text-info">Đang vận chuyển</span>
-                                                        <span class="status-badge status-shipping ms-2">VẬN CHUYỂN</span>
+                                                        <span class="text-info">Processing</span>
+                                                        <span class="status-badge status-processing ms-2">PROCESSING</span>
                                                     </c:when>
-                                                    <c:when test="${order.orderStatus == 'Pending' || order.orderStatus == 'Waiting for Payment'}">
+                                                    <c:when test="${order.orderStatus == 'pending'}">
                                                         <i class="fas fa-clock text-warning me-2"></i>
-                                                        <span class="text-warning">Chờ thanh toán</span>
-                                                        <span class="status-badge status-pending ms-2">CHỜ THANH TOÁN</span>
+                                                        <span class="text-warning">Pending payment</span>
+                                                        <span class="status-badge status-pending ms-2">PENDING PAYMENT</span>
                                                     </c:when>
-                                                    <c:when test="${order.orderStatus == 'Cancelled'}">
+                                                    <c:when test="${order.orderStatus == 'cancel'}">
                                                         <i class="fas fa-times-circle text-danger me-2"></i>
-                                                        <span class="text-danger">Đã hủy</span>
-                                                        <span class="status-badge status-cancelled ms-2">ĐÃ HỦY</span>
+                                                        <span class="text-danger">Cancelled</span>
+                                                        <span class="status-badge status-cancelled ms-2">CANCELLED</span>
                                                     </c:when>
                                                     <c:otherwise>
                                                         <i class="fas fa-info-circle text-secondary me-2"></i>
@@ -466,20 +491,20 @@
                                         <div class="p-3">
                                             <div class="row">
                                                 <div class="col-md-8">
-                                                    <h6><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng:</h6>
+                                                    <h6><i class="fas fa-map-marker-alt me-2"></i>Shipping Address:</h6>
                                                     <p class="text-muted mb-2">${order.shippingAddress}</p>
 
                                                     <c:if test="${not empty order.receiverName}">
-                                                        <p class="mb-1"><strong>Người nhận:</strong> ${order.receiverName}</p>
+                                                        <p class="mb-1"><strong>Receiver:</strong> ${order.receiverName}</p>
                                                     </c:if>
                                                     <c:if test="${not empty order.receiverPhone}">
-                                                        <p class="mb-1"><strong>SĐT:</strong> ${order.receiverPhone}</p>
+                                                        <p class="mb-1"><strong>Phone:</strong> ${order.receiverPhone}</p>
                                                     </c:if>
 
-                                                    <p class="mb-1"><strong>Phương thức thanh toán:</strong> 
+                                                    <p class="mb-1"><strong>Payment Method:</strong> 
                                                         <c:choose>
                                                             <c:when test="${order.paymentMethod == 'COD'}">
-                                                                <span class="badge bg-warning">Thanh toán khi nhận hàng</span>
+                                                                <span class="badge bg-warning">Cash on Delivery</span>
                                                             </c:when>
                                                             <c:when test="${order.paymentMethod == 'VNPay'}">
                                                                 <span class="badge bg-primary">VNPay</span>
@@ -492,15 +517,15 @@
                                                 </div>
                                                 <div class="col-md-4 text-end">
                                                     <div class="order-total-summary">
-                                                        <p class="mb-1">Tổng tiền hàng: 
+                                                        <p class="mb-1">Total Amount: 
                                                             <fmt:formatNumber value="${order.totalAmount}" pattern="#,###"/>đ
                                                         </p>
                                                         <c:if test="${order.discountAmount != null && order.discountAmount > 0}">
-                                                            <p class="mb-1 text-success">Giảm giá: 
+                                                            <p class="mb-1 text-success">Discount: 
                                                                 -<fmt:formatNumber value="${order.discountAmount}" pattern="#,###"/>đ
                                                             </p>
                                                         </c:if>
-                                                        <h5 class="mb-0 text-danger">Thành tiền: 
+                                                        <h5 class="mb-0 text-danger">Final Amount: 
                                                             <fmt:formatNumber value="${order.finalAmount != null ? order.finalAmount : order.totalAmount}" pattern="#,###"/>đ
                                                         </h5>
                                                     </div>
@@ -513,38 +538,40 @@
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="action-buttons">
                                                     <c:choose>
-                                                        <c:when test="${order.orderStatus == 'Completed'}">
+                                                        <c:when test="${order.orderStatus == 'completed'}">
                                                             <button class="btn btn-action btn-review" data-order-id="${order.orderId}" onclick="showReviewModal(this.getAttribute('data-order-id'))">
-                                                                <i class="fas fa-star me-1"></i>Đánh Giá
+                                                                <i class="fas fa-star me-1"></i>Review
                                                             </button>
-
                                                         </c:when>
-                                                        <c:when test="${order.orderStatus == 'Pending' || order.orderStatus == 'Waiting for Payment'}">
-                                                            <button class="btn btn-action btn-review" data-order-id="${order.orderId}" onclick="cancelOrder(this.getAttribute('data-order-id'))">
-                                                                <i class="fas fa-times me-1"></i>Hủy Đơn Hàng
+                                                        <c:when test="${order.orderStatus == 'pending'}">
+                                                            <button class="btn btn-action btn-cancel" data-order-id="${order.orderId}" onclick="cancelOrder(this.getAttribute('data-order-id'))">
+                                                                <i class="fas fa-times me-1"></i>Cancel Order
                                                             </button>
                                                             <c:if test="${order.paymentMethod != 'COD'}">
                                                                 <button class="btn btn-action btn-request" data-order-id="${order.orderId}" onclick="payNow(this.getAttribute('data-order-id'))">
-                                                                    <i class="fas fa-credit-card me-1"></i>Thanh Toán Ngay
+                                                                    <i class="fas fa-credit-card me-1"></i>Pay Now
                                                                 </button>
                                                             </c:if>
                                                         </c:when>
-                                                        <c:when test="${order.orderStatus == 'Shipping' || order.orderStatus == 'Processing'}">
-                                                            <button class="btn btn-action btn-request" data-order-id="${order.orderId}" onclick="trackOrder(this.getAttribute('data-order-id'))">
-                                                                <i class="fas fa-truck me-1"></i>Theo Dõi Đơn Hàng
+                                                        <c:when test="${order.orderStatus == 'processing'}">
+                                                            <button class="btn btn-action btn-review" data-order-id="${order.orderId}" onclick="confirmReceived(this.getAttribute('data-order-id'))">
+                                                                <i class="fas fa-check me-1"></i>Received
                                                             </button>
+                                                        </c:when>
+                                                        <c:when test="${order.orderStatus == 'shipped'}">
+                                                            <!-- No action button for shipped status -->
                                                         </c:when>
                                                     </c:choose>
 
                                                     <button class="btn btn-action btn-request" data-order-id="${order.orderId}" onclick="viewOrderDetails(this.getAttribute('data-order-id'))">
-                                                        <i class="fas fa-eye me-1"></i>Xem Chi Tiết
+                                                        <i class="fas fa-eye me-1"></i>View Details
                                                     </button>
                                                 </div>
 
                                                 <div class="text-end">
                                                     <a href="${pageContext.request.contextPath}/OrderDetailsController?orderId=${order.orderId}" 
                                                        class="btn btn-outline-primary btn-sm">
-                                                        <i class="fas fa-info-circle me-1"></i>Chi tiết đơn hàng
+                                                        <i class="fas fa-info-circle me-1"></i>Order Details
                                                     </a>
                                                 </div>
                                             </div>
@@ -555,37 +582,37 @@
                             <c:otherwise>
                                 <div class="empty-state">
                                     <c:choose>
-                                        <c:when test="${currentTab == 'pending-payment'}">
+                                        <c:when test="${currentTab == 'pending'}">
                                             <i class="fas fa-credit-card"></i>
-                                            <h5>Không có đơn hàng nào đang chờ thanh toán</h5>
-                                            <p>Tất cả đơn hàng của bạn đã được thanh toán hoặc đã bị hủy.</p>
+                                            <h5>No pending payment orders</h5>
+                                            <p>All your orders have been paid or cancelled.</p>
                                         </c:when>
-                                        <c:when test="${currentTab == 'shipping'}">
+                                        <c:when test="${currentTab == 'processing'}">
                                             <i class="fas fa-truck"></i>
-                                            <h5>Không có đơn hàng nào đang vận chuyển</h5>
-                                            <p>Hiện tại không có đơn hàng nào đang trong quá trình vận chuyển.</p>
+                                            <h5>No orders being processed</h5>
+                                            <p>Currently no orders are in processing.</p>
                                         </c:when>
-                                        <c:when test="${currentTab == 'delivery'}">
+                                        <c:when test="${currentTab == 'shipped'}">
                                             <i class="fas fa-box"></i>
-                                            <h5>Không có đơn hàng nào đang chờ giao</h5>
-                                            <p>Không có đơn hàng nào đang chờ giao hàng.</p>
+                                            <h5>No shipped orders</h5>
+                                            <p>No orders have been shipped yet.</p>
                                         </c:when>
                                         <c:when test="${currentTab == 'completed'}">
                                             <i class="fas fa-check-circle"></i>
-                                            <h5>Chưa có đơn hàng nào hoàn thành</h5>
-                                            <p>Bạn chưa có đơn hàng nào được giao thành công.</p>
+                                            <h5>No completed orders</h5>
+                                            <p>You don't have any completed orders yet.</p>
                                         </c:when>
                                         <c:when test="${currentTab == 'cancelled'}">
                                             <i class="fas fa-times-circle"></i>
-                                            <h5>Không có đơn hàng nào đã bị hủy</h5>
-                                            <p>Bạn chưa hủy đơn hàng nào.</p>
+                                            <h5>No cancelled orders</h5>
+                                            <p>You haven't cancelled any orders.</p>
                                         </c:when>
                                         <c:otherwise>
                                             <i class="fas fa-shopping-bag"></i>
-                                            <h5>Chưa có đơn hàng nào</h5>
-                                            <p>Bạn chưa có đơn hàng nào. Hãy mua sắm ngay!</p>
+                                            <h5>No orders yet</h5>
+                                            <p>You don't have any orders yet. Start shopping now!</p>
                                             <a href="${pageContext.request.contextPath}/HomeController" class="btn btn-primary">
-                                                <i class="fas fa-shopping-cart me-2"></i>Mua sắm ngay
+                                                <i class="fas fa-shopping-cart me-2"></i>Shop Now
                                             </a>
                                         </c:otherwise>
                                     </c:choose>
@@ -632,7 +659,7 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
                                                         // Search functionality
-                                                        document.querySelector('input[placeholder*="tìm kiếm"]').addEventListener('input', function (e) {
+                                                        document.querySelector('input[placeholder*="search"]').addEventListener('input', function (e) {
                                                             const searchTerm = e.target.value.toLowerCase();
                                                             const orderCards = document.querySelectorAll('.order-card');
 
@@ -650,7 +677,7 @@
                                                             content.innerHTML = `
                     <div class="text-center">
                         <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Đang tải...</span>
+                            <span class="visually-hidden">Loading...</span>
                         </div>
                     </div>
                 `;
@@ -662,16 +689,16 @@
                                                                 content.innerHTML = `
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            Chức năng đánh giá đơn hàng #${orderId} đang được phát triển.
-                            <br>Bạn sẽ có thể đánh giá sản phẩm và để lại nhận xét về chất lượng dịch vụ.
+                            The review feature for order #${orderId} is under development.
+                            <br>You will be able to rate products and leave comments about service quality.
                         </div>
                         <div class="mt-3">
-                            <h6>Đặc tính sẽ có trong phiên bản tiếp theo:</h6>
+                            <h6>Features coming in the next version:</h6>
                             <ul class="list-unstyled">
-                                <li><i class="fas fa-star text-warning me-2"></i>Đánh giá 1-5 sao cho từng sản phẩm</li>
-                                <li><i class="fas fa-comment text-info me-2"></i>Viết nhận xét chi tiết</li>
-                                <li><i class="fas fa-image text-success me-2"></i>Đăng hình ảnh sản phẩm thực tế</li>
-                                <li><i class="fas fa-thumbs-up text-primary me-2"></i>Đánh giá chất lượng dịch vụ</li>
+                                <li><i class="fas fa-star text-warning me-2"></i>1-5 star rating for each product</li>
+                                <li><i class="fas fa-comment text-info me-2"></i>Write detailed reviews</li>
+                                <li><i class="fas fa-image text-success me-2"></i>Upload actual product images</li>
+                                <li><i class="fas fa-thumbs-up text-primary me-2"></i>Rate service quality</li>
                             </ul>
                         </div>
                     `;
@@ -681,74 +708,39 @@
 
 
                                                         function cancelOrder(orderId) {
-                                                            if (confirm('Bạn có chắc chắn muốn hủy đơn hàng #' + orderId + '?\nHành động này không thể hoàn tác.')) {
+                                                            if (confirm('Are you sure you want to cancel order #' + orderId + '?\nThis action cannot be undone.')) {
                                                                 // Show loading state
                                                                 const button = event.target.closest('button');
                                                                 const originalText = button.innerHTML;
-                                                                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang hủy...';
+                                                                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Cancelling...';
                                                                 button.disabled = true;
 
-                                                                // TODO: Call cancel API
-                                                                setTimeout(() => {
-                                                                    window.location.href = '${pageContext.request.contextPath}/OrderController?action=cancel&orderId=' + orderId;
-                                                                }, 1000);
+                                                                // Redirect to cancel endpoint
+                                                                window.location.href = '${pageContext.request.contextPath}/OrderController?action=cancel&orderId=' + orderId;
+                                                            }
+                                                        }
+
+                                                        function confirmReceived(orderId) {
+                                                            if (confirm('Confirm that you have received order #' + orderId + '?\nThe order will be marked as completed.')) {
+                                                                // Show loading state
+                                                                const button = event.target.closest('button');
+                                                                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+                                                                button.disabled = true;
+
+                                                                // Update status to completed
+                                                                window.location.href = '${pageContext.request.contextPath}/OrderController?action=update-status&orderId=' + orderId + '&status=completed';
                                                             }
                                                         }
 
                                                         function payNow(orderId) {
                                                             // Show loading state
                                                             const button = event.target.closest('button');
-                                                            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Chuyển hướng...';
+                                                            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Redirecting...';
                                                             button.disabled = true;
 
                                                             // TODO: Redirect to payment page
                                                             setTimeout(() => {
                                                                 window.location.href = '${pageContext.request.contextPath}/PaymentController?orderId=' + orderId;
-                                                            }, 1000);
-                                                        }
-
-                                                        function trackOrder(orderId) {
-                                                            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
-                                                            const modalTitle = document.getElementById('orderDetailsModalLabel');
-                                                            const content = document.getElementById('orderDetailsContent');
-
-                                                            modalTitle.innerHTML = '<i class="fas fa-truck text-primary me-2"></i>Theo Dõi Đơn Hàng #' + orderId;
-
-                                                            content.innerHTML = `
-                    <div class="text-center">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Đang tải...</span>
-                        </div>
-                    </div>
-                `;
-
-                                                            modal.show();
-
-                                                            // Simulate loading tracking data
-                                                            setTimeout(() => {
-                                                                content.innerHTML = `
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Chức năng theo dõi đơn hàng #${orderId} đang được phát triển.
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6>Trạng thái hiện tại:</h6>
-                                <div class="progress mb-3">
-                                    <div class="progress-bar bg-warning" style="width: 60%"></div>
-                                </div>
-                                <p class="text-muted">Đang vận chuyển (60% hoàn thành)</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6>Thông tin vận chuyển:</h6>
-                                <ul class="list-unstyled">
-                                    <li><strong>Đơn vị vận chuyển:</strong> Giao Hàng Nhanh</li>
-                                    <li><strong>Mã vận đơn:</strong> GHN${orderId}789</li>
-                                    <li><strong>Dự kiến giao:</strong> 2-3 ngày</li>
-                                </ul>
-                            </div>
-                        </div>
-                    `;
                                                             }, 1000);
                                                         }
 
@@ -790,7 +782,7 @@
                     <div class="modal-header">
                         <h5 class="modal-title" id="reviewModalLabel">
                             <i class="fas fa-star text-warning me-2"></i>
-                            Đánh Giá Sản Phẩm
+                            Product Review
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -814,7 +806,7 @@
                     <div class="modal-header">
                         <h5 class="modal-title" id="orderDetailsModalLabel">
                             <i class="fas fa-receipt text-primary me-2"></i>
-                            Chi Tiết Đơn Hàng
+                            Order Details
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -822,7 +814,7 @@
                         <div id="orderDetailsContent">
                             <div class="text-center">
                                 <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Đang tải...</span>
+                                    <span class="visually-hidden">Loading...</span>
                                 </div>
                             </div>
                         </div>

@@ -1,6 +1,7 @@
 package Controllers;
 
 import DAOs.CustomerDAO;
+import Ultis.MD5Util;
 
 import Models.Customer;
 
@@ -58,7 +59,7 @@ public class RegisterController extends HttpServlet {
             Customer user = new Customer();
             user.setCusId(dao.generateNextCusId());
             user.setUsername(username);
-            user.setCusPassword(password);
+            user.setCusPassword(MD5Util.hashPassword(password)); // Hash password before storing
             user.setCusFullName(fullname);
             user.setCusGender(gender);
             user.setCusGmail(gmail);

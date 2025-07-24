@@ -6,7 +6,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Thông Tin Cá Nhân</title>
+        <title>Personal Information</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
         <style>
@@ -49,7 +49,7 @@
                     <ul class="navbar-nav ms-auto">
                         <!-- Cart icon (moved up) -->
                         <li class="nav-item">
-                            <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
+                            <a class="nav-link position-relative" href="CartController?action=view" title="View Cart">
                                 <i class="fas fa-shopping-cart fa-lg"></i>
                                 <c:if test="${sessionScope.cartSize > 0}">
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -81,7 +81,7 @@
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
-                                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                     </ul>
                                 </li>
                             </c:when>
@@ -97,7 +97,7 @@
 
         <!-- Profile Form -->
         <div class="container profile-container">
-            <h3 class="text-center mb-4">Thông Tin Cá Nhân</h3>
+            <h3 class="text-center mb-4">Personal Information</h3>
 
             <c:if test="${not empty message}">
                 <div class="alert alert-success">${message}</div>
@@ -115,21 +115,21 @@
                 </div>
 
                 <div class="mb-3 mt-3">
-                    <label>Tên đăng nhập:</label>
+                    <label>Username:</label>
                     <input type="text" class="form-control" value="${customer.username}" disabled>
                 </div>
 
                 <div class="mb-3">
-                    <label>Họ và tên:</label>
+                    <label>Full Name:</label>
                     <input type="text" class="form-control" name="cusFullName" value="${customer.cusFullName}" required>
                 </div>
 
                 <div class="mb-3">
-                    <label>Giới tính:</label>
+                    <label>Gender:</label>
                     <select class="form-control" name="cusGender">
                         <option value="Male" ${customer.cusGender == 'Male' ? 'selected' : ''}>Nam</option>
-                        <option value="Female" ${customer.cusGender == 'Female' ? 'selected' : ''}>Nữ</option>
-                        <option value="Other" ${customer.cusGender == 'Other' ? 'selected' : ''}>Khác</option>
+                        <option value="Female" ${customer.cusGender == 'Female' ? 'selected' : ''}>Female</option>
+                        <option value="Other" ${customer.cusGender == 'Other' ? 'selected' : ''}>Other</option>
                     </select>
                 </div>
 
@@ -139,29 +139,29 @@
                 </div>
 
                 <div class="mb-3">
-                    <label>Số điện thoại:</label>
+                    <label>Phone Number:</label>
                     <input type="text" class="form-control" name="cusPhone" value="${customer.cusPhone}" required>
                 </div>
 
                 <div class="mb-3">
-                    <label>Mật khẩu:</label>
+                    <label>Password:</label>
                     <input type="password" class="form-control" name="cusPassword" value="${customer.cusPassword}" disabled>
                 </div>
                 <div class="text-center mb-3">
                     <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-                        Đổi mật khẩu
+                        Change Password
                     </button>
                 </div>
 
                 <div class="text-center">
                     <div class="mt-2">
-                        <label class="form-label">Tải ảnh mới:</label>
+                        <label class="form-label">Upload New Photo:</label>
                         <input type="file" class="form-control" name="imageFile">
                         <input type="hidden" name="existingImage" value="${customer.cusImage}">
                     </div>
                 </div>
                 <div class="text-center">
-                    <button type="submit" class="btn btn-primary px-4">Cập nhật</button>
+                    <button type="submit" class="btn btn-primary px-4">Update</button>
                 </div>
 
                 <!-- Modal đổi mật khẩu -->
@@ -169,22 +169,22 @@
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="changePasswordModalLabel">Đổi mật khẩu</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <div class="mb-3">
-                                    <label>Mật khẩu cũ:</label>
+                                    <label>Old password:</label>
                                     <input type="password" class="form-control" name="oldPassword" form="profileForm">
                                 </div>
                                 <div class="mb-3">
-                                    <label>Mật khẩu mới:</label>
+                                    <label>New password:</label>
                                     <input type="password" class="form-control" name="cusPassword" form="profileForm">
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                <button type="button" class="btn btn-primary" onclick="submitForm()">Xác nhận</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="submitForm()">Confirm</button>
                             </div>
                         </div>
                     </div>

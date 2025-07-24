@@ -586,4 +586,138 @@ public class OrderDAO {
         }
         return orders;
     }
+
+    /**
+     * Get revenue growth rate by month compared to previous month
+     */
+    public Map<String, Double> getMonthlyRevenueGrowthRate(int year) throws SQLException, ClassNotFoundException {
+        Map<String, Double> growthRateMap = new LinkedHashMap<>();
+        Map<String, BigDecimal> monthlyRevenue = getMonthlyRevenueInYear(year);
+        
+        BigDecimal previousRevenue = null;
+        for (Map.Entry<String, BigDecimal> entry : monthlyRevenue.entrySet()) {
+            String month = entry.getKey();
+            BigDecimal currentRevenue = entry.getValue();
+            
+            if (previousRevenue != null && previousRevenue.compareTo(BigDecimal.ZERO) > 0) {
+                // Calculate growth rate: (current - previous) / previous * 100
+                BigDecimal growth = currentRevenue.subtract(previousRevenue)
+                    .divide(previousRevenue, 4, BigDecimal.ROUND_HALF_UP)
+                    .multiply(new BigDecimal("100"));
+                growthRateMap.put(month, growth.doubleValue());
+            } else {
+                // First month or previous month was 0, set growth to 0
+                growthRateMap.put(month, 0.0);
+            }
+            previousRevenue = currentRevenue;
+        }
+        return growthRateMap;
+    }
+
+    /**
+     * Get product revenue statistics from order details
+     */
+    public List<Map<String, Object>> getProductRevenue(int year) throws SQLException, ClassNotFoundException {
+        List<Map<String, Object>> productRevenueList = new ArrayList<>();
+        
+        String sql = "SELECT p.proName, " +
+                    "SUM(od.quantity * od.unitPrice) AS revenue, " +
+                    "SUM(od.quantity) AS totalQuantity " +
+                    "FROM [Order] o " +
+                    "JOIN OrderDetail od ON o.orderId = od.orderId " +
+                    "JOIN Product p ON od.proId = p.proId " +
+                    "WHERE o.orderStatus = 'Completed' AND YEAR(o.orderDate) = ? " +
+                    "GROUP BY p.proId, p.proName " +
+                    "ORDER BY revenue DESC";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> productData = new HashMap<>();
+                    productData.put("productName", rs.getString("proName"));
+                    productData.put("revenue", rs.getBigDecimal("revenue"));
+                    productData.put("quantity", rs.getInt("totalQuantity"));
+                    productRevenueList.add(productData);
+                }
+            }
+        }
+        return productRevenueList;
+    }
+
+    /**
+     * Get yearly revenue statistics (last 5 years)
+     */
+    public Map<String, BigDecimal> getYearlyRevenue() throws SQLException, ClassNotFoundException {
+        Map<String, BigDecimal> yearlyRevenueMap = new LinkedHashMap<>();
+        
+        String sql = "SELECT YEAR(orderDate) AS year, SUM(finalAmount) AS revenue " +
+                    "FROM [Order] " +
+                    "WHERE orderStatus = 'Completed' " +
+                    "GROUP BY YEAR(orderDate) " +
+                    "ORDER BY year DESC";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String year = String.valueOf(rs.getInt("year"));
+                    BigDecimal revenue = rs.getBigDecimal("revenue");
+                    yearlyRevenueMap.put(year, revenue);
+                }
+            }
+        }
+        return yearlyRevenueMap;
+    }
+
+    /**
+     * Get revenue for specific year
+     */
+    public BigDecimal getRevenueByYear(int year) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT SUM(finalAmount) AS revenue " +
+                    "FROM [Order] " +
+                    "WHERE orderStatus = 'Completed' AND YEAR(orderDate) = ?";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal revenue = rs.getBigDecimal("revenue");
+                    return revenue != null ? revenue : BigDecimal.ZERO;
+                }
+            }
+        }
+        return BigDecimal.ZERO;
+    }
+
+    /**
+     * Get yearly growth rate compared to previous year
+     */
+    public Map<String, Double> getYearlyGrowthRate() throws SQLException, ClassNotFoundException {
+        Map<String, Double> growthRateMap = new LinkedHashMap<>();
+        Map<String, BigDecimal> yearlyRevenue = getYearlyRevenue();
+        
+        BigDecimal previousRevenue = null;
+        for (Map.Entry<String, BigDecimal> entry : yearlyRevenue.entrySet()) {
+            String year = entry.getKey();
+            BigDecimal currentRevenue = entry.getValue();
+            
+            if (previousRevenue != null && previousRevenue.compareTo(BigDecimal.ZERO) > 0) {
+                // Calculate growth rate: (current - previous) / previous * 100
+                BigDecimal growth = currentRevenue.subtract(previousRevenue)
+                    .divide(previousRevenue, 4, BigDecimal.ROUND_HALF_UP)
+                    .multiply(new BigDecimal("100"));
+                growthRateMap.put(year, growth.doubleValue());
+            } else {
+                growthRateMap.put(year, 0.0);
+            }
+            previousRevenue = currentRevenue;
+        }
+        return growthRateMap;
+    }
 }

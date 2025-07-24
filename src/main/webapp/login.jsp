@@ -46,7 +46,7 @@
             %>
             <div class="alert alert-success">
                 <i class="fas fa-check-circle me-2"></i>
-                Bạn đã đăng xuất thành công!
+                You have been successfully logged out!
             </div>
             <% } %>
 

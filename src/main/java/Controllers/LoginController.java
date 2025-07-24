@@ -7,6 +7,7 @@ import DAOs.StaffDAO;
 import Models.Admin;
 import Models.Staff;
 import Models.Customer;
+import Ultis.MD5Util;
 
 import Models.User;
 
@@ -44,8 +45,8 @@ public class LoginController extends HttpServlet {
             User loginUser = viewDao.getUserByUsername(username);
 
             if (loginUser != null) {
-                // Check password
-                if (password.equals(loginUser.getPassword())) {
+                // Check password using MD5 hash
+                if (MD5Util.verifyPassword(password, loginUser.getPassword())) {
                     System.out.println("Password correct - Role: " + loginUser.getRole());
 
                     HttpSession session = request.getSession();

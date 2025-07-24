@@ -186,7 +186,7 @@
                     <ul class="navbar-nav ms-auto">
                         <!-- Cart icon (moved up) -->
                         <li class="nav-item">
-                            <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
+                            <a class="nav-link position-relative" href="CartController?action=view" title="View Cart">
                                 <i class="fas fa-shopping-cart fa-lg"></i>
                                 <c:if test="${sessionScope.cartSize > 0}">
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -206,19 +206,13 @@
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a class="dropdown-item" href="ProfileCustomerController">Profile</a></li>
-
-                                        <!-- Orders (moved below Cart) -->
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="OrderHistoryController">
-                                                My Orders
-                                            </a>
-                                        </li>
+                                        <li><a class="dropdown-item" href="OrderHistoryController">My Orders</a></li>
                                         <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
-                                            <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                                            <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                     </ul>
                                 </li>
                             </c:when>
