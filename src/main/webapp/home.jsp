@@ -9,7 +9,7 @@
         <title>Tech Store - Your Ultimate Tech Destination</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
- 
+
         <style>
             body {
                 background-color: #f8f9fa;
@@ -34,30 +34,35 @@
                 margin-bottom: 40px;
             }
             .product-card {
-                background: white;
+                display: flex;
+                flex-direction: column;
+                background: #fff;
                 border-radius: 10px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                transition: transform 0.3s;
-                margin-bottom: 20px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+                overflow: hidden;
                 height: 100%;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
             }
+
             .product-card:hover {
                 transform: translateY(-5px);
-                box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                box-shadow: 0 8px 16px rgba(0,0,0,0.12);
             }
+
             .product-image {
-                height: 200px;
-                object-fit: contain;
-                border-radius: 10px 10px 0 0;
                 width: 100%;
-                padding: 10px;
-                background-color: #f8f9fa;
+                height: 200px;
+                object-fit: cover;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+                display: block;
             }
+
             .product-info {
                 padding: 15px;
                 display: flex;
                 flex-direction: column;
-                height: calc(100% - 200px);
+                flex-grow: 1;
             }
             .product-title {
                 font-weight: 600;
@@ -272,7 +277,7 @@
             </div>
 
             <!-- Products Grid -->
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 align-items-stretch">
                 <c:forEach items="${products}" var="product">
                     <div class="col">
                         <div class="product-card position-relative">

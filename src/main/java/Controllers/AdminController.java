@@ -9,6 +9,7 @@ import DAOs.AttributeDAO;
 import DAOs.OrderDetailDAO;
 import DAOs.ProductAttributeDAO;
 import DAOs.ProductDAO;
+import DAOs.ProductTypeDAO;
 import DAOs.ReplyFeedbackDAO;
 import DAOs.StaffDAO;
 import DAOs.StockDAO;
@@ -24,6 +25,7 @@ import Models.Attribute;
 import Models.OrderDetail;
 import Models.Product;
 import Models.ProductAttribute;
+import Models.ProductTypes;
 import Models.ReplyFeedback;
 import Models.Staff;
 import Models.Stock;
@@ -191,6 +193,15 @@ public class AdminController extends BaseController {
                 case "RevenueByMonth":
                     handleRevenueByMonth(request, response);
                     return;
+                case "addProductType":
+                    addProductType(request, response);
+                    break;
+                case "updateProductType":
+                    updateProductType(request, response);
+                    break;
+                case "deleteProductType":
+                    deleteProductType(request, response);
+                    break;
                 default:
                     loadAdminPage(request, response);
             }
@@ -220,6 +231,7 @@ public class AdminController extends BaseController {
             ProductAttributeDAO paDAO = new ProductAttributeDAO();
             OrderDAO ordDao = new OrderDAO();
             StockDAO stockDAO = new StockDAO();
+            ProductTypeDAO productTypeDAO = new ProductTypeDAO();
 
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
@@ -231,6 +243,7 @@ public class AdminController extends BaseController {
             List<Order> orders = ordDao.getAll();
             List<Stock> stocks = stockDAO.getAllStocks();
             BigDecimal totalRevenue = ordDao.getTotalRevenue();
+            List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes();
 
             // === NEW: Load từ VIEW ===
             Connection conn = DBContext.getConnection();
@@ -248,6 +261,7 @@ public class AdminController extends BaseController {
             request.setAttribute("orders", orders);
             request.setAttribute("stocks", stocks);
             request.setAttribute("totalRevenue", totalRevenue);
+            request.setAttribute("productTypes", productTypes);
 
             // 1. Lấy danh sách tất cả đơn hàng
             OrderDetailDAO detailDAO = new OrderDetailDAO();
@@ -907,6 +921,125 @@ public class AdminController extends BaseController {
             request.setAttribute("error", "Error loading revenue data: " + e.getMessage());
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
+    }
+    
+    private void addProductType(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proTypeName = request.getParameter("proTypeName").trim();
+            ProductTypeDAO dao = new ProductTypeDAO();
+
+            // BR01 & BR02: Validate name
+            if (proTypeName.isEmpty() || proTypeName.length() < 3 || proTypeName.length() > 100) {
+                request.getSession().setAttribute("error", "Product type name must be between 3 and 100 characters.");
+                response.sendRedirect("AdminController?tab=productTypes");
+                return;
+            }
+
+            // Standardize name (e.g., capitalize first letter)
+            proTypeName = proTypeName.substring(0, 1).toUpperCase() + proTypeName.substring(1).toLowerCase();
+
+            // BR01: Check for unique name
+            if (dao.isProductTypeNameExists(proTypeName)) {
+                request.getSession().setAttribute("error", "Product type name already exists.");
+                response.sendRedirect("AdminController?tab=productTypes");
+                return;
+            }
+
+            ProductTypes productType = new ProductTypes();
+            productType.setName(proTypeName);
+            dao.addProductType(productType);
+            response.sendRedirect("AdminController?tab=productTypes");
+        } catch (Exception e) {
+            throw new ServletException("Error adding product type: " + e.getMessage());
+        }
+    }
+
+    private void updateProductType(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("proTypeId"));
+            String proTypeName = request.getParameter("proTypeName").trim();
+            ProductTypeDAO dao = new ProductTypeDAO();
+
+            // BR02: Validate name length
+            if (proTypeName.isEmpty() || proTypeName.length() < 3 || proTypeName.length() > 100) {
+                request.getSession().setAttribute("error", "Product type name must be between 3 and 100 characters.");
+                response.sendRedirect("AdminController?tab=productTypes");
+                return;
+            }
+
+            // Standardize name
+            proTypeName = proTypeName.substring(0, 1).toUpperCase() + proTypeName.substring(1).toLowerCase();
+
+            // BR01: Check for unique name (excluding current ID)
+            if (dao.isProductTypeNameExistsForOtherId(proTypeName, id)) {
+                request.getSession().setAttribute("error", "Product type name already exists.");
+                response.sendRedirect("AdminController?tab=productTypes");
+                return;
+            }
+
+            // BR04: Check if there are associated products
+            if (dao.hasAssociatedProducts(id)) {
+                ProductTypes existingType = dao.getProductTypeById(id);
+                String existingName = existingType.getName().toLowerCase();
+                String newName = proTypeName.toLowerCase();
+                // Allow minor spelling changes (e.g., Levenshtein distance <= 2)
+                if (getLevenshteinDistance(existingName, newName) > 2) {
+                    request.getSession().setAttribute("error", "Cannot update product type name significantly as it has associated products.");
+                    response.sendRedirect("AdminController?tab=productTypes");
+                    return;
+                }
+            }
+
+            ProductTypes productType = new ProductTypes(id, proTypeName);
+            dao.updateProductType(productType);
+            response.sendRedirect("AdminController?tab=productTypes");
+        } catch (Exception e) {
+            throw new ServletException("Error updating product type: " + e.getMessage());
+        }
+    }
+
+    private void deleteProductType(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            ProductTypeDAO dao = new ProductTypeDAO();
+
+            // BR06: Prevent deletion if linked to products or attributes
+            if (dao.hasAssociatedProducts(id) || dao.hasAssociatedAttributes(id)) {
+                request.getSession().setAttribute("error", "Cannot delete product type as it has associated products or attributes.");
+                response.sendRedirect("AdminController?tab=productTypes");
+                return;
+            }
+
+            dao.deleteProductType(id);
+            response.sendRedirect("AdminController?tab=productTypes");
+        } catch (Exception e) {
+            throw new ServletException("Error deleting product type: " + e.getMessage());
+        }
+    }
+    
+    // Levenshtein distance for minor spelling change detection
+    private int getLevenshteinDistance(String s1, String s2) {
+        int len1 = s1.length();
+        int len2 = s2.length();
+        int[][] dp = new int[len1 + 1][len2 + 1];
+
+        for (int i = 0; i <= len1; i++) {
+            dp[i][0] = i;
+        }
+        for (int j = 0; j <= len2; j++) {
+            dp[0][j] = j;
+        }
+
+        for (int i = 1; i <= len1; i++) {
+            for (int j = 1; j <= len2; j++) {
+                int cost = s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1;
+                dp[i][j] = Math.min(Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1), dp[i - 1][j - 1] + cost);
+            }
+        }
+        return dp[len1][len2];
     }
 
     @Override

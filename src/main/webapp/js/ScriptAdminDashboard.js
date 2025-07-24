@@ -517,6 +517,16 @@ function viewProductAttribute(productId, attributeId) {
     new bootstrap.Modal(document.getElementById('viewProductAttributeModal')).show();
 }
 
+function editProductType(id, name) {
+    document.getElementById('editProTypeId').value = id;
+    document.getElementById('editProTypeName').value = name;
+    new bootstrap.Modal(document.getElementById('editProductTypeModal')).show();
+}
 
+function deleteProductType(id) {
+    if (confirm('Are you sure you want to delete this product type?')) {
+        window.location.href = `${contextPath}/AdminController?action=deleteProductType&tab=productTypes&id=${id}`;
+    }
+}
 
 
