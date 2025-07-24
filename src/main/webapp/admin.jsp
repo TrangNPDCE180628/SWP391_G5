@@ -12,6 +12,7 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <link href="css/admindashboard.css" rel="stylesheet" />
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <style>
             .action-buttons .btn {
                 margin-right: 5px;
@@ -62,6 +63,12 @@
                             </li>
 
                             <li class="nav-item">
+                                <a href="#productTypes" class="nav-link" data-bs-toggle="tab">
+                                    <i class="fas fa-list-alt me-2"></i>Product Types
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
                                 <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
                                     <i class="fa-solid fa-ticket me-2"></i>Voucher
                                 </a>
@@ -102,10 +109,12 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
                                 <li>
-                                    <a class="dropdown-item" href="login.jsp">Logout</a>
+                                    <a class="dropdown-item" href="/LogoutController">Logout</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/HomeController">Go Home Page</a>
                                 </li>
                             </ul>
-
                         </div>
                     </div>
                 </div>
@@ -263,10 +272,136 @@
                             </div>
                         </div>
                         <!-- Product Tab -->
+                        <%--<jsp:include page="productManager.jsp" />--%>
                         <div class="tab-pane fade" id="products">
                             <h2>Product Management</h2>
-                            <jsp:include page="productManager.jsp" />
+                            <!-- Search form -->
+                            <form class="row g-3 mb-3" method="get" action="AdminController">
+                                <input type="hidden" name="tab" value="products" />
+                                <input type="hidden" name="action" value="searchPrd" />
+                                <div class="col-auto">
+                                    <input type="text" class="form-control" name="searchValue" placeholder="Search by product name" value="${param.searchName}" />
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn btn-primary mb-3">
+                                        <i class="fas fa-search"></i> Search
+                                    </button>
+                                </div>
+                            </form>
+                            <c:set var="prods" value="${requestScope.prds}" />
+                            <c:if test="${empty prods}">
+                                <h3>Item not found</h3>
+                            </c:if>
+                            <c:if test="${not empty sessionScope.error}">
+                                <div class="alert alert-danger">${sessionScope.error}</div>
+                                <c:remove var="error" scope="session"/>
+                            </c:if>
+                            <c:if test="${not empty sessionScope.success}">
+                                <div class="alert alert-danger">${sessionScope.success}</div>
+                                <c:remove var="error" scope="session"/>
+                            </c:if>
+                            <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#addProductModal">➕ Add Product</button>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Type ID</th>
+                                            <th>Description</th>
+                                            <th>Price</th>
+                                            <th>Image</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach items="${prods}" var="product">
+                                            <tr>
+                                                <td>${product.proId}</td>
+                                                <td>${product.proName}</td>
+                                                <td>${product.proTypeId}</td>
+                                                <td>${product.proDescription}</td>
+                                                <td>${product.proPrice}</td>
+                                                <td>
+                                                    <img src="${pageContext.request.contextPath}/images/products/${product.proImageMain}" alt="Product Image" width="80" height="80">
+                                                </td>
+                                                <td class="action-buttons">
+                                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewProductModal" data-proid="${product.proId}">
+                                                        <i class="fas fa-eye"></i> View Detail
+                                                    </button>
+                                                    <!-- Edit button -->
+                                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editProductModal"
+                                                            data-proid="${product.proId}"
+                                                            data-proname="${product.proName}"
+                                                            data-protypeid="${product.proTypeId}"
+                                                            data-prodescription="${product.proDescription}"
+                                                            data-proprice="${product.proPrice}"
+                                                            data-proimagemain="${product.proImageMain}"
+                                                            data-proAttName="${product.productAttributes.attributeName}"
+                                                            data-proAttValue="${product.productAttributes.value}"
+                                                            data-proAttUnit="${product.productAttributes.unit}">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    <!-- Delete button -->
+                                                    <form action="AdminController" method="post" style="display:inline;">
+                                                        <input type="hidden" name="action" value="deleteProduct" />
+                                                        <input type="hidden" name="proId" value="${product.proId}" />
+                                                        <input type="hidden" name="tab" value="products" />
+                                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this product?');">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+
+                            </div>
                         </div>
+
+                        <!-- Product Types Tab -->
+                        <div class="tab-pane fade" id="productTypes">
+                            <h2>Product Type Management</h2>
+                            <c:if test="${not empty sessionScope.error}">
+                                <div class="alert alert-danger">${sessionScope.error}</div>
+                                <c:remove var="error" scope="session"/>
+                            </c:if>
+                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductTypeModal">
+                                <i class="fas fa-plus"></i> Add New Product Type
+                            </button>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach items="${productTypes}" var="type">
+                                            <tr
+                                                data-product-type-id="${type.id}"
+                                                data-product-type-name="${type.name}">
+                                                <td>${type.id}</td>
+                                                <td>${type.name}</td>
+                                                <td class="action-buttons">
+                                                    <button class="btn btn-sm btn-warning" onclick="editProductType('${type.id}', '${type.name}')"
+                                                            data-bs-toggle="modal" data-bs-target="#editProductTypeModal">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteProductType('${type.id}')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
 
                         <!-- Vouchers Tab -->
                         <div class="tab-pane fade" id="vouchers">
@@ -275,8 +410,35 @@
                         <!-- Feedback Tab -->
                         <div class="tab-pane fade" id="feedbacks">
                             <h2>Feedback Management</h2>
+                            
+                            <!-- Search and Filter Controls -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control" id="feedbackSearchInput" 
+                                               placeholder="Search by customer name, product name, or feedback content...">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="feedbackStatusFilter">
+                                        <option value="all">All Status</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="replied">Replied</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="feedbackSortOrder">
+                                        <option value="newest">Newest First</option>
+                                        <option value="oldest">Oldest First</option>
+                                        <option value="highest-rating">Highest Rating</option>
+                                        <option value="lowest-rating">Lowest Rating</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
                             <div class="table-responsive">
-                                <table class="table table-striped">
+                                <table class="table table-striped" id="feedbackTable">
                                     <thead>
                                         <tr>
                                             <th>Feedback ID</th>
@@ -293,13 +455,16 @@
                                             <tr
                                                 data-feedback-id="${fb.feedbackId}"
                                                 data-cus-id="${fb.cusId}"
+                                                data-cus-name="${fb.cusFullName}"
                                                 data-pro-id="${fb.proId}"
+                                                data-pro-name="${fb.proName}"
                                                 data-content="${fb.feedbackContent}"
                                                 data-rate="${fb.rate}"
                                                 data-reply-id="${fb.replyFeedbackId}"
                                                 data-reply-content="${fb.contentReply}"
                                                 data-staff-id="${fb.staffId}"
-                                                data-reply-time="${fb.createdAt}">
+                                                data-reply-time="${fb.createdAt}"
+                                                data-status="${not empty fb.replyFeedbackId ? 'replied' : 'pending'}">
                                                 <td>${fb.feedbackId}</td>
                                                 <td>${fb.cusFullName}</td>
                                                 <td>${fb.proName}</td>
@@ -316,6 +481,9 @@
                                                     </c:choose>
                                                 </td>
                                                 <td class="action-buttons">
+                                                    <button class="btn btn-sm btn-primary" onclick="viewCustomerInfo('${fb.cusId}')">
+                                                        <i class="fas fa-user"></i> View Customer
+                                                    </button>
                                                     <c:choose>
                                                         <c:when test="${empty fb.replyFeedbackId}">
                                                             <button class="btn btn-sm btn-info" onclick="replyFeedback('${fb.feedbackId}')">
@@ -336,6 +504,11 @@
                                         </c:forEach>
                                     </tbody>
                                 </table>
+                            </div>
+                            
+                            <!-- No results message -->
+                            <div id="noFeedbackResults" class="alert alert-info text-center" style="display: none;">
+                                <i class="fas fa-search"></i> No feedback found matching your criteria.
                             </div>
                         </div>
                         <!-- Tab Attributes -->
@@ -552,6 +725,9 @@
                         <p id="modalReplyContent"></p>
                     </div>
                     <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" id="deleteReplyBtn" onclick="deleteReply()">
+                            <i class="fas fa-trash"></i> Delete Reply
+                        </button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
@@ -574,16 +750,30 @@
                             <input type="hidden" name="feedbackId" id="replyFeedbackId">
                             <input type="hidden" name="cusId" id="replyCusId">
 
-                            <!-- Staff Selector -->
-                            <div class="mb-3">
-                                <label for="staffSelect" class="form-label">Select Staff</label>
-                                <select class="form-select" id="staffSelect" name="staffId" required>
-                                    <option value="">-- Choose Staff --</option>
-                                    <c:forEach var="staff" items="${staffs}">
-                                        <option value="${staff.staffId}">${staff.staffFullName}</option>
-                                    </c:forEach>
-                                </select>
-                            </div>
+                            <!-- Staff Selection - Only show for Admin -->
+                            <c:choose>
+                                <c:when test="${LOGIN_USER.role == 'Admin'}">
+                                    <div class="mb-3">
+                                        <label for="staffSelect" class="form-label">Select Staff to Reply</label>
+                                        <select class="form-select" id="staffSelect" name="staffId" required>
+                                            <option value="">-- Choose Staff --</option>
+                                            <c:forEach var="staff" items="${staffs}">
+                                                <option value="${staff.staffId}">${staff.staffFullName}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                </c:when>
+                                <c:when test="${LOGIN_USER.role == 'Staff'}">
+                                    <!-- Hidden field for Staff ID and display current staff info -->
+                                    <input type="hidden" name="staffId" value="${LOGIN_USER.id}">
+                                    <div class="mb-3">
+                                        <label class="form-label">Replying as:</label>
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-user"></i> ${profile.staffFullName} (Staff)
+                                        </div>
+                                    </div>
+                                </c:when>
+                            </c:choose>
 
                             <!-- Reply Content -->
                             <div class="mb-3">
@@ -598,6 +788,111 @@
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+
+        <!-- View Customer Info Modal -->
+        <div class="modal fade" id="viewCustomerModal" tabindex="-1" aria-labelledby="viewCustomerModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewCustomerModalLabel">Customer Information</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Customer Details</h6>
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <th width="35%">Customer ID:</th>
+                                            <td id="modalCusId">-</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Full Name:</th>
+                                            <td id="modalCusFullName">-</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email:</th>
+                                            <td id="modalCusEmail">-</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Phone:</th>
+                                            <td id="modalCusPhone">-</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Gender:</th>
+                                            <td id="modalCusGender">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Order History</h6>
+                                <div id="customerOrderHistory" style="max-height: 300px; overflow-y: auto;">
+                                    <div class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Product Type Modal -->
+        <div class="modal fade" id="addProductTypeModal" tabindex="-1" aria-labelledby="addProductTypeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form action="AdminController" method="post" class="modal-content">
+                    <input type="hidden" name="action" value="addProductType">
+                    <input type="hidden" name="tab" value="productTypes">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addProductTypeModalLabel">Add New Product Type</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="proTypeName" class="form-label">Product Type Name</label>
+                            <input type="text" class="form-control" name="proTypeName" id="proTypeName" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Product Type</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Product Type Modal -->
+        <div class="modal fade" id="editProductTypeModal" tabindex="-1" aria-labelledby="editProductTypeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form action="AdminController" method="post" class="modal-content">
+                    <input type="hidden" name="action" value="updateProductType">
+                    <input type="hidden" name="tab" value="productTypes">
+                    <input type="hidden" name="proTypeId" id="editProTypeId">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editProductTypeModalLabel">Edit Product Type</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="editProTypeName" class="form-label">Product Type Name</label>
+                            <input type="text" class="form-control" name="proTypeName" id="editProTypeName" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Update Product Type</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -854,6 +1149,226 @@
                 </div>
             </div>
         </div>
+
+        <!-- Edit Product Modal -->
+        <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="AdminController" method="post" enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="editProduct" />
+                            <input type="hidden" name="tab" value="products" />
+                            <input type="hidden" name="proId" id="prdId" />
+                            <div class="mb-3">
+                                <label for="editProName" class="form-label">Name</label>
+                                <input type="text" class="form-control" name="proName" id="editProName" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="editProTypeId" class="form-label">Type ID</label>
+                                <input type="number" class="form-control" name="proTypeId" id="editProTypeId" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="editProDescription" class="form-label">Description</label>
+                                <textarea class="form-control" name="proDescription" id="editProDescription" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editProPrice" class="form-label">Price</label>
+                                <input type="text" class="form-control" name="proPrice" id="editProPrice" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="editProImageMain" class="form-label">Image</label>
+                                <input type="file" class="form-control" name="proImageMain" id="editProImageMain" accept="image/*" />
+                                <img id="editProductImagePreview" src="#" alt="Current Image" style="max-height: 80px; margin-top: 5px; display: none;" />
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Product Modal -->
+        <!-- Modal for View Product Detail -->
+        <div class="modal fade" id="viewProductModal" tabindex="-1" aria-labelledby="viewProductModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewProductModalLabel">Product Detail</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Product details will be displayed here -->
+                        <p><strong>ID:</strong> <span id="viewPrdId"></span></p>
+                        <p><strong>Name:</strong> <span id="viewProName"></span></p>
+                        <p><strong>Description:</strong> <span id="viewProDescription"></span></p>
+                        <p><strong>Type ID:</strong> <span id="viewPrdTypeId"></span></p>
+                        <p><strong>Price:</strong> <span id="viewProPrice"></span></p>
+                        <p><strong>Image:</strong> <img id="viewProImage" src="#" alt="Product Image" style="max-width: 100px;"></p>
+                        <p><strong>Product Attributes:</strong></p>
+                        <ul id="viewProAttributes"></ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add Product Modal -->
+        <div class="modal fade" id="addProductModal" tabindex="-1">
+            <div class="modal-dialog">
+                <form class="modal-content" action="AdminController" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="add"/>
+                    <div class="modal-header">
+                        <h5 class="modal-title">📝 Product Form</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <label>Product ID</label>
+                            <input type="text" name="proId" class="form-control"/>
+                        </div>
+                        <div class="mb-2">
+                            <label>Product Name</label>
+                            <input type="text" name="proName" class="form-control" required/>
+                        </div>
+                        <div class="mb-2">
+                            <label>Description</label>
+                            <textarea name="proDescription" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label for="editProPrice" class="form-label">Price</label>
+                            <input type="text" id="addProPrice" name="proPrice" class="form-control" required/>
+                        </div>
+                        <div class="mb-2">
+                            <label>Upload Image</label>
+                            <input type="file" name="proImageMain" class="form-control" accept="image/*"/>
+                        </div>
+
+                        <div class="mb-2">
+                            <label>Product Type</label>
+                            <select name="proTypeId" class="form-select" required>
+                                <option value="">-- Select Type --</option>
+                                <c:forEach var="type" items="${requestScope.types}">
+                                    <option value="${type.id}">${type.name}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+
+
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" type="submit">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script>
+            var editProductModal = document.getElementById('editProductModal');
+            if (editProductModal) {
+                editProductModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget; // Nút Edit mà người dùng nhấn
+                    document.getElementById('prdId').value = button.getAttribute('data-proid'); // Lấy proId và gán vào input ẩn
+
+                    // Điền các giá trị khác vào modal
+                    document.getElementById('editProName').value = button.getAttribute('data-proname');
+                    document.getElementById('editProTypeId').value = button.getAttribute('data-protypeid');
+                    document.getElementById('editProDescription').value = button.getAttribute('data-prodescription');
+                    document.getElementById('editProPrice').value = button.getAttribute('data-proprice');
+
+                    // Cập nhật hình ảnh nếu có
+                    var img = button.getAttribute('data-proimagemain');
+                    var preview = document.getElementById('editProductImagePreview');
+                    if (img) {
+                        preview.src = contextPath + '/images/products/' + img; // Đảm bảo rằng contextPath được xác định chính xác
+                        preview.style.display = 'block';
+                    } else {
+                        preview.style.display = 'none';
+                    }
+                });
+            }
+            var viewProductModal = document.getElementById('viewProductModal');
+            if (viewProductModal) {
+                viewProductModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const proId = button.getAttribute('data-proid');
+
+                    fetch('AdminController?action=viewProductDetail&proId=' + proId)
+                            .then(response => response.json())
+                            .then(product => {
+                                console.log("Full product:", product);
+
+                                // Điền thông tin sản phẩm vào modal
+                                document.getElementById('viewPrdId').textContent = product.proId || '';
+                                document.getElementById('viewProName').textContent = product.proName || '';
+                                document.getElementById('viewProDescription').textContent = product.proDescription || '';
+                                document.getElementById('viewPrdTypeId').textContent = product.proTypeId || '';
+                                document.getElementById('viewProPrice').textContent = product.proPrice || '';
+
+                                // Hình ảnh
+                                const imgTag = document.getElementById('viewProImage');
+                                imgTag.src = product.proImage
+                                        ? '/images/products/' + product.proImage
+                                        : '/images/default.png';
+                                imgTag.alt = 'Product Image';
+
+                                // Hiển thị thuộc tính
+                                const attributesList = document.getElementById('viewProAttributes');
+                                attributesList.innerHTML = ''; // Xoá cũ
+                                console.log("Danh sách thuộc tính:", product.productAttributes);
+                                if (Array.isArray(product.productAttributes) && product.productAttributes.length > 0) {
+                                    product.productAttributes.forEach(attr => {
+                                        console.log("Attr in loop:", attr);
+                                        const name = attr.attributeName || 'Unnamed';
+                                        const value = attr.value || 'N/A';
+                                        const unit = attr.unit || '';
+
+                                        // Tạo phần tử <li> mới
+                                        const listItem = document.createElement('li');
+                                        listItem.textContent = name + ': ' + value + ' ' + unit;
+                                        attributesList.appendChild(listItem);
+                                    });
+                                } else {
+                                    const listItem = document.createElement('li');
+                                    listItem.textContent = 'No attributes available';
+                                    attributesList.appendChild(listItem);
+                                }
+                            })
+                            .catch(error => console.error('Error fetching product details:', error));
+                });
+            }
+
+            function setupPriceInputFormat(inputId) {
+                const priceInput = document.getElementById(inputId);
+                if (priceInput) {
+                    priceInput.addEventListener('input', function () {
+                        let value = this.value.replace(/\./g, '');
+                        if (!isNaN(value) && value !== '') {
+                            this.value = Number(value).toLocaleString('vi-VN');
+                        } else {
+                            this.value = '';
+                        }
+                    });
+
+                    const form = priceInput.closest("form");
+                    if (form) {
+                        form.addEventListener("submit", function () {
+                            priceInput.value = priceInput.value.replace(/\./g, '');
+                        });
+                    }
+                }
+            }
+            setupPriceInputFormat('editProPrice');
+            setupPriceInputFormat('addProPrice');
+
+        </script>
 
 
         <script>const contextPath = '${pageContext.request.contextPath}';</script>

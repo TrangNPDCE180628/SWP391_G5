@@ -1,0 +1,24 @@
+[2025-07-22 03:11:34] [Imported] 1 into stock of [ProductID] L001 [ProductName] Dell XPS 13 [Beginning Inventory] 12 [Ending Inventory] 13
+[2025-07-22 03:11:40] [Created] 111 into stock of [ProductID] B001 [ProductName] Keychron K2 [Beginning Inventory] 0 [Ending Inventory] 111
+[2025-07-22 03:11:44] [Imported] 1 into stock of [ProductID] B001 [ProductName] Keychron K2 [Beginning Inventory] 111 [Ending Inventory] 112
+[2025-07-22 03:14:53] [Exported] 1 into stock of [ProductID] B001 [ProductName] Keychron K2 [Beginning Inventory] 112 [Ending Inventory] 111
+[2025-07-22 03:16:14] [Created] 12 into stock of [ProductID] B001 [ProductName] Keychron K2 [Beginning Inventory] 0 [Ending Inventory] 12
+[2025-07-22 03:16:19] [Created] 123 into stock of [ProductID] L001 [ProductName] Dell XPS 13 [Beginning Inventory] 0 [Ending Inventory] 123
+[2025-07-22 03:19:32] [Created] 33 into stock of [ProductID] M002 [ProductName] LG UltraFine 4K [Beginning Inventory] 0 [Ending Inventory] 33
+[2025-07-22 03:19:37] [Deleted] 123 into stock of [ProductID] L001 [ProductName] Dell XPS 13 [Beginning Inventory] 123 [Ending Inventory] 0
+[2025-07-22 03:19:47] [Created] 23 into stock of [ProductID] M001 [ProductName] Canon EOS 90D [Beginning Inventory] 0 [Ending Inventory] 23
+[2025-07-22 03:19:52] [Created] 32 into stock of [ProductID] S002 [ProductName] Samsung Galaxy S23 [Beginning Inventory] 0 [Ending Inventory] 32
+[2025-07-22 03:19:56] [Created] 12 into stock of [ProductID] L001 [ProductName] Dell XPS 13 [Beginning Inventory] 0 [Ending Inventory] 12
+[2025-07-22 03:19:59] [Imported] 12 into stock of [ProductID] B001 [ProductName] Keychron K2 [Beginning Inventory] 12 [Ending Inventory] 24
+[2025-07-22 03:20:04] [Created] 32 into stock of [ProductID] T001 [ProductName] Sony WH-1000XM4 [Beginning Inventory] 0 [Ending Inventory] 32
+[2025-07-22 03:20:08] [Created] 11 into stock of [ProductID] W001 [ProductName] Galaxy Watch 5 [Beginning Inventory] 0 [Ending Inventory] 11
+[2025-07-22 03:20:12] [Exported] 22 into stock of [ProductID] M001 [ProductName] Canon EOS 90D [Beginning Inventory] 23 [Ending Inventory] 1
+[2025-07-22 03:20:16] [Exported] 12 into stock of [ProductID] M002 [ProductName] LG UltraFine 4K [Beginning Inventory] 33 [Ending Inventory] 21
+[2025-07-22 03:20:19] [Created] 12 into stock of [ProductID] T002 [ProductName] AirPods Pro [Beginning Inventory] 0 [Ending Inventory] 12
+[2025-07-22 03:20:24] [Imported] 3 into stock of [ProductID] T002 [ProductName] AirPods Pro [Beginning Inventory] 12 [Ending Inventory] 15
+[2025-07-22 03:20:28] [Imported] 12 into stock of [ProductID] W001 [ProductName] Galaxy Watch 5 [Beginning Inventory] 11 [Ending Inventory] 23
+[2025-07-22 03:20:33] [Created] 1 into stock of [ProductID] L002 [ProductName] HP Envy [Beginning Inventory] 0 [Ending Inventory] 1
+[2025-07-22 03:20:38] [Exported] 12 into stock of [ProductID] W001 [ProductName] Galaxy Watch 5 [Beginning Inventory] 23 [Ending Inventory] 11
+[2025-07-22 03:20:42] [Created] 1 into stock of [ProductID] S001 [ProductName] iPhone 14 [Beginning Inventory] 0 [Ending Inventory] 1
+[2025-07-22 03:20:50] [Deleted] 32 into stock of [ProductID] T001 [ProductName] Sony WH-1000XM4 [Beginning Inventory] 32 [Ending Inventory] 0
+[2025-07-22 03:20:54] [Created] 10 into stock of [ProductID] T001 [ProductName] Sony WH-1000XM4 [Beginning Inventory] 0 [Ending Inventory] 10

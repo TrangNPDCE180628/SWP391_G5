@@ -2,6 +2,7 @@ package Models;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.util.List;
 
 public class Product {
 
@@ -11,6 +12,7 @@ public class Product {
     private String proDescription;
     private BigDecimal proPrice;
     private String proImage;
+    private List<ProductAttribute> productAttributes;
 
     public Product() {
     }
@@ -108,4 +110,20 @@ public class Product {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
+    public String getProImage() {
+        return proImage;
+    }
+
+    public void setProImage(String proImage) {
+        this.proImage = proImage;
+    }
+
+    public List<ProductAttribute> getProductAttributes() {
+        return productAttributes;
+    }
+
+    public void setProductAttributes(List<ProductAttribute> productAttributes) {
+        this.productAttributes = productAttributes;
+    }
+    
 }

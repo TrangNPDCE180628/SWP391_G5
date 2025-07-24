@@ -204,15 +204,16 @@
 
                                         <!-- Orders (moved below Cart) -->
                                         <li class="nav-item">
-                                            <a class="nav-link" href="OrderController?action=view">
+                                            <a class="nav-link" href="OrderHistoryController">
                                                 My Orders
                                             </a>
                                         </li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="MainController?action=Logout">Logout</a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
+                                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
                                     </ul>
                                 </li>
                             </c:when>
@@ -245,12 +246,7 @@
                                 <p class="text-danger fs-3 fw-bold mb-4">
                                     <fmt:formatNumber value="${product.proPrice}" type="currency" currencySymbol="$" maxFractionDigits="${product.proPrice % 1 == 0 ? 0 : 2}"/>
                                 </p>
-                                <!-- [ADDED]: Color selection -->
-                                <div class="mb-4">
-                                    <span class="fw-bold me-2">Color:</span>
-                                    <span class="color-dot bg-dark selected" title="Space Gray"></span>
-                                    <span class="color-dot bg-light border" title="Silver"></span>
-                                </div>
+
                                 <!-- Description -->
                                 <div class="mb-4">
                                     <h5 class="fw-bold">Description</h5>

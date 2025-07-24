@@ -28,7 +28,8 @@ import java.io.File;
 public class ProductManagerController extends HttpServlet {
 
     private static final String ERROR = "error.jsp";
-    private static final String ADMIN_PAGE = "productManager.jsp";
+//    private static final String ADMIN_PAGE = "productManager.jsp";
+    private static final String ADMIN_PAGE = "admin.jsp";
     private final ProductDAO productDAO = new ProductDAO();
     private final ProductTypeDAO productTypeDAO = new ProductTypeDAO();
 
@@ -86,7 +87,7 @@ public class ProductManagerController extends HttpServlet {
         int totalRecords = productDAO.countAll();
         int totalPages = (int) Math.ceil((double) totalRecords / recordsPerPage);
 
-        request.setAttribute("products", products);
+        request.setAttribute("prds", products);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalRecords", totalRecords);
@@ -117,7 +118,7 @@ public class ProductManagerController extends HttpServlet {
             request.setAttribute("ERROR", "Error adding product: " + e.getMessage());
         }
 
-        return listProducts(request);
+        return "AdminController?tab=products";
     }
 
     private String editProduct(HttpServletRequest request) throws SQLException, ClassNotFoundException {

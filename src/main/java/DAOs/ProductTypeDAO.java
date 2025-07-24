@@ -8,6 +8,59 @@ import java.util.List;
 
 public class ProductTypeDAO {
 
+    // Check if a product type name already exists (case-insensitive)
+    public boolean isProductTypeNameExists(String name) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT COUNT(*) FROM ProductType WHERE LOWER(proTypeName) = LOWER(?)";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, name.trim());
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+        return false;
+    }
+
+    // Check if a product type name exists for a different ID (used in update)
+    public boolean isProductTypeNameExistsForOtherId(String name, int excludeId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT COUNT(*) FROM ProductType WHERE LOWER(proTypeName) = LOWER(?) AND proTypeId != ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, name.trim());
+            stmt.setInt(2, excludeId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+        return false;
+    }
+
+    // Check if a product type has associated products
+    public boolean hasAssociatedProducts(int proTypeId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT COUNT(*) FROM Product WHERE proTypeId = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, proTypeId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+        return false;
+    }
+
+    // Check if a product type has associated attributes
+    public boolean hasAssociatedAttributes(int proTypeId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT COUNT(*) FROM Attribute WHERE proTypeId = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, proTypeId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+        return false;
+    }
+
     // Create a new product type
     public void addProductType(ProductTypes productType) throws SQLException, ClassNotFoundException {
         String sql = "INSERT INTO ProductType (proTypeName) VALUES (?)";

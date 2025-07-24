@@ -9,6 +9,7 @@ import DAOs.AttributeDAO;
 import DAOs.OrderDetailDAO;
 import DAOs.ProductAttributeDAO;
 import DAOs.ProductDAO;
+import DAOs.ProductTypeDAO;
 import DAOs.ReplyFeedbackDAO;
 import DAOs.StaffDAO;
 import DAOs.StockDAO;
@@ -24,6 +25,7 @@ import Models.Attribute;
 import Models.OrderDetail;
 import Models.Product;
 import Models.ProductAttribute;
+import Models.ProductTypes;
 import Models.ReplyFeedback;
 import Models.Staff;
 import Models.Stock;
@@ -42,19 +44,27 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import javax.servlet.http.HttpSession;
 import Ultis.DBContext;
+import Ultis.ExcelUtils;
+import Ultis.LogUtil;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.sql.Date;
 import java.util.List;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.ServletContext;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
@@ -62,7 +72,7 @@ import java.util.Map;
         maxFileSize = 1024 * 1024 * 10,
         maxRequestSize = 1024 * 1024 * 100
 )
-public class AdminController extends HttpServlet {
+public class AdminController extends BaseController {
 
     private static final String UPLOAD_DIR = "images/products";
 
@@ -70,6 +80,37 @@ public class AdminController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
+        
+        // Check authentication manually first
+        HttpSession session = request.getSession(false);
+        User loginUser = null;
+        if (session != null) {
+            loginUser = (User) session.getAttribute("LOGIN_USER");
+        }
+        
+        // If not authenticated, store current URL and redirect to login
+        if (loginUser == null) {
+            String originalURL = request.getRequestURI();
+            String queryString = request.getQueryString();
+            if (queryString != null) {
+                originalURL += "?" + queryString;
+            }
+            
+            // Create session to store redirect URL
+            session = request.getSession(true);
+            session.setAttribute("REDIRECT_URL", originalURL);
+            
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
+        }
+        
+        // Check if user has admin/staff role
+        String role = loginUser.getRole();
+        if (!"Admin".equals(role) && !"Staff".equals(role)) {
+            response.sendRedirect(request.getContextPath() + "/HomeController?error=access_denied");
+            return;
+        }
+        
         String action = request.getParameter("action");
 
         try {
@@ -93,6 +134,9 @@ public class AdminController extends HttpServlet {
                     break;
                 case "replyFeedback":
                     replyFeedback(request, response);
+                    break;
+                case "deleteReply":
+                    deleteReply(request, response);
                     break;
                 case "addAttribute":
                     addAttribute(request, response);
@@ -139,14 +183,14 @@ public class AdminController extends HttpServlet {
                 case "deleteOrder":
                     deleteOrder(request, response);
                     return;
-                case "goToOrderDetailPage":
-                    goToOrderDetailPage(request, response);
+                case "viewOrderDetails":
+                    viewOrderDetails(request, response);
                     return;
                 case "viewStockList":
                     viewStockList(request, response);
                     return;
-                case "addStockQuantity":
-                    addStockQuantity(request, response);
+                case "ImportStockQuantity":
+                    importStockQuantity(request, response);
                     return;
                 case "deleteStock":
                     deleteStock(request, response);
@@ -154,11 +198,35 @@ public class AdminController extends HttpServlet {
                 case "createStock":
                     createStock(request, response);
                     return;
-                case "updateStockQuantity":
-                    updateStockQuantity(request, response);
+                case "listStocks":
+                    listStocks(request, response);
+                    return;
+                case "ExportStockQuantity":
+                    exportStockQuantity(request, response);
                     return;
                 case "RevenueByMonth":
                     handleRevenueByMonth(request, response);
+                    return;
+                case "add":
+                    addProduct(request, response);
+                    return;
+                case "searchPrd":
+                    searchProduct(request, response);
+                    return;
+                case "editProduct":
+                    editProduct(request, response);
+                    return;
+                case "deleteProduct":
+                    deleteProduct(request, response);
+                    return;
+                case "viewProductDetail":
+                    viewProductDetail(request, response);
+                    return;
+                case "getCustomerInfo":
+                    getCustomerInfo(request, response);
+                    return;
+                case "deleteFeedback":
+                    deleteFeedback(request, response);
                     return;
                 default:
                     loadAdminPage(request, response);
@@ -179,7 +247,8 @@ public class AdminController extends HttpServlet {
         try {
             String activeTab = request.getParameter("tab");
             request.setAttribute("activeTab", activeTab);
-            // Load common data
+
+            // 1. Load common data
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
@@ -189,6 +258,7 @@ public class AdminController extends HttpServlet {
             ProductAttributeDAO paDAO = new ProductAttributeDAO();
             OrderDAO ordDao = new OrderDAO();
             StockDAO stockDAO = new StockDAO();
+            ProductTypeDAO productTypeDAO = new ProductTypeDAO();
 
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
@@ -197,16 +267,24 @@ public class AdminController extends HttpServlet {
             List<FeedbackReplyView> viewFeedbacks = viewfeedbackDAO.getAllFeedbackReplies();
             List<Attribute> attributes = attributeDAO.getAll();
             List<ProductAttribute> productAttributes = paDAO.getAll();
-            List<Order> orders = ordDao.getAll();
-            List<Stock> stocks = stockDAO.getAllStocks();
+            
+           
+            // Add: Load all products for product tab
+            ProductDAO productDAO = new ProductDAO();
+            List<Product> products = productDAO.getAllProducts();
+            
+            ProductTypeDAO typeDAO = new ProductTypeDAO();
+            List<ProductTypes> types = typeDAO.getAllProductTypes();
             BigDecimal totalRevenue = ordDao.getTotalRevenue();
+            List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes();
 
-            // === NEW: Load từ VIEW ===
+            // 2. Load ViewProductAttributes
             Connection conn = DBContext.getConnection();
             ViewProductAttributeDAO viewProductAttributeDAO = new ViewProductAttributeDAO(conn);
             List<ViewProductAttribute> viewProductAttributes = viewProductAttributeDAO.getAll();
             request.setAttribute("viewProductAttributes", viewProductAttributes);
 
+            // 3. Set data to request
             request.setAttribute("users", users);
             request.setAttribute("staffs", staffs);
             request.setAttribute("vouchers", vouchers);
@@ -214,33 +292,33 @@ public class AdminController extends HttpServlet {
             request.setAttribute("viewFeedbacks", viewFeedbacks);
             request.setAttribute("attributes", attributes);
             request.setAttribute("productAttributes", productAttributes);
-            request.setAttribute("orders", orders);
-            request.setAttribute("stocks", stocks);
             request.setAttribute("totalRevenue", totalRevenue);
+            request.setAttribute("productTypes", productTypes);
+             request.setAttribute("prds", products);
 
-            // 1. Lấy danh sách tất cả đơn hàng
-            OrderDetailDAO detailDAO = new OrderDetailDAO();
-            // 2. Tạo map: orderId -> list of OrderDetail
-            Map<Integer, List<OrderDetail>> orderDetailsMap = new HashMap<>();
-            for (Order o : orders) {
-                List<OrderDetail> details = detailDAO.getByOrderId(o.getOrderId());
-                orderDetailsMap.put(o.getOrderId(), details);
+            StockDAO dao = new StockDAO();
+            List<Map<String, Object>> productStockList = dao.getAllProductStockData();
+            request.setAttribute("productStockList", productStockList);
+            
+            List<String> noStockProIds = stockDAO.getProductsWithoutStock();
+            request.setAttribute("noStockProIds", noStockProIds);
+
+            // 4. Load danh sách đơn hàng nếu không có filter trạng thái
+            if (request.getParameter("sortByOrderStatus") == null) {
+                List<Map<String, Object>> orderData = ordDao.getOrderDetailsAll();
+                request.setAttribute("orders", orderData);
             }
-            request.setAttribute("orderDetailsMap", orderDetailsMap);
 
-            // Doanh thu theo tháng trong năm hiện tại
+            // 5. Load doanh thu theo tháng của năm hiện tại
             int currentYear = LocalDate.now().getYear();
             Map<String, BigDecimal> monthlyRevenue = ordDao.getMonthlyRevenueInYear(currentYear);
             request.setAttribute("monthlyRevenueMap", monthlyRevenue);
             request.setAttribute("revenueYear", currentYear);
 
-            System.out.println(monthlyRevenue);
-
-            // Load profile info
+            // 6. Load profile info từ LOGIN_USER
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
             if (loginUser != null) {
                 String role = loginUser.getRole();
-
                 if ("Admin".equals(role)) {
                     AdminDAO adminDAO = new AdminDAO();
                     Admin adminProfile = adminDAO.getAdminById(String.valueOf(loginUser.getId()));
@@ -251,10 +329,21 @@ public class AdminController extends HttpServlet {
                     request.setAttribute("profile", staffProfile);
                 }
             }
+
+            // 7. Load successMessage từ session nếu có
+            HttpSession session = request.getSession();
+            String successMessage = (String) session.getAttribute("successMessage");
+            if (successMessage != null) {
+                request.setAttribute("successMessage", successMessage);
+                session.removeAttribute("successMessage"); // clear after showing
+            }
+
+            // 8. Forward về admin.jsp
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
             throw new ServletException(e);
         }
+
     }
 
     private void editProfile(HttpServletRequest request, HttpServletResponse response)
@@ -343,7 +432,7 @@ public class AdminController extends HttpServlet {
         }
         return "";
     }
-  
+
     private void addStaff(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -490,7 +579,7 @@ public class AdminController extends HttpServlet {
             reply.setContentReply(contentReply);
 
             dao.insertReplyFeedback(reply);
-            loadAdminPage(request, response);
+            response.sendRedirect("AdminController?tab=feedbacks");
         } catch (Exception e) {
             log("Error in replyFeedback: " + e.toString());
             if (!response.isCommitted()) {
@@ -501,6 +590,8 @@ public class AdminController extends HttpServlet {
             }
         }
     }
+
+    
 
     // Helper classes for JSON response
     private static class OrderDetailsResponse {
@@ -665,28 +756,18 @@ public class AdminController extends HttpServlet {
         }
     }
 
-    private void addStockQuantity(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String proId = request.getParameter("proId");
-            int quantity = Integer.parseInt(request.getParameter("quantity"));
-            StockDAO stockDAO = new StockDAO();
-            stockDAO.addStockQuantity(proId, quantity);
-            response.sendRedirect("AdminController?tab=inventory");
-        } catch (Exception e) {
-            log("Error in addStockQuantity: " + e.getMessage());
-            if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Unable to add stock quantity: " + e.getMessage());
-                request.getRequestDispatcher("error.jsp").forward(request, response);
-            }
-        }
-    }
-
     private void deleteStock(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             String proId = request.getParameter("proId");
             StockDAO stockDAO = new StockDAO();
+            // Có thể kiểm tra số lượng hiện tại tại đây nếu muốn
+            int current = stockDAO.getStockByProductId(proId).getStockQuantity();
+
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Deleted] " + current + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + current + " [Ending Inventory] " + "0");
+
             stockDAO.deleteStock(proId);
             response.sendRedirect("AdminController?tab=inventory");
         } catch (Exception e) {
@@ -712,7 +793,14 @@ public class AdminController extends HttpServlet {
             String proId = request.getParameter("proId");
             int quantity = Integer.parseInt(request.getParameter("quantity"));
             StockDAO stockDAO = new StockDAO();
+
             stockDAO.createStock(proId, quantity);
+
+            int finalstock = stockDAO.getStockByProductId(proId).getStockQuantity();
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Created] " + quantity + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + "0" + " [Ending Inventory] " + finalstock);
+
             response.sendRedirect("AdminController?tab=inventory");
         } catch (Exception e) {
             log("Error in createStock: " + e.getMessage());
@@ -723,20 +811,57 @@ public class AdminController extends HttpServlet {
         }
     }
 
-    private void updateStockQuantity(HttpServletRequest request, HttpServletResponse response)
+    private void exportStockQuantity(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             String proId = request.getParameter("proId");
-            int newQuantity = Integer.parseInt(request.getParameter("newQuantity"));
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+
+            if (quantity <= 0) {
+                throw new IllegalArgumentException("Quantity must be greater than 0.");
+            }
+
             StockDAO stockDAO = new StockDAO();
-            stockDAO.updateStockQuantity(proId, newQuantity);
+            // Có thể kiểm tra số lượng hiện tại tại đây nếu muốn
+            int current = stockDAO.getStockByProductId(proId).getStockQuantity();
+            stockDAO.exportStockQuantity(proId, quantity);
+            int finalstock = stockDAO.getStockByProductId(proId).getStockQuantity();
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Exported] " + quantity + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + current + " [Ending Inventory] " + finalstock);
+
             response.sendRedirect("AdminController?tab=inventory");
         } catch (Exception e) {
-            log("Error in updateStockQuantity: " + e.getMessage());
+            log("Error in exportStockQuantity: " + e.getMessage());
             if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Unable to update stock quantity: " + e.getMessage());
+                request.setAttribute("ERROR", "Unable to export stock: " + e.getMessage());
                 request.getRequestDispatcher("error.jsp").forward(request, response);
             }
+        }
+    }
+
+    private void listStocks(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String sortBy = request.getParameter("sortBy");
+            String order = request.getParameter("order");
+
+            if (sortBy == null || sortBy.isEmpty()) {
+                sortBy = "lastUpdated";
+            }
+            if (order == null || order.isEmpty()) {
+                order = "DESC";
+            }
+
+            StockDAO stockDAO = new StockDAO();
+            List<Stock> stocks = stockDAO.getStocksSorted(sortBy, order);
+
+            request.setAttribute("stocks", stocks);
+            request.getRequestDispatcher("inventory.jsp").forward(request, response);
+        } catch (Exception e) {
+            log("Error in listStocks: " + e.getMessage());
+            request.setAttribute("ERROR", "Unable to list stocks: " + e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
 
@@ -749,33 +874,6 @@ public class AdminController extends HttpServlet {
      * @throws ServletException nếu forward bị lỗi
      * @throws IOException nếu có lỗi khi đọc ghi dữ liệu
      */
-    private void goToOrderDetailPage(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int orderId = Integer.parseInt(request.getParameter("orderId"));
-
-            OrderDAO orderDAO = new OrderDAO();
-            OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
-            ProductDAO productDAO = new ProductDAO();
-
-            Order order = orderDAO.getById(orderId);
-            List<OrderDetail> orderDetailList = orderDetailDAO.getByOrderId(orderId);
-            Map<String, Product> productMap = new HashMap<>();
-            for (OrderDetail detail : orderDetailList) {
-                Product product = productDAO.getById(detail.getProId());
-                productMap.put(detail.getProId(), product);
-            }
-
-            request.setAttribute("order", order);
-            request.setAttribute("orderDetails", orderDetailList);
-            request.setAttribute("productMap", productMap);
-
-            request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
-        } catch (Exception e) {
-            throw new ServletException("Failed to load order detail page", e);
-        }
-    }
-
     private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -799,29 +897,32 @@ public class AdminController extends HttpServlet {
         }
     }
 
+    /**
+     * Filters orders by their status (e.g., All, Pending, Done, Cancel) and
+     * forwards the result to admin.jsp for display.
+     */
     private void filterOrdersByStatus(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            String status = request.getParameter("status"); // All, pending, shipped, etc.
-
+            String status = request.getParameter("sortByOrderStatus");
             OrderDAO dao = new OrderDAO();
-            List<Order> filteredOrders;
-
-            if (status == null || status.isEmpty() || "All".equalsIgnoreCase(status)) {
-                filteredOrders = dao.getAll();  // Không lọc
+            if (status.equals("All")) {
+                List<Map<String, Object>> filteredOrders = dao.getOrderDetailsAll();
+                request.setAttribute("orders", filteredOrders);
             } else {
-                filteredOrders = dao.getByStatus(status);  // Lọc theo status
+                List<Map<String, Object>> filteredOrders = dao.getOrderDetailsByStatus(status);
+                request.setAttribute("orders", filteredOrders);
+                System.out.println(filteredOrders);
             }
 
-            request.setAttribute("orders", filteredOrders);
-            request.setAttribute("filterStatus", status); // Để giữ lại khi hiển thị lại dropdown
+            // Set attributes for displaying in JSP
+            request.setAttribute("filterStatus", status); // Preserve selected filter in dropdown
             request.setAttribute("activeTab", "orders");
 
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("ERROR", "Unable to filter orders.");
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            log("Error in filterOrdersByStatus: " + e.getMessage());
+
         }
     }
 
@@ -829,9 +930,12 @@ public class AdminController extends HttpServlet {
             throws ServletException, IOException {
         try {
             int orderId = Integer.parseInt(request.getParameter("orderId"));
-
             OrderDAO dao = new OrderDAO();
             dao.delete(orderId);
+
+            // Thêm thông báo vào session
+            HttpSession session = request.getSession();
+            session.setAttribute("successMessage", "Order #" + orderId + " deleted successfully.");
 
             response.sendRedirect("AdminController?tab=orders");
         } catch (Exception e) {
@@ -873,6 +977,529 @@ public class AdminController extends HttpServlet {
 
             request.setAttribute("error", "Error loading revenue data: " + e.getMessage());
             request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
+    }
+    
+    private void addProductType(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proTypeName = request.getParameter("proTypeName").trim();
+            ProductTypeDAO dao = new ProductTypeDAO();
+
+            // BR01 & BR02: Validate name
+            if (proTypeName.isEmpty() || proTypeName.length() < 3 || proTypeName.length() > 100) {
+                request.getSession().setAttribute("error", "Product type name must be between 3 and 100 characters.");
+                response.sendRedirect("AdminController?tab=productTypes");
+                return;
+            }
+
+            // Standardize name (e.g., capitalize first letter)
+            proTypeName = proTypeName.substring(0, 1).toUpperCase() + proTypeName.substring(1).toLowerCase();
+
+            // BR01: Check for unique name
+            if (dao.isProductTypeNameExists(proTypeName)) {
+                request.getSession().setAttribute("error", "Product type name already exists.");
+                response.sendRedirect("AdminController?tab=productTypes");
+                return;
+            }
+
+            ProductTypes productType = new ProductTypes();
+            productType.setName(proTypeName);
+            dao.addProductType(productType);
+            response.sendRedirect("AdminController?tab=productTypes");
+        } catch (Exception e) {
+            throw new ServletException("Error adding product type: " + e.getMessage());
+        }
+    }
+
+    private void updateProductType(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("proTypeId"));
+            String proTypeName = request.getParameter("proTypeName").trim();
+            ProductTypeDAO dao = new ProductTypeDAO();
+
+            // BR02: Validate name length
+            if (proTypeName.isEmpty() || proTypeName.length() < 3 || proTypeName.length() > 100) {
+                request.getSession().setAttribute("error", "Product type name must be between 3 and 100 characters.");
+                response.sendRedirect("AdminController?tab=productTypes");
+                return;
+            }
+
+            // Standardize name
+            proTypeName = proTypeName.substring(0, 1).toUpperCase() + proTypeName.substring(1).toLowerCase();
+
+            // BR01: Check for unique name (excluding current ID)
+            if (dao.isProductTypeNameExistsForOtherId(proTypeName, id)) {
+                request.getSession().setAttribute("error", "Product type name already exists.");
+                response.sendRedirect("AdminController?tab=productTypes");
+                return;
+            }
+
+            // BR04: Check if there are associated products
+            if (dao.hasAssociatedProducts(id)) {
+                ProductTypes existingType = dao.getProductTypeById(id);
+                String existingName = existingType.getName().toLowerCase();
+                String newName = proTypeName.toLowerCase();
+                // Allow minor spelling changes (e.g., Levenshtein distance <= 2)
+                if (getLevenshteinDistance(existingName, newName) > 2) {
+                    request.getSession().setAttribute("error", "Cannot update product type name significantly as it has associated products.");
+                    response.sendRedirect("AdminController?tab=productTypes");
+                    return;
+                }
+            }
+
+            ProductTypes productType = new ProductTypes(id, proTypeName);
+            dao.updateProductType(productType);
+            response.sendRedirect("AdminController?tab=productTypes");
+        } catch (Exception e) {
+            throw new ServletException("Error updating product type: " + e.getMessage());
+        }
+    }
+
+    private void deleteProductType(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            ProductTypeDAO dao = new ProductTypeDAO();
+
+            // BR06: Prevent deletion if linked to products or attributes
+            if (dao.hasAssociatedProducts(id) || dao.hasAssociatedAttributes(id)) {
+                request.getSession().setAttribute("error", "Cannot delete product type as it has associated products or attributes.");
+                response.sendRedirect("AdminController?tab=productTypes");
+                return;
+            }
+
+            dao.deleteProductType(id);
+            response.sendRedirect("AdminController?tab=productTypes");
+        } catch (Exception e) {
+            throw new ServletException("Error deleting product type: " + e.getMessage());
+        }
+    }
+    
+    // Levenshtein distance for minor spelling change detection
+    private int getLevenshteinDistance(String s1, String s2) {
+        int len1 = s1.length();
+        int len2 = s2.length();
+        int[][] dp = new int[len1 + 1][len2 + 1];
+
+        for (int i = 0; i <= len1; i++) {
+            dp[i][0] = i;
+        }
+        for (int j = 0; j <= len2; j++) {
+            dp[0][j] = j;
+        }
+
+        for (int i = 1; i <= len1; i++) {
+            for (int j = 1; j <= len2; j++) {
+                int cost = s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1;
+                dp[i][j] = Math.min(Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1), dp[i - 1][j - 1] + cost);
+            }
+        }
+        return dp[len1][len2];
+    }
+
+    private void viewOrderDetails(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String orderIdStr = request.getParameter("orderId");
+            int orderId = Integer.parseInt(orderIdStr);
+
+            OrderDAO ordDao = new OrderDAO();
+            List<Map<String, Object>> allData = ordDao.getOrderDetailsAll();
+
+            // Lọc ra những dòng thuộc orderId này
+            List<Map<String, Object>> orderDetails = new ArrayList<>();
+            Map<String, Object> orderInfo = null;
+
+            for (Map<String, Object> row : allData) {
+                int currentOrderId = (int) row.get("orderId");
+
+                if (currentOrderId == orderId) {
+                    orderDetails.add(row);
+
+                    // Lấy thông tin chung của order (1 lần)
+                    if (orderInfo == null) {
+                        orderInfo = new HashMap<>();
+                        orderInfo.put("orderId", currentOrderId);
+                        orderInfo.put("cusFullName", row.get("cusFullName"));
+                        orderInfo.put("orderDate", row.get("orderDate"));
+                        orderInfo.put("codeName", row.get("codeName") != null ? row.get("codeName") : "No voucher");
+                        orderInfo.put("finalAmount", row.get("finalAmount"));
+                        orderInfo.put("orderStatus", row.get("orderStatus"));
+                        orderInfo.put("paymentMethod", row.get("paymentMethod"));
+                        orderInfo.put("shippingAddress", row.get("shippingAddress"));
+                        orderInfo.put("receiverName", row.get("receiverName"));
+                        orderInfo.put("receiverPhone", row.get("receiverPhone"));
+                    }
+                }
+            }
+
+            if (orderInfo == null) {
+                // Không tìm thấy đơn hàng
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Order not found");
+                return;
+            }
+
+            request.setAttribute("orderInfo", orderInfo);
+            request.setAttribute("orderDetails", orderDetails);
+            request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error loading order details");
+        }
+    }
+
+    private void importStockQuantity(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+
+            if (quantity <= 0) {
+                throw new IllegalArgumentException("Quantity must be greater than 0.");
+            }
+
+            StockDAO stockDAO = new StockDAO();
+            int current = stockDAO.getStockByProductId(proId).getStockQuantity();
+            stockDAO.importStockQuantity(proId, quantity);
+            int finalstock = stockDAO.getStockByProductId(proId).getStockQuantity();
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Imported] " + quantity + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + current + " [Ending Inventory] " + finalstock);
+
+            response.sendRedirect("AdminController?tab=inventory");
+        } catch (Exception e) {
+            log("Error in importStockQuantity: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Unable to import stock: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
+        }
+    }
+
+    private void generateInventoryExcel(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String startDateStr = request.getParameter("startDate");
+            String endDateStr = request.getParameter("endDate");
+
+            SimpleDateFormat dateOnlyFormat = new SimpleDateFormat("yyyy-MM-dd");
+            java.util.Date startDate = new java.sql.Date(dateOnlyFormat.parse(startDateStr).getTime());
+            java.util.Date endDate = new java.sql.Date(dateOnlyFormat.parse(endDateStr).getTime());
+            
+            System.out.println(startDate + " " + endDate);
+            // Validate: startDate must not be after endDate
+            if (startDate.after(endDate)) {
+                request.setAttribute("ERROR", "Start date must not be after end date.");
+                request.setAttribute("activeTab", "inventory");
+                request.getRequestDispatcher("admin.jsp").forward(request, response);
+                return;
+            }
+
+            // Gọi ExcelUtils với ServletContext và log file path
+            ServletContext context = request.getServletContext();
+            
+            String logFilePath = context.getRealPath("/logs/inventory_log.txt");
+            System.out.println(logFilePath);
+            File excelFile = ExcelUtils.generateInventoryReport(context, startDate, endDate, logFilePath);
+
+            // Thiết lập response để tải file về
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=" + excelFile.getName());
+
+            try ( FileInputStream fis = new FileInputStream(excelFile);  OutputStream out = response.getOutputStream()) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = fis.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            }
+
+            // Xoá file tạm sau khi tải
+            excelFile.delete();
+        } catch (Exception e) {
+            log("Error in generateInventoryExcel: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Failed to generate inventory report: " + e.getMessage());
+                request.getRequestDispatcher("inventory.jsp").forward(request, response);
+            }
+        }
+    }
+
+    private void searchProduct(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String searchName = request.getParameter("searchValue");
+            ProductDAO productDAO = new ProductDAO();
+            List<Product> products;
+            if (searchName != null && !searchName.trim().isEmpty()) {
+                products = productDAO.searchByName(searchName, 1, 100); // lấy tối đa 100 sản phẩm
+            } else {
+                products = productDAO.getAllProducts();
+            }
+            request.setAttribute("prds", products);
+            request.setAttribute("searchName", searchName);
+            // Load lại các dữ liệu khác cần thiết cho admin.jsp
+//            loadAdminPage(request, response);
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    private void viewProductDetail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            ProductDAO productDAO = new ProductDAO();
+            Product product = productDAO.getProductDetail(proId);
+            // Return the product details as JSON
+            response.setContentType("application/json");
+            response.getWriter().write(new Gson().toJson(product));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ServletException(e);
+        }
+    }
+
+    private void editProduct(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            // Lấy các tham số từ request
+            String proId = request.getParameter("proId");
+            String proName = request.getParameter("proName");
+            String proDescription = request.getParameter("proDescription");
+            String proTypeIdStr = request.getParameter("proTypeId");
+            String proPriceStr = request.getParameter("proPrice");
+            String oldImage = request.getParameter("oldImage");
+
+            // Kiểm tra nếu các tham số quan trọng bị null hoặc rỗng
+            if (proId == null || proId.trim().isEmpty()) {
+                throw new ServletException("Product ID is required.");
+            }
+
+            // Lấy các giá trị cũ của sản phẩm từ cơ sở dữ liệu
+            ProductDAO productDAO = new ProductDAO();
+            Product existingProduct = productDAO.getById(proId);
+            if (existingProduct == null) {
+                throw new ServletException("Product not found.");
+            }
+
+            // Nếu không có giá trị mới, giữ nguyên giá trị cũ
+            String proNameToUse = (proName != null && !proName.trim().isEmpty()) ? proName : existingProduct.getProName();
+            String proDescriptionToUse = (proDescription != null && !proDescription.trim().isEmpty()) ? proDescription : existingProduct.getProDescription();
+            int proTypeId = (proTypeIdStr != null && !proTypeIdStr.trim().isEmpty()) ? Integer.parseInt(proTypeIdStr) : existingProduct.getProTypeId();
+            java.math.BigDecimal proPrice = (proPriceStr != null && !proPriceStr.trim().isEmpty()) ? new java.math.BigDecimal(proPriceStr) : existingProduct.getProPrice();
+
+            // Sử dụng hình ảnh cũ nếu không có hình ảnh mới
+            String imageFileName = oldImage;
+            javax.servlet.http.Part imagePart = request.getPart("proImageMain");
+
+            // Kiểm tra nếu có phần hình ảnh được tải lên
+            if (imagePart != null && imagePart.getSize() > 0) {
+                imageFileName = java.nio.file.Paths.get(imagePart.getSubmittedFileName()).getFileName().toString();
+                String uploadPath = getServletContext().getRealPath("/") + "images" + java.io.File.separator + "products";
+                java.io.File uploadDir = new java.io.File(uploadPath);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+                imagePart.write(uploadPath + java.io.File.separator + imageFileName);
+            }
+
+            // Cập nhật sản phẩm nếu có thay đổi
+            Product product = new Product(proId, proTypeId, proNameToUse, proDescriptionToUse, proPrice, imageFileName);
+            productDAO.updateProduct(product);
+
+            // Chuyển hướng về trang admin với tab sản phẩm
+            response.sendRedirect("AdminController?tab=products");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ServletException(e);
+        }
+    }
+
+    private void addProduct(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        try {
+            String proId = request.getParameter("proId");
+            ProductDAO productDAO = new ProductDAO();
+
+            Product product = parseProductFromRequest(request);
+            productDAO.insertProduct(product);
+            List<Product> prds = productDAO.getAllProducts();
+            request.setAttribute("SUCCESS", "Product added successfully!");
+            request.setAttribute("prds", prds);
+        } catch (NumberFormatException e) {
+            request.setAttribute("ERROR", "Invalid number format!");
+        } catch (ClassNotFoundException ex) {
+            log("CreateAccount _ ClassNotFound: " + ex.getMessage());
+        } catch (SQLException ex) {
+            String msg = ex.getMessage();
+            log("CreateAccount _ SQL: " + msg);
+            if (msg.contains("duplicate")) {
+                request.setAttribute("ERROR", "Product ID already exists!");
+            }
+        } finally {
+            HttpSession session = request.getSession();
+            if (request.getAttribute("ERROR") != null) {
+                session.setAttribute("error", (String) request.getAttribute("ERROR"));
+            } else if (request.getAttribute("SUCCESS") != null) {
+                session.setAttribute("success", (String) request.getAttribute("SUCCESS"));
+            }
+            response.sendRedirect("AdminController?tab=products");
+        }
+    }
+
+    private Product parseProductFromRequest(HttpServletRequest request) throws NumberFormatException, IOException, ServletException {
+        String proId = request.getParameter("proId");
+        String proName = request.getParameter("proName");
+        String proDescription = request.getParameter("proDescription");
+        BigDecimal proPrice = new BigDecimal(request.getParameter("proPrice"));
+        int proTypeId = Integer.parseInt(request.getParameter("proTypeId"));
+        // HANDLE FILE UPLOAD
+        Part filePart = request.getPart("proImageMain");
+        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+
+        String uploadPath = getServletContext().getRealPath("/") + "images" + File.separator + "products";
+        File uploadDir = new File(uploadPath);
+        if (!uploadDir.exists()) {
+            uploadDir.mkdirs();
+        }
+
+        if (fileName != null && !fileName.isEmpty()) {
+            filePart.write(uploadPath + File.separator + fileName);
+        }
+
+        String proImageMain = fileName;
+
+        return new Product(proId, proTypeId, proName, proDescription, proPrice, proImageMain);
+    }
+
+    private void deleteProduct(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            ProductDAO productDAO = new ProductDAO();
+            productDAO.deleteProduct(proId);
+            response.sendRedirect("AdminController?tab=products");
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    /**
+     * Delete feedback by feedback ID
+     */
+    private void deleteFeedback(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String feedbackIdStr = request.getParameter("feedbackId");
+            int feedbackId = Integer.parseInt(feedbackIdStr);
+            
+            FeedbackDAO feedbackDAO = new FeedbackDAO();
+            
+            // Delete the feedback (assuming database has CASCADE DELETE for replies)
+            feedbackDAO.deleteFeedback(feedbackId);
+            
+            // Set success message
+            HttpSession session = request.getSession();
+            session.setAttribute("successMessage", "Feedback deleted successfully.");
+            
+            response.sendRedirect("AdminController?tab=feedbacks");
+            
+        } catch (Exception e) {
+            log("Error deleting feedback: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Cannot delete feedback: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
+        }
+    }
+
+    /**
+     * Delete reply feedback by reply ID
+     */
+    private void deleteReply(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String replyIdStr = request.getParameter("replyId");
+            
+            if (replyIdStr == null || replyIdStr.trim().isEmpty()) {
+                request.setAttribute("ERROR", "Reply ID is required.");
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+                return;
+            }
+            
+            int replyId = Integer.parseInt(replyIdStr);
+            
+            ReplyFeedbackDAO replyDAO = new ReplyFeedbackDAO();
+            
+            // Delete the reply
+            replyDAO.deleteReply(replyId);
+            
+            // Set success message
+            HttpSession session = request.getSession();
+            session.setAttribute("successMessage", "Reply deleted successfully.");
+            
+            response.sendRedirect("AdminController?tab=feedbacks");
+            
+        } catch (Exception e) {
+            log("Error deleting reply: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Cannot delete reply: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
+        }
+    }
+
+    /**
+     * Get customer information including personal details and order history
+     */
+    private void getCustomerInfo(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        String cusId = request.getParameter("cusId");
+        
+        try {
+            CustomerDAO customerDAO = new CustomerDAO();
+            OrderDAO orderDAO = new OrderDAO();
+            
+            // Get customer details
+            Customer customer = customerDAO.getCustomerById(cusId);
+            
+            // Get customer's order history
+            List<Order> orders = orderDAO.getOrdersByCustomerId(cusId);
+            
+            // Create response JSON
+            Map<String, Object> responseData = new HashMap<>();
+            
+            if (customer != null) {
+                responseData.put("success", true);
+                responseData.put("customer", customer);
+                responseData.put("orders", orders);
+            } else {
+                responseData.put("success", false);
+                responseData.put("message", "Customer not found");
+            }
+            
+            // Convert to JSON and send response
+            Gson gson = new Gson();
+            String jsonResponse = gson.toJson(responseData);
+            
+            response.getWriter().write(jsonResponse);
+            
+        } catch (Exception e) {
+            // Handle error
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Error loading customer information: " + e.getMessage());
+            
+            Gson gson = new Gson();
+            String jsonResponse = gson.toJson(errorResponse);
+            
+            response.getWriter().write(jsonResponse);
         }
     }
 

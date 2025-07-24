@@ -90,9 +90,9 @@
                         <li class="nav-item">
                             <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
                                 <i class="fas fa-shopping-cart fa-lg"></i>
-                                <c:if test="${sessionScope.cartTotalQuantity > 0}">
+                                <c:if test="${sessionScope.cartSize > 0}">
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        ${sessionScope.cartTotalQuantity}
+                                        ${sessionScope.cartSize}
                                     </span>
                                 </c:if>
                             </a>
@@ -111,15 +111,16 @@
 
                                         <!-- Orders (moved below Cart) -->
                                         <li class="nav-item">
-                                            <a class="nav-link" href="OrderController?action=view">
+                                            <a class="nav-link" href="OrderHistoryController">
                                                 My Orders
                                             </a>
                                         </li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="MainController?action=Logout">Logout</a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
+                                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
                                     </ul>
                                 </li>
                             </c:when>

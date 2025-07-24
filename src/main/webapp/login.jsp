@@ -39,12 +39,25 @@
         <div class="card">
             <h3 class="text-center mb-4">Login</h3>
 
+            <%-- Hiển thị thông báo logout thành công --%>
+            <% 
+                String logoutParam = request.getParameter("logout");
+                if ("success".equals(logoutParam)) {
+            %>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                Bạn đã đăng xuất thành công!
+            </div>
+            <% } %>
+
             <%-- Hiển thị lỗi đăng nhập --%>
             <% if (request.getAttribute("ERROR") != null) {%>
             <div class="alert alert-danger">
                 <%= request.getAttribute("ERROR")%>
             </div>
             <% } %>
+
+            
 
             <%-- Hiển thị cảnh báo khi truy cập giỏ hàng mà chưa đăng nhập --%>
             <%
@@ -75,7 +88,7 @@
                 <%= request.getAttribute("message") != null ? request.getAttribute("message") : ""%>
             </div>
 
-            <form action="MainController" method="post">
+            <form action="LoginController" method="post">
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
                     <input type="text" name="username" id="username" class="form-control" required placeholder="Enter your username">

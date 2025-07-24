@@ -11,6 +11,7 @@ public class Stock {
     private String proId;
     private int stockQuantity;
     private Timestamp lastUpdated;
+  
 
     public Stock() {
     }
@@ -20,7 +21,7 @@ public class Stock {
         this.stockQuantity = stockQuantity;
         this.lastUpdated = lastUpdated;
     }
-  
+
     public String getProId() {
         return proId;
     }
@@ -28,7 +29,10 @@ public class Stock {
     public void setProId(String proId) {
         this.proId = proId;
     }
-  
+    // Getter & Setter cho productName
+
+   
+
     public int getStockQuantity() {
         return stockQuantity;
     }
