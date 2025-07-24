@@ -55,7 +55,7 @@ public class LoginController extends HttpServlet {
                     // Check if there's a redirect URL stored
                     String redirectURL = (String) session.getAttribute("REDIRECT_URL");
                     System.out.println("Redirect URL from session: " + redirectURL);
-                    
+
                     if (redirectURL != null && !redirectURL.isEmpty()) {
                         // Remove the redirect URL from session
                         session.removeAttribute("REDIRECT_URL");
