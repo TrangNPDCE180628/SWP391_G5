@@ -21,6 +21,7 @@ public class AuthenticationFilter implements Filter {
         "/voucher-manager.jsp",
         "/Revenue.jsp",
         "/Stock.jsp"
+        
     );
     
     // URLs that require user authentication (admin, staff, or customer)

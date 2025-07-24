@@ -110,6 +110,9 @@
                                 <li>
                                     <a class="dropdown-item" href="login.jsp">Logout</a>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item" href="/HomeController">Go Home Page</a>
+                                </li>
                             </ul>
 
                         </div>
