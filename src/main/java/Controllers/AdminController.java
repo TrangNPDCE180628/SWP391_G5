@@ -135,6 +135,9 @@ public class AdminController extends BaseController {
                 case "replyFeedback":
                     replyFeedback(request, response);
                     break;
+                case "deleteReply":
+                    deleteReply(request, response);
+                    break;
                 case "addAttribute":
                     addAttribute(request, response);
                     return;
@@ -218,6 +221,12 @@ public class AdminController extends BaseController {
                     return;
                 case "viewProductDetail":
                     viewProductDetail(request, response);
+                    return;
+                case "getCustomerInfo":
+                    getCustomerInfo(request, response);
+                    return;
+                case "deleteFeedback":
+                    deleteFeedback(request, response);
                     return;
                 default:
                     loadAdminPage(request, response);
@@ -570,7 +579,7 @@ public class AdminController extends BaseController {
             reply.setContentReply(contentReply);
 
             dao.insertReplyFeedback(reply);
-            loadAdminPage(request, response);
+            response.sendRedirect("AdminController?tab=feedbacks");
         } catch (Exception e) {
             log("Error in replyFeedback: " + e.toString());
             if (!response.isCommitted()) {
@@ -1375,6 +1384,122 @@ public class AdminController extends BaseController {
             response.sendRedirect("AdminController?tab=products");
         } catch (Exception e) {
             throw new ServletException(e);
+        }
+    }
+
+    /**
+     * Delete feedback by feedback ID
+     */
+    private void deleteFeedback(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String feedbackIdStr = request.getParameter("feedbackId");
+            int feedbackId = Integer.parseInt(feedbackIdStr);
+            
+            FeedbackDAO feedbackDAO = new FeedbackDAO();
+            
+            // Delete the feedback (assuming database has CASCADE DELETE for replies)
+            feedbackDAO.deleteFeedback(feedbackId);
+            
+            // Set success message
+            HttpSession session = request.getSession();
+            session.setAttribute("successMessage", "Feedback deleted successfully.");
+            
+            response.sendRedirect("AdminController?tab=feedbacks");
+            
+        } catch (Exception e) {
+            log("Error deleting feedback: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Cannot delete feedback: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
+        }
+    }
+
+    /**
+     * Delete reply feedback by reply ID
+     */
+    private void deleteReply(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String replyIdStr = request.getParameter("replyId");
+            
+            if (replyIdStr == null || replyIdStr.trim().isEmpty()) {
+                request.setAttribute("ERROR", "Reply ID is required.");
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+                return;
+            }
+            
+            int replyId = Integer.parseInt(replyIdStr);
+            
+            ReplyFeedbackDAO replyDAO = new ReplyFeedbackDAO();
+            
+            // Delete the reply
+            replyDAO.deleteReply(replyId);
+            
+            // Set success message
+            HttpSession session = request.getSession();
+            session.setAttribute("successMessage", "Reply deleted successfully.");
+            
+            response.sendRedirect("AdminController?tab=feedbacks");
+            
+        } catch (Exception e) {
+            log("Error deleting reply: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Cannot delete reply: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
+        }
+    }
+
+    /**
+     * Get customer information including personal details and order history
+     */
+    private void getCustomerInfo(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        String cusId = request.getParameter("cusId");
+        
+        try {
+            CustomerDAO customerDAO = new CustomerDAO();
+            OrderDAO orderDAO = new OrderDAO();
+            
+            // Get customer details
+            Customer customer = customerDAO.getCustomerById(cusId);
+            
+            // Get customer's order history
+            List<Order> orders = orderDAO.getOrdersByCustomerId(cusId);
+            
+            // Create response JSON
+            Map<String, Object> responseData = new HashMap<>();
+            
+            if (customer != null) {
+                responseData.put("success", true);
+                responseData.put("customer", customer);
+                responseData.put("orders", orders);
+            } else {
+                responseData.put("success", false);
+                responseData.put("message", "Customer not found");
+            }
+            
+            // Convert to JSON and send response
+            Gson gson = new Gson();
+            String jsonResponse = gson.toJson(responseData);
+            
+            response.getWriter().write(jsonResponse);
+            
+        } catch (Exception e) {
+            // Handle error
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Error loading customer information: " + e.getMessage());
+            
+            Gson gson = new Gson();
+            String jsonResponse = gson.toJson(errorResponse);
+            
+            response.getWriter().write(jsonResponse);
         }
     }
 

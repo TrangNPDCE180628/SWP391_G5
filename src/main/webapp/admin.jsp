@@ -109,7 +109,7 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
                                 <li>
-                                    <a class="dropdown-item" href="login.jsp">Logout</a>
+                                    <a class="dropdown-item" href="/LogoutController">Logout</a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="/HomeController">Go Home Page</a>
@@ -410,8 +410,35 @@
                         <!-- Feedback Tab -->
                         <div class="tab-pane fade" id="feedbacks">
                             <h2>Feedback Management</h2>
+                            
+                            <!-- Search and Filter Controls -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control" id="feedbackSearchInput" 
+                                               placeholder="Search by customer name, product name, or feedback content...">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="feedbackStatusFilter">
+                                        <option value="all">All Status</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="replied">Replied</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="feedbackSortOrder">
+                                        <option value="newest">Newest First</option>
+                                        <option value="oldest">Oldest First</option>
+                                        <option value="highest-rating">Highest Rating</option>
+                                        <option value="lowest-rating">Lowest Rating</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
                             <div class="table-responsive">
-                                <table class="table table-striped">
+                                <table class="table table-striped" id="feedbackTable">
                                     <thead>
                                         <tr>
                                             <th>Feedback ID</th>
@@ -428,13 +455,16 @@
                                             <tr
                                                 data-feedback-id="${fb.feedbackId}"
                                                 data-cus-id="${fb.cusId}"
+                                                data-cus-name="${fb.cusFullName}"
                                                 data-pro-id="${fb.proId}"
+                                                data-pro-name="${fb.proName}"
                                                 data-content="${fb.feedbackContent}"
                                                 data-rate="${fb.rate}"
                                                 data-reply-id="${fb.replyFeedbackId}"
                                                 data-reply-content="${fb.contentReply}"
                                                 data-staff-id="${fb.staffId}"
-                                                data-reply-time="${fb.createdAt}">
+                                                data-reply-time="${fb.createdAt}"
+                                                data-status="${not empty fb.replyFeedbackId ? 'replied' : 'pending'}">
                                                 <td>${fb.feedbackId}</td>
                                                 <td>${fb.cusFullName}</td>
                                                 <td>${fb.proName}</td>
@@ -451,6 +481,9 @@
                                                     </c:choose>
                                                 </td>
                                                 <td class="action-buttons">
+                                                    <button class="btn btn-sm btn-primary" onclick="viewCustomerInfo('${fb.cusId}')">
+                                                        <i class="fas fa-user"></i> View Customer
+                                                    </button>
                                                     <c:choose>
                                                         <c:when test="${empty fb.replyFeedbackId}">
                                                             <button class="btn btn-sm btn-info" onclick="replyFeedback('${fb.feedbackId}')">
@@ -471,6 +504,11 @@
                                         </c:forEach>
                                     </tbody>
                                 </table>
+                            </div>
+                            
+                            <!-- No results message -->
+                            <div id="noFeedbackResults" class="alert alert-info text-center" style="display: none;">
+                                <i class="fas fa-search"></i> No feedback found matching your criteria.
                             </div>
                         </div>
                         <!-- Tab Attributes -->
@@ -687,6 +725,9 @@
                         <p id="modalReplyContent"></p>
                     </div>
                     <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" id="deleteReplyBtn" onclick="deleteReply()">
+                            <i class="fas fa-trash"></i> Delete Reply
+                        </button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
@@ -709,16 +750,30 @@
                             <input type="hidden" name="feedbackId" id="replyFeedbackId">
                             <input type="hidden" name="cusId" id="replyCusId">
 
-                            <!-- Staff Selector -->
-                            <div class="mb-3">
-                                <label for="staffSelect" class="form-label">Select Staff</label>
-                                <select class="form-select" id="staffSelect" name="staffId" required>
-                                    <option value="">-- Choose Staff --</option>
-                                    <c:forEach var="staff" items="${staffs}">
-                                        <option value="${staff.staffId}">${staff.staffFullName}</option>
-                                    </c:forEach>
-                                </select>
-                            </div>
+                            <!-- Staff Selection - Only show for Admin -->
+                            <c:choose>
+                                <c:when test="${LOGIN_USER.role == 'Admin'}">
+                                    <div class="mb-3">
+                                        <label for="staffSelect" class="form-label">Select Staff to Reply</label>
+                                        <select class="form-select" id="staffSelect" name="staffId" required>
+                                            <option value="">-- Choose Staff --</option>
+                                            <c:forEach var="staff" items="${staffs}">
+                                                <option value="${staff.staffId}">${staff.staffFullName}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                </c:when>
+                                <c:when test="${LOGIN_USER.role == 'Staff'}">
+                                    <!-- Hidden field for Staff ID and display current staff info -->
+                                    <input type="hidden" name="staffId" value="${LOGIN_USER.id}">
+                                    <div class="mb-3">
+                                        <label class="form-label">Replying as:</label>
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-user"></i> ${profile.staffFullName} (Staff)
+                                        </div>
+                                    </div>
+                                </c:when>
+                            </c:choose>
 
                             <!-- Reply Content -->
                             <div class="mb-3">
@@ -732,6 +787,62 @@
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Customer Info Modal -->
+        <div class="modal fade" id="viewCustomerModal" tabindex="-1" aria-labelledby="viewCustomerModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewCustomerModalLabel">Customer Information</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Customer Details</h6>
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <th width="35%">Customer ID:</th>
+                                            <td id="modalCusId">-</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Full Name:</th>
+                                            <td id="modalCusFullName">-</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email:</th>
+                                            <td id="modalCusEmail">-</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Phone:</th>
+                                            <td id="modalCusPhone">-</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Gender:</th>
+                                            <td id="modalCusGender">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Order History</h6>
+                                <div id="customerOrderHistory" style="max-height: 300px; overflow-y: auto;">
+                                    <div class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
                 </div>
             </div>
         </div>
