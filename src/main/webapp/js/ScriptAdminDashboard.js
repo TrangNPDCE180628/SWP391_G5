@@ -35,38 +35,38 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
-//    /* ---- Kiểm tra ngày Voucher ---- */
-//    const addForm = document.querySelector('#addVoucherForm');
-//    if (addForm) {
-//        // Tạo alert lỗi và chèn vào đầu modal-body
-//        const errorDiv = document.createElement('div');
-//        errorDiv.className = 'alert alert-danger';
-//        errorDiv.style.display = 'none';
-//        addForm.querySelector('.modal-body').prepend(errorDiv);
-//
-//        // Xử lý submit
-//        addForm.addEventListener('submit', function (e) {
-//            const start = new Date(document.getElementById('startDate').value);
-//            const end = new Date(document.getElementById('endDate').value);
-//            if (start >= end) {
-//                e.preventDefault();
-//                errorDiv.textContent = 'Start date must be before end date.';
-//                errorDiv.style.display = 'block';
-//            } else {
-//                errorDiv.style.display = 'none';
-//            }
-//        });
-//
-//        // Ẩn alert khi chỉnh lại ngày
-//        document.getElementById('startDate').addEventListener('change', () => {
-//            errorDiv.style.display = 'none';
-//        });
-//        document.getElementById('endDate').addEventListener('change', () => {
-//            errorDiv.style.display = 'none';
-//        });
-//    }
-//    /* ---- Hết kiểm tra ngày Voucher ---- */
-    
+    /* ---- Kiểm tra ngày Voucher ---- */
+    const addForm = document.querySelector('#addVoucherForm');
+    if (addForm) {
+        // Tạo alert lỗi và chèn vào đầu modal-body
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger';
+        errorDiv.style.display = 'none';
+        addForm.querySelector('.modal-body').prepend(errorDiv);
+
+        // Xử lý submit
+        addForm.addEventListener('submit', function (e) {
+            const start = new Date(document.getElementById('startDate').value);
+            const end = new Date(document.getElementById('endDate').value);
+            if (start >= end) {
+                e.preventDefault();
+                errorDiv.textContent = 'Start date must be before end date.';
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        });
+
+        // Ẩn alert khi chỉnh lại ngày
+        document.getElementById('startDate').addEventListener('change', () => {
+            errorDiv.style.display = 'none';
+        });
+        document.getElementById('endDate').addEventListener('change', () => {
+            errorDiv.style.display = 'none';
+        });
+    }
+    /* ---- Hết kiểm tra ngày Voucher ---- */
+
     /* ---- Vẽ chart revenue ---- */
     const canvas = document.getElementById("revenueChart");
     if (!canvas)
@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-
+    initStockSearch();
 
 }
 );
@@ -517,11 +517,41 @@ function viewProductAttribute(productId, attributeId) {
     new bootstrap.Modal(document.getElementById('viewProductAttributeModal')).show();
 }
 
-function editProductType(id, name) {
-    document.getElementById('editProTypeId').value = id;
-    document.getElementById('editProTypeName').value = name;
-    new bootstrap.Modal(document.getElementById('editProductTypeModal')).show();
+function loadOrderDetails(orderId) {
+    const modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+    const content = document.getElementById('orderDetailContent');
+    content.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+    fetch(`AdminController?action=viewOrderDetails&orderId=${orderId}`)
+            .then(response => response.text())
+            .then(data => {
+                content.innerHTML = data;
+            })
+            .catch(error => {
+                content.innerHTML = `<div class="alert alert-danger">Error loading order details.</div>`;
+            });
+
+    modal.show();
 }
+
+function initStockSearch() {
+    const input = document.getElementById("stockSearchInput");
+    const table = document.getElementById("stockTable");
+    if (!input || !table)
+        return;
+
+    const rows = table.querySelector("tbody").getElementsByTagName("tr");
+
+    input.addEventListener("keyup", function () {
+        const filter = input.value.toLowerCase();
+        Array.from(rows).forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? "" : "none";
+        });
+    });
+}
+
+
 
 function deleteProductType(id) {
     if (confirm('Are you sure you want to delete this product type?')) {

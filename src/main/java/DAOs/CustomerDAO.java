@@ -96,13 +96,11 @@ public class CustomerDAO {
             stmt.executeUpdate();
         }
     }
-    
+
     //Update password customer
-    
-    public boolean updatePassword(String email, String newPassword) throws SQLException,ClassNotFoundException {
+    public boolean updatePassword(String email, String newPassword) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE Customer SET cusPassword = ? WHERE cusGmail = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newPassword);
             ps.setString(2, email);
             return ps.executeUpdate() > 0;
@@ -149,5 +147,19 @@ public class CustomerDAO {
             }
         }
 
+    }
+
+    public String getCusNameById(String cusId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT cusFullName FROM Customer WHERE cusId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, cusId);
+            try ( ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("cusFullName");
+                }
+            }
+        }
+        return null; // Not found
     }
 }

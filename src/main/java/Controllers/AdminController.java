@@ -44,9 +44,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import javax.servlet.http.HttpSession;
 import Ultis.DBContext;
+import Ultis.ExcelUtils;
+import Ultis.LogUtil;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.nio.file.Paths;
@@ -54,9 +58,12 @@ import java.sql.Date;
 import java.util.List;
 import java.sql.Connection;
 import java.time.LocalDate;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.ServletContext;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/AdminController"})
 @MultipartConfig(
@@ -172,14 +179,14 @@ public class AdminController extends BaseController {
                 case "deleteOrder":
                     deleteOrder(request, response);
                     return;
-                case "goToOrderDetailPage":
-                    goToOrderDetailPage(request, response);
+                case "viewOrderDetails":
+                    viewOrderDetails(request, response);
                     return;
                 case "viewStockList":
                     viewStockList(request, response);
                     return;
-                case "addStockQuantity":
-                    addStockQuantity(request, response);
+                case "ImportStockQuantity":
+                    importStockQuantity(request, response);
                     return;
                 case "deleteStock":
                     deleteStock(request, response);
@@ -187,8 +194,11 @@ public class AdminController extends BaseController {
                 case "createStock":
                     createStock(request, response);
                     return;
-                case "updateStockQuantity":
-                    updateStockQuantity(request, response);
+                case "listStocks":
+                    listStocks(request, response);
+                    return;
+                case "ExportStockQuantity":
+                    exportStockQuantity(request, response);
                     return;
                 case "RevenueByMonth":
                     handleRevenueByMonth(request, response);
@@ -221,7 +231,8 @@ public class AdminController extends BaseController {
         try {
             String activeTab = request.getParameter("tab");
             request.setAttribute("activeTab", activeTab);
-            // Load common data
+
+            // 1. Load common data
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
@@ -240,17 +251,16 @@ public class AdminController extends BaseController {
             List<FeedbackReplyView> viewFeedbacks = viewfeedbackDAO.getAllFeedbackReplies();
             List<Attribute> attributes = attributeDAO.getAll();
             List<ProductAttribute> productAttributes = paDAO.getAll();
-            List<Order> orders = ordDao.getAll();
-            List<Stock> stocks = stockDAO.getAllStocks();
             BigDecimal totalRevenue = ordDao.getTotalRevenue();
             List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes();
 
-            // === NEW: Load từ VIEW ===
+            // 2. Load ViewProductAttributes
             Connection conn = DBContext.getConnection();
             ViewProductAttributeDAO viewProductAttributeDAO = new ViewProductAttributeDAO(conn);
             List<ViewProductAttribute> viewProductAttributes = viewProductAttributeDAO.getAll();
             request.setAttribute("viewProductAttributes", viewProductAttributes);
 
+            // 3. Set data to request
             request.setAttribute("users", users);
             request.setAttribute("staffs", staffs);
             request.setAttribute("vouchers", vouchers);
@@ -258,34 +268,32 @@ public class AdminController extends BaseController {
             request.setAttribute("viewFeedbacks", viewFeedbacks);
             request.setAttribute("attributes", attributes);
             request.setAttribute("productAttributes", productAttributes);
-            request.setAttribute("orders", orders);
-            request.setAttribute("stocks", stocks);
             request.setAttribute("totalRevenue", totalRevenue);
             request.setAttribute("productTypes", productTypes);
 
-            // 1. Lấy danh sách tất cả đơn hàng
-            OrderDetailDAO detailDAO = new OrderDetailDAO();
-            // 2. Tạo map: orderId -> list of OrderDetail
-            Map<Integer, List<OrderDetail>> orderDetailsMap = new HashMap<>();
-            for (Order o : orders) {
-                List<OrderDetail> details = detailDAO.getByOrderId(o.getOrderId());
-                orderDetailsMap.put(o.getOrderId(), details);
-            }
-            request.setAttribute("orderDetailsMap", orderDetailsMap);
+            StockDAO dao = new StockDAO();
+            List<Map<String, Object>> productStockList = dao.getAllProductStockData();
+            request.setAttribute("productStockList", productStockList);
+            
+            List<String> noStockProIds = stockDAO.getProductsWithoutStock();
+            request.setAttribute("noStockProIds", noStockProIds);
 
-            // Doanh thu theo tháng trong năm hiện tại
+            // 4. Load danh sách đơn hàng nếu không có filter trạng thái
+            if (request.getParameter("sortByOrderStatus") == null) {
+                List<Map<String, Object>> orderData = ordDao.getOrderDetailsAll();
+                request.setAttribute("orders", orderData);
+            }
+
+            // 5. Load doanh thu theo tháng của năm hiện tại
             int currentYear = LocalDate.now().getYear();
             Map<String, BigDecimal> monthlyRevenue = ordDao.getMonthlyRevenueInYear(currentYear);
             request.setAttribute("monthlyRevenueMap", monthlyRevenue);
             request.setAttribute("revenueYear", currentYear);
 
-            System.out.println(monthlyRevenue);
-
-            // Load profile info
+            // 6. Load profile info từ LOGIN_USER
             User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
             if (loginUser != null) {
                 String role = loginUser.getRole();
-
                 if ("Admin".equals(role)) {
                     AdminDAO adminDAO = new AdminDAO();
                     Admin adminProfile = adminDAO.getAdminById(String.valueOf(loginUser.getId()));
@@ -296,10 +304,21 @@ public class AdminController extends BaseController {
                     request.setAttribute("profile", staffProfile);
                 }
             }
+
+            // 7. Load successMessage từ session nếu có
+            HttpSession session = request.getSession();
+            String successMessage = (String) session.getAttribute("successMessage");
+            if (successMessage != null) {
+                request.setAttribute("successMessage", successMessage);
+                session.removeAttribute("successMessage"); // clear after showing
+            }
+
+            // 8. Forward về admin.jsp
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
             throw new ServletException(e);
         }
+
     }
 
     private void editProfile(HttpServletRequest request, HttpServletResponse response)
@@ -712,28 +731,18 @@ public class AdminController extends BaseController {
         }
     }
 
-    private void addStockQuantity(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String proId = request.getParameter("proId");
-            int quantity = Integer.parseInt(request.getParameter("quantity"));
-            StockDAO stockDAO = new StockDAO();
-            stockDAO.addStockQuantity(proId, quantity);
-            response.sendRedirect("AdminController?tab=inventory");
-        } catch (Exception e) {
-            log("Error in addStockQuantity: " + e.getMessage());
-            if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Unable to add stock quantity: " + e.getMessage());
-                request.getRequestDispatcher("error.jsp").forward(request, response);
-            }
-        }
-    }
-
     private void deleteStock(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             String proId = request.getParameter("proId");
             StockDAO stockDAO = new StockDAO();
+            // Có thể kiểm tra số lượng hiện tại tại đây nếu muốn
+            int current = stockDAO.getStockByProductId(proId).getStockQuantity();
+
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Deleted] " + current + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + current + " [Ending Inventory] " + "0");
+
             stockDAO.deleteStock(proId);
             response.sendRedirect("AdminController?tab=inventory");
         } catch (Exception e) {
@@ -759,7 +768,14 @@ public class AdminController extends BaseController {
             String proId = request.getParameter("proId");
             int quantity = Integer.parseInt(request.getParameter("quantity"));
             StockDAO stockDAO = new StockDAO();
+
             stockDAO.createStock(proId, quantity);
+
+            int finalstock = stockDAO.getStockByProductId(proId).getStockQuantity();
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Created] " + quantity + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + "0" + " [Ending Inventory] " + finalstock);
+
             response.sendRedirect("AdminController?tab=inventory");
         } catch (Exception e) {
             log("Error in createStock: " + e.getMessage());
@@ -770,20 +786,57 @@ public class AdminController extends BaseController {
         }
     }
 
-    private void updateStockQuantity(HttpServletRequest request, HttpServletResponse response)
+    private void exportStockQuantity(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             String proId = request.getParameter("proId");
-            int newQuantity = Integer.parseInt(request.getParameter("newQuantity"));
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+
+            if (quantity <= 0) {
+                throw new IllegalArgumentException("Quantity must be greater than 0.");
+            }
+
             StockDAO stockDAO = new StockDAO();
-            stockDAO.updateStockQuantity(proId, newQuantity);
+            // Có thể kiểm tra số lượng hiện tại tại đây nếu muốn
+            int current = stockDAO.getStockByProductId(proId).getStockQuantity();
+            stockDAO.exportStockQuantity(proId, quantity);
+            int finalstock = stockDAO.getStockByProductId(proId).getStockQuantity();
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Exported] " + quantity + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + current + " [Ending Inventory] " + finalstock);
+
             response.sendRedirect("AdminController?tab=inventory");
         } catch (Exception e) {
-            log("Error in updateStockQuantity: " + e.getMessage());
+            log("Error in exportStockQuantity: " + e.getMessage());
             if (!response.isCommitted()) {
-                request.setAttribute("ERROR", "Unable to update stock quantity: " + e.getMessage());
+                request.setAttribute("ERROR", "Unable to export stock: " + e.getMessage());
                 request.getRequestDispatcher("error.jsp").forward(request, response);
             }
+        }
+    }
+
+    private void listStocks(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String sortBy = request.getParameter("sortBy");
+            String order = request.getParameter("order");
+
+            if (sortBy == null || sortBy.isEmpty()) {
+                sortBy = "lastUpdated";
+            }
+            if (order == null || order.isEmpty()) {
+                order = "DESC";
+            }
+
+            StockDAO stockDAO = new StockDAO();
+            List<Stock> stocks = stockDAO.getStocksSorted(sortBy, order);
+
+            request.setAttribute("stocks", stocks);
+            request.getRequestDispatcher("inventory.jsp").forward(request, response);
+        } catch (Exception e) {
+            log("Error in listStocks: " + e.getMessage());
+            request.setAttribute("ERROR", "Unable to list stocks: " + e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
 
@@ -796,33 +849,6 @@ public class AdminController extends BaseController {
      * @throws ServletException nếu forward bị lỗi
      * @throws IOException nếu có lỗi khi đọc ghi dữ liệu
      */
-    private void goToOrderDetailPage(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int orderId = Integer.parseInt(request.getParameter("orderId"));
-
-            OrderDAO orderDAO = new OrderDAO();
-            OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
-            ProductDAO productDAO = new ProductDAO();
-
-            Order order = orderDAO.getById(orderId);
-            List<OrderDetail> orderDetailList = orderDetailDAO.getByOrderId(orderId);
-            Map<String, Product> productMap = new HashMap<>();
-            for (OrderDetail detail : orderDetailList) {
-                Product product = productDAO.getById(detail.getProId());
-                productMap.put(detail.getProId(), product);
-            }
-
-            request.setAttribute("order", order);
-            request.setAttribute("orderDetails", orderDetailList);
-            request.setAttribute("productMap", productMap);
-
-            request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
-        } catch (Exception e) {
-            throw new ServletException("Failed to load order detail page", e);
-        }
-    }
-
     private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -846,29 +872,32 @@ public class AdminController extends BaseController {
         }
     }
 
+    /**
+     * Filters orders by their status (e.g., All, Pending, Done, Cancel) and
+     * forwards the result to admin.jsp for display.
+     */
     private void filterOrdersByStatus(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            String status = request.getParameter("status"); // All, pending, shipped, etc.
-
+            String status = request.getParameter("sortByOrderStatus");
             OrderDAO dao = new OrderDAO();
-            List<Order> filteredOrders;
-
-            if (status == null || status.isEmpty() || "All".equalsIgnoreCase(status)) {
-                filteredOrders = dao.getAll();  // Không lọc
+            if (status.equals("All")) {
+                List<Map<String, Object>> filteredOrders = dao.getOrderDetailsAll();
+                request.setAttribute("orders", filteredOrders);
             } else {
-                filteredOrders = dao.getByStatus(status);  // Lọc theo status
+                List<Map<String, Object>> filteredOrders = dao.getOrderDetailsByStatus(status);
+                request.setAttribute("orders", filteredOrders);
+                System.out.println(filteredOrders);
             }
 
-            request.setAttribute("orders", filteredOrders);
-            request.setAttribute("filterStatus", status); // Để giữ lại khi hiển thị lại dropdown
+            // Set attributes for displaying in JSP
+            request.setAttribute("filterStatus", status); // Preserve selected filter in dropdown
             request.setAttribute("activeTab", "orders");
 
             request.getRequestDispatcher("admin.jsp").forward(request, response);
         } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("ERROR", "Unable to filter orders.");
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            log("Error in filterOrdersByStatus: " + e.getMessage());
+
         }
     }
 
@@ -876,9 +905,12 @@ public class AdminController extends BaseController {
             throws ServletException, IOException {
         try {
             int orderId = Integer.parseInt(request.getParameter("orderId"));
-
             OrderDAO dao = new OrderDAO();
             dao.delete(orderId);
+
+            // Thêm thông báo vào session
+            HttpSession session = request.getSession();
+            session.setAttribute("successMessage", "Order #" + orderId + " deleted successfully.");
 
             response.sendRedirect("AdminController?tab=orders");
         } catch (Exception e) {
@@ -1040,6 +1072,135 @@ public class AdminController extends BaseController {
             }
         }
         return dp[len1][len2];
+    }
+
+    private void viewOrderDetails(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String orderIdStr = request.getParameter("orderId");
+            int orderId = Integer.parseInt(orderIdStr);
+
+            OrderDAO ordDao = new OrderDAO();
+            List<Map<String, Object>> allData = ordDao.getOrderDetailsAll();
+
+            // Lọc ra những dòng thuộc orderId này
+            List<Map<String, Object>> orderDetails = new ArrayList<>();
+            Map<String, Object> orderInfo = null;
+
+            for (Map<String, Object> row : allData) {
+                int currentOrderId = (int) row.get("orderId");
+
+                if (currentOrderId == orderId) {
+                    orderDetails.add(row);
+
+                    // Lấy thông tin chung của order (1 lần)
+                    if (orderInfo == null) {
+                        orderInfo = new HashMap<>();
+                        orderInfo.put("orderId", currentOrderId);
+                        orderInfo.put("cusFullName", row.get("cusFullName"));
+                        orderInfo.put("orderDate", row.get("orderDate"));
+                        orderInfo.put("codeName", row.get("codeName") != null ? row.get("codeName") : "No voucher");
+                        orderInfo.put("finalAmount", row.get("finalAmount"));
+                        orderInfo.put("orderStatus", row.get("orderStatus"));
+                        orderInfo.put("paymentMethod", row.get("paymentMethod"));
+                        orderInfo.put("shippingAddress", row.get("shippingAddress"));
+                        orderInfo.put("receiverName", row.get("receiverName"));
+                        orderInfo.put("receiverPhone", row.get("receiverPhone"));
+                    }
+                }
+            }
+
+            if (orderInfo == null) {
+                // Không tìm thấy đơn hàng
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Order not found");
+                return;
+            }
+
+            request.setAttribute("orderInfo", orderInfo);
+            request.setAttribute("orderDetails", orderDetails);
+            request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error loading order details");
+        }
+    }
+
+    private void importStockQuantity(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String proId = request.getParameter("proId");
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+
+            if (quantity <= 0) {
+                throw new IllegalArgumentException("Quantity must be greater than 0.");
+            }
+
+            StockDAO stockDAO = new StockDAO();
+            int current = stockDAO.getStockByProductId(proId).getStockQuantity();
+            stockDAO.importStockQuantity(proId, quantity);
+            int finalstock = stockDAO.getStockByProductId(proId).getStockQuantity();
+            ProductDAO prodao = new ProductDAO();
+            String proname = prodao.getById(proId).getProName();
+            LogUtil.logToFile("logs/inventory_log.txt", "[Imported] " + quantity + " into stock of [ProductID] " + proId + " [ProductName] " + proname + " [Beginning Inventory] " + current + " [Ending Inventory] " + finalstock);
+
+            response.sendRedirect("AdminController?tab=inventory");
+        } catch (Exception e) {
+            log("Error in importStockQuantity: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Unable to import stock: " + e.getMessage());
+                request.getRequestDispatcher("error.jsp").forward(request, response);
+            }
+        }
+    }
+
+    private void generateInventoryExcel(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String startDateStr = request.getParameter("startDate");
+            String endDateStr = request.getParameter("endDate");
+
+            SimpleDateFormat dateOnlyFormat = new SimpleDateFormat("yyyy-MM-dd");
+            java.util.Date startDate = new java.sql.Date(dateOnlyFormat.parse(startDateStr).getTime());
+            java.util.Date endDate = new java.sql.Date(dateOnlyFormat.parse(endDateStr).getTime());
+            
+            System.out.println(startDate + " " + endDate);
+            // Validate: startDate must not be after endDate
+            if (startDate.after(endDate)) {
+                request.setAttribute("ERROR", "Start date must not be after end date.");
+                request.setAttribute("activeTab", "inventory");
+                request.getRequestDispatcher("admin.jsp").forward(request, response);
+                return;
+            }
+
+            // Gọi ExcelUtils với ServletContext và log file path
+            ServletContext context = request.getServletContext();
+            
+            String logFilePath = context.getRealPath("/logs/inventory_log.txt");
+            System.out.println(logFilePath);
+            File excelFile = ExcelUtils.generateInventoryReport(context, startDate, endDate, logFilePath);
+
+            // Thiết lập response để tải file về
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=" + excelFile.getName());
+
+            try ( FileInputStream fis = new FileInputStream(excelFile);  OutputStream out = response.getOutputStream()) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = fis.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            }
+
+            // Xoá file tạm sau khi tải
+            excelFile.delete();
+        } catch (Exception e) {
+            log("Error in generateInventoryExcel: " + e.getMessage());
+            if (!response.isCommitted()) {
+                request.setAttribute("ERROR", "Failed to generate inventory report: " + e.getMessage());
+                request.getRequestDispatcher("inventory.jsp").forward(request, response);
+            }
+        }
     }
 
     @Override
