@@ -175,7 +175,7 @@
                                         </p>
                                         <p><strong>Total amount:</strong>
                                             <span class="final-amount">
-                                                <fmt:formatNumber value="${order.totalAmount - order.discountAmount}" type="currency" currencySymbol=""/> ₫
+                                                <fmt:formatNumber value="${order.finalAmount}" type="currency" currencySymbol=""/> ₫
                                             </span>
                                         </p>
                                     </div>
@@ -268,8 +268,9 @@
                                             <div class="d-flex justify-content-between">
                                                 <strong>Total:</strong>
                                                 <strong class="text-danger">
-                                                    <fmt:formatNumber value="${order.totalAmount - order.discountAmount}" type="currency" currencySymbol=""/> ₫
+                                                    <fmt:formatNumber value="${order.finalAmount}" type="currency" currencySymbol=""/> ₫
                                                 </strong>
+
                                             </div>
                                         </div>
                                     </div>
@@ -278,7 +279,7 @@
                                     <div class="d-flex justify-content-end">
                                         <input type="hidden" name="bankCode" value="" />
                                         <input type="hidden" name="language" value="vn" />
-                                        <input type="hidden" name="totalBill" value="${order.totalAmount - order.discountAmount}" />
+                                        <input type="hidden" name="totalBill" value="${order.finalAmount}" />
 
                                         <button type="submit" class="btn btn-success btn-lg">
                                             <i class="fas fa-check me-2"></i>Payment Confirmation

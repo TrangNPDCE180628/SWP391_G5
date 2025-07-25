@@ -714,7 +714,7 @@ public class AdminController extends BaseController {
             new ProductAttributeDAO().create(new ProductAttribute(proId, attributeId, value));
             response.sendRedirect("AdminController?tab=productAttributes");
         } catch (Exception e) {
-            throw new ServletException(e);
+            throw new ServletException(e);  
         }
     }
 
@@ -1220,49 +1220,74 @@ public class AdminController extends BaseController {
             String orderIdStr = request.getParameter("orderId");
             int orderId = Integer.parseInt(orderIdStr);
 
-            OrderDAO ordDao = new OrderDAO();
-            List<Map<String, Object>> allData = ordDao.getOrderDetailsAll();
-
-            // Lọc ra những dòng thuộc orderId này
-            List<Map<String, Object>> orderDetails = new ArrayList<>();
-            Map<String, Object> orderInfo = null;
-
-            for (Map<String, Object> row : allData) {
-                int currentOrderId = (int) row.get("orderId");
-
-                if (currentOrderId == orderId) {
-                    orderDetails.add(row);
-
-                    // Lấy thông tin chung của order (1 lần)
-                    if (orderInfo == null) {
-                        orderInfo = new HashMap<>();
-                        orderInfo.put("orderId", currentOrderId);
-                        orderInfo.put("cusFullName", row.get("cusFullName"));
-                        orderInfo.put("orderDate", row.get("orderDate"));
-                        orderInfo.put("codeName", row.get("codeName") != null ? row.get("codeName") : "No voucher");
-                        orderInfo.put("finalAmount", row.get("finalAmount"));
-                        orderInfo.put("orderStatus", row.get("orderStatus"));
-                        orderInfo.put("paymentMethod", row.get("paymentMethod"));
-                        orderInfo.put("shippingAddress", row.get("shippingAddress"));
-                        orderInfo.put("receiverName", row.get("receiverName"));
-                        orderInfo.put("receiverPhone", row.get("receiverPhone"));
-                    }
-                }
-            }
-
-            if (orderInfo == null) {
-                // Không tìm thấy đơn hàng
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Order not found");
+            // Initialize DAOs
+            OrderDAO orderDAO = new OrderDAO();
+            OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
+            ProductDAO productDAO = new ProductDAO();
+            VoucherDAO voucherDAO = new VoucherDAO();
+            
+            // Get order information
+            Order order = orderDAO.getOrderById(orderId);
+            if (order == null) {
+                response.getWriter().write("<div class='alert alert-danger'>Không tìm thấy đơn hàng</div>");
                 return;
             }
-
-            request.setAttribute("orderInfo", orderInfo);
-            request.setAttribute("orderDetails", orderDetails);
-            request.getRequestDispatcher("orderDetails.jsp").forward(request, response);
+            
+            // Get order details with product information
+            List<OrderDetail> orderDetails = orderDetailDAO.getOrderDetailByOrderId(orderId);
+            List<OrderDetailsController.OrderDetailWithProduct> orderDetailsWithProducts = new ArrayList<>();
+            
+            for (OrderDetail detail : orderDetails) {
+                try {
+                    Product product = productDAO.getById(detail.getProId());
+                    OrderDetailsController.OrderDetailWithProduct detailWithProduct = new OrderDetailsController.OrderDetailWithProduct();
+                    detailWithProduct.setOrderDetail(detail);
+                    detailWithProduct.setProduct(product);
+                    
+                    // Calculate subtotal for this item
+                    double subtotal = detail.getQuantity() * detail.getUnitPrice();
+                    detailWithProduct.setSubtotal(subtotal);
+                    
+                    orderDetailsWithProducts.add(detailWithProduct);
+                } catch (Exception e) {
+                    // Continue with other products even if one fails
+                }
+            }
+            
+            // Get voucher information if exists
+            Voucher voucher = null;
+            if (order.getVoucherId() != null) {
+                try {
+                    voucher = voucherDAO.getById(order.getVoucherId());
+                } catch (Exception e) {
+                    // Voucher not found, continue without it
+                }
+            }
+            
+            // Calculate totals
+            double subtotalAmount = orderDetailsWithProducts.stream()
+                    .mapToDouble(OrderDetailsController.OrderDetailWithProduct::getSubtotal)
+                    .sum();
+            
+            double discountAmount = order.getDiscountAmount() != null ? 
+                    order.getDiscountAmount().doubleValue() : 0.0;
+            
+            double finalAmount = subtotalAmount - discountAmount;
+            
+            // Set attributes for JSP
+            request.setAttribute("order", order);
+            request.setAttribute("orderDetailsWithProducts", orderDetailsWithProducts);
+            request.setAttribute("voucher", voucher);
+            request.setAttribute("subtotalAmount", subtotalAmount);
+            request.setAttribute("discountAmount", discountAmount);
+            request.setAttribute("finalAmount", finalAmount);
+            
+            // Forward to the admin order details JSP
+            request.getRequestDispatcher("admin-order-details.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error loading order details");
+            response.getWriter().write("<div class='alert alert-danger'>Lỗi khi tải chi tiết đơn hàng: " + e.getMessage() + "</div>");
         }
     }
 

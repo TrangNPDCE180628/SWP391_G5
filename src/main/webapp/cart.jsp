@@ -186,11 +186,13 @@
                             <div class="text-end">
                                 <div><strong>Subtotal:</strong> <span id="subtotal">₫0</span></div>
                                 <div><strong>Discount:</strong> <span id="discount">₫0</span></div>
+                                <div><strong>Shipping Fee:</strong> <span id="shippingFee">₫30000</span></div>
                                 <div><strong>Total (selected):</strong> <span id="selectedTotal">₫0</span></div>
                                 <button type="submit" class="btn btn-danger ms-3">
                                     Checkout <i class="fas fa-arrow-right"></i>
                                 </button>
                             </div>
+
                         </div>
                     </form>
                 </c:if>
@@ -391,7 +393,9 @@
 
                     subtotalEl.textContent = formatCurrency(subtotal);
                     discountEl.textContent = formatCurrency(discount);
-                    selectedTotal.textContent = formatCurrency(subtotal - discount);
+                    const shippingFee = 30000;
+                    selectedTotal.textContent = formatCurrency(subtotal - discount + shippingFee);
+
                 };
                 checkboxes.forEach(cb => cb.addEventListener("change", updateTotal));
                 updateTotal();
@@ -444,9 +448,9 @@
                 });
 
                 cartForm.addEventListener("submit", (e) => {
-                    const submitter = e.submitter; // <-- Lấy nút đã nhấn
+                    const submitter = e.submitter;
                     if (!submitter || !submitter.innerText.includes("Checkout")) {
-                        return; // nếu không phải nút Checkout thì bỏ qua
+                        return;
                     }
 
                     const checkedBoxes = document.querySelectorAll('input[name="selectedProductIds"]:checked');
@@ -458,6 +462,7 @@
 
                     cartForm.querySelectorAll("input[name='selectedProductIds']").forEach(el => el.remove());
                     cartForm.querySelectorAll("input[name='voucherCode']").forEach(el => el.remove());
+
                     checkedBoxes.forEach(cb => {
                         const hidden = document.createElement("input");
                         hidden.type = "hidden";
@@ -465,6 +470,7 @@
                         hidden.value = cb.value;
                         cartForm.appendChild(hidden);
                     });
+
                     if (voucher) {
                         const hiddenVoucher = document.createElement("input");
                         hiddenVoucher.type = "hidden";
@@ -473,8 +479,15 @@
                         cartForm.appendChild(hiddenVoucher);
                     }
 
-                    // Form will submit automatically after this
+                    const hiddenShipping = document.createElement("input");
+                    hiddenShipping.type = "hidden";
+                    hiddenShipping.name = "shippingFee";
+                    hiddenShipping.value = 30000;
+                    cartForm.appendChild(hiddenShipping);
+
+                    // Form sẽ submit sau đó
                 });
+
             });
             document.querySelectorAll(".delete-btn").forEach(btn => {
                 btn.addEventListener("click", () => {

@@ -60,12 +60,7 @@ public class OrderDAO {
             stmt.setBigDecimal(4, order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
 
             // Tính finalAmount = totalAmount - discountAmount
-            BigDecimal finalAmount = order.getTotalAmount().subtract(
-                    order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO
-            );
-            order.setFinalAmount(finalAmount);
-            stmt.setBigDecimal(5, finalAmount);
-
+            stmt.setBigDecimal(5, order.getFinalAmount());
             stmt.setString(6, order.getOrderStatus());
             stmt.setString(7, order.getPaymentMethod());
             stmt.setString(8, order.getShippingAddress());
@@ -344,7 +339,7 @@ public class OrderDAO {
                 + "AS total FROM [Order] o "
                 + "JOIN OrderDetail od ON o.orderId = od.orderId "
                 + "WHERE o.cusId = ? AND od.proId = ? "
-                + "AND o.orderStatus IN ('Completed') ";
+                + "AND o.orderStatus IN ('shipped') ";
 
         try (
                  Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -434,10 +429,8 @@ public class OrderDAO {
                 + "JOIN Customer c ON o.cusId = c.cusId "
                 + "JOIN OrderDetail od ON o.orderId = od.orderId "
                 + "JOIN Product p ON od.proId = p.proId " + "LEFT JOIN Voucher v ON o.voucherId = v.voucherId";
-        
-                
 
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {            
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
             try ( ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
@@ -518,13 +511,12 @@ public class OrderDAO {
     public List<Order> getOrdersByCustomerId(String customerId) throws SQLException, ClassNotFoundException {
         List<Order> orders = new ArrayList<>();
         String sql = "SELECT * FROM [Order] WHERE cusId = ? ORDER BY orderDate DESC";
-        
-        try (Connection conn = DBContext.getConnection(); 
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, customerId);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
+
+            try ( ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     orders.add(extractOrderFromResultSet(rs));
                 }
@@ -532,19 +524,18 @@ public class OrderDAO {
         }
         return orders;
     }
-    
+
     // Get orders by customer ID and status
     public List<Order> getOrdersByCustomerIdAndStatus(String customerId, String status) throws SQLException, ClassNotFoundException {
         List<Order> orders = new ArrayList<>();
         String sql = "SELECT * FROM [Order] WHERE cusId = ? AND orderStatus = ? ORDER BY orderDate DESC";
-        
-        try (Connection conn = DBContext.getConnection(); 
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, customerId);
             stmt.setString(2, status);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
+
+            try ( ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     orders.add(extractOrderFromResultSet(rs));
                 }
@@ -552,16 +543,16 @@ public class OrderDAO {
         }
         return orders;
     }
-    
+
     // Get orders by customer ID with multiple statuses
     public List<Order> getOrdersByCustomerIdAndStatuses(String customerId, List<String> statuses) throws SQLException, ClassNotFoundException {
         if (statuses == null || statuses.isEmpty()) {
             return new ArrayList<>();
         }
-        
+
         List<Order> orders = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT * FROM [Order] WHERE cusId = ? AND orderStatus IN (");
-        
+
         for (int i = 0; i < statuses.size(); i++) {
             sql.append("?");
             if (i < statuses.size() - 1) {
@@ -569,16 +560,15 @@ public class OrderDAO {
             }
         }
         sql.append(") ORDER BY orderDate DESC");
-        
-        try (Connection conn = DBContext.getConnection(); 
-             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-            
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
             stmt.setString(1, customerId);
             for (int i = 0; i < statuses.size(); i++) {
                 stmt.setString(i + 2, statuses.get(i));
             }
-            
-            try (ResultSet rs = stmt.executeQuery()) {
+
+            try ( ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     orders.add(extractOrderFromResultSet(rs));
                 }
@@ -593,17 +583,17 @@ public class OrderDAO {
     public Map<String, Double> getMonthlyRevenueGrowthRate(int year) throws SQLException, ClassNotFoundException {
         Map<String, Double> growthRateMap = new LinkedHashMap<>();
         Map<String, BigDecimal> monthlyRevenue = getMonthlyRevenueInYear(year);
-        
+
         BigDecimal previousRevenue = null;
         for (Map.Entry<String, BigDecimal> entry : monthlyRevenue.entrySet()) {
             String month = entry.getKey();
             BigDecimal currentRevenue = entry.getValue();
-            
+
             if (previousRevenue != null && previousRevenue.compareTo(BigDecimal.ZERO) > 0) {
                 // Calculate growth rate: (current - previous) / previous * 100
                 BigDecimal growth = currentRevenue.subtract(previousRevenue)
-                    .divide(previousRevenue, 4, BigDecimal.ROUND_HALF_UP)
-                    .multiply(new BigDecimal("100"));
+                        .divide(previousRevenue, 4, BigDecimal.ROUND_HALF_UP)
+                        .multiply(new BigDecimal("100"));
                 growthRateMap.put(month, growth.doubleValue());
             } else {
                 // First month or previous month was 0, set growth to 0
@@ -619,22 +609,21 @@ public class OrderDAO {
      */
     public List<Map<String, Object>> getProductRevenue(int year) throws SQLException, ClassNotFoundException {
         List<Map<String, Object>> productRevenueList = new ArrayList<>();
-        
-        String sql = "SELECT p.proName, " +
-                    "SUM(od.quantity * od.unitPrice) AS revenue, " +
-                    "SUM(od.quantity) AS totalQuantity " +
-                    "FROM [Order] o " +
-                    "JOIN OrderDetail od ON o.orderId = od.orderId " +
-                    "JOIN Product p ON od.proId = p.proId " +
-                    "WHERE o.orderStatus = 'Completed' AND YEAR(o.orderDate) = ? " +
-                    "GROUP BY p.proId, p.proName " +
-                    "ORDER BY revenue DESC";
-        
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        String sql = "SELECT p.proName, "
+                + "SUM(od.quantity * od.unitPrice) AS revenue, "
+                + "SUM(od.quantity) AS totalQuantity "
+                + "FROM [Order] o "
+                + "JOIN OrderDetail od ON o.orderId = od.orderId "
+                + "JOIN Product p ON od.proId = p.proId "
+                + "WHERE o.orderStatus = 'Completed' AND YEAR(o.orderDate) = ? "
+                + "GROUP BY p.proId, p.proName "
+                + "ORDER BY revenue DESC";
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, year);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
+
+            try ( ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> productData = new HashMap<>();
                     productData.put("productName", rs.getString("proName"));
@@ -652,17 +641,16 @@ public class OrderDAO {
      */
     public Map<String, BigDecimal> getYearlyRevenue() throws SQLException, ClassNotFoundException {
         Map<String, BigDecimal> yearlyRevenueMap = new LinkedHashMap<>();
-        
-        String sql = "SELECT YEAR(orderDate) AS year, SUM(finalAmount) AS revenue " +
-                    "FROM [Order] " +
-                    "WHERE orderStatus = 'Completed' " +
-                    "GROUP BY YEAR(orderDate) " +
-                    "ORDER BY year DESC";
-        
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            try (ResultSet rs = stmt.executeQuery()) {
+
+        String sql = "SELECT YEAR(orderDate) AS year, SUM(finalAmount) AS revenue "
+                + "FROM [Order] "
+                + "WHERE orderStatus = 'Completed' "
+                + "GROUP BY YEAR(orderDate) "
+                + "ORDER BY year DESC";
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            try ( ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String year = String.valueOf(rs.getInt("year"));
                     BigDecimal revenue = rs.getBigDecimal("revenue");
@@ -677,15 +665,14 @@ public class OrderDAO {
      * Get revenue for specific year
      */
     public BigDecimal getRevenueByYear(int year) throws SQLException, ClassNotFoundException {
-        String sql = "SELECT SUM(finalAmount) AS revenue " +
-                    "FROM [Order] " +
-                    "WHERE orderStatus = 'Completed' AND YEAR(orderDate) = ?";
-        
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        String sql = "SELECT SUM(finalAmount) AS revenue "
+                + "FROM [Order] "
+                + "WHERE orderStatus = 'Completed' AND YEAR(orderDate) = ?";
+
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, year);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
+
+            try ( ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     BigDecimal revenue = rs.getBigDecimal("revenue");
                     return revenue != null ? revenue : BigDecimal.ZERO;
@@ -701,17 +688,17 @@ public class OrderDAO {
     public Map<String, Double> getYearlyGrowthRate() throws SQLException, ClassNotFoundException {
         Map<String, Double> growthRateMap = new LinkedHashMap<>();
         Map<String, BigDecimal> yearlyRevenue = getYearlyRevenue();
-        
+
         BigDecimal previousRevenue = null;
         for (Map.Entry<String, BigDecimal> entry : yearlyRevenue.entrySet()) {
             String year = entry.getKey();
             BigDecimal currentRevenue = entry.getValue();
-            
+
             if (previousRevenue != null && previousRevenue.compareTo(BigDecimal.ZERO) > 0) {
                 // Calculate growth rate: (current - previous) / previous * 100
                 BigDecimal growth = currentRevenue.subtract(previousRevenue)
-                    .divide(previousRevenue, 4, BigDecimal.ROUND_HALF_UP)
-                    .multiply(new BigDecimal("100"));
+                        .divide(previousRevenue, 4, BigDecimal.ROUND_HALF_UP)
+                        .multiply(new BigDecimal("100"));
                 growthRateMap.put(year, growth.doubleValue());
             } else {
                 growthRateMap.put(year, 0.0);

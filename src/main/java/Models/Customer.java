@@ -53,14 +53,13 @@ public class Customer {
         this.cusPassword = cusPassword;
     }
 
+    public String getCusFullName() {
+        return cusFullName;
+    }
+
     public String getFullName() {
         return cusFullName;
     }
-
-    public String getcusFullName() {
-        return cusFullName;
-    }
-
 
     public void setCusFullName(String cusFullName) {
         this.cusFullName = cusFullName;
@@ -113,11 +112,11 @@ public class Customer {
     }
 
     public void setPassword(String password) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        this.cusPassword = password;
     }
 
     public void setFullName(String fullname) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        this.cusFullName = fullname;
     }
 }
 

@@ -6,7 +6,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chi tiết đơn hàng #${order.orderId} - Tech Store</title>
+        <title>Order Details #${order.orderId} - Tech Store</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <style>
@@ -229,6 +229,14 @@
                 font-size: 0.85rem;
                 font-weight: 500;
             }
+            .review-action {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .review-action .btn {
+                white-space: nowrap;
+            }
             @media (max-width: 768px) {
                 .order-info-grid {
                     grid-template-columns: 1fr;
@@ -243,6 +251,13 @@
                 .quantity-info,
                 .price-info {
                     margin: 10px 0;
+                }
+                .review-action {
+                    margin-top: 15px;
+                    width: 100%;
+                }
+                .review-action .btn {
+                    width: 200px;
                 }
             }
         </style>
@@ -269,7 +284,7 @@
                     <ul class="navbar-nav ms-auto">
                         <!-- Cart icon (moved up) -->
                         <li class="nav-item">
-                            <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
+                            <a class="nav-link position-relative" href="CartController?action=view" title="View Cart">
                                 <i class="fas fa-shopping-cart fa-lg"></i>
                                 <c:if test="${sessionScope.cartSize > 0}">
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -301,13 +316,13 @@
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
-                                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                     </ul>
                                 </li>
                             </c:when>
                             <c:otherwise>
-                                <li class="nav-item"><a class="nav-link" href="login.jsp">Login</a></li>
-                                <li class="nav-item"><a class="nav-link" href="register.jsp">Register</a></li>
+                                <li><a class="dropdown-item" href="login.jsp">Login</a></li>
+                                <li><a class="dropdown-item" href="register.jsp">Register</a></li>
                                 </c:otherwise>
                             </c:choose>
                     </ul>
@@ -319,7 +334,7 @@
             <!-- Back Button -->
             <div class="back-btn">
                 <a href="${pageContext.request.contextPath}/order-history" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                    <i class="fas fa-arrow-left me-2"></i>Back
                 </a>
             </div>
 
@@ -328,10 +343,10 @@
                 <div class="order-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h2><i class="fas fa-receipt me-3"></i>Chi tiết đơn hàng #${order.orderId}</h2>
+                            <h2><i class="fas fa-receipt me-3"></i>Order Details #${order.orderId}</h2>
                             <p class="mb-0 opacity-75">
                                 <i class="fas fa-calendar me-2"></i>
-                                Đặt hàng: <fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm" />
+                                Order Date: <fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm" />
                             </p>
                         </div>
                         <div class="text-end">
@@ -346,21 +361,21 @@
                 <div class="order-info-grid">
                     <!-- Customer Info -->
                     <div class="info-card">
-                        <h6><i class="fas fa-user me-2"></i>Thông tin khách hàng</h6>
-                        <p><strong>Mã khách hàng:</strong> ${order.cusId}</p>
+                        <h6><i class="fas fa-user me-2"></i>Customer Information</h6>
+                        <p><strong>Customer ID:</strong> ${order.cusId}</p>
                         <c:if test="${not empty order.receiverName}">
-                            <p><strong>Người nhận:</strong> ${order.receiverName}</p>
+                            <p><strong>Receiver:</strong> ${order.receiverName}</p>
                         </c:if>
                         <c:if test="${not empty order.receiverPhone}">
-                            <p><strong>Số điện thoại:</strong> ${order.receiverPhone}</p>
+                            <p><strong>Phone:</strong> ${order.receiverPhone}</p>
                         </c:if>
                     </div>
 
                     <!-- Shipping Info -->
                     <div class="info-card">
-                        <h6><i class="fas fa-shipping-fast me-2"></i>Thông tin giao hàng</h6>
-                        <p><strong>Địa chỉ:</strong> ${order.shippingAddress}</p>
-                        <p><strong>Trạng thái:</strong> 
+                        <h6><i class="fas fa-shipping-fast me-2"></i>Shipping Information</h6>
+                        <p><strong>Address:</strong> ${order.shippingAddress}</p>
+                        <p><strong>Status:</strong> 
                             <span class="status-badge status-${order.orderStatus.toLowerCase().replace(' ', '-')}">
                                 ${order.orderStatus}
                             </span>
@@ -369,13 +384,13 @@
 
                     <!-- Payment Info -->
                     <div class="info-card">
-                        <h6><i class="fas fa-credit-card me-2"></i>Thông tin thanh toán</h6>
-                        <p><strong>Phương thức:</strong> 
+                        <h6><i class="fas fa-credit-card me-2"></i>Payment Information</h6>
+                        <p><strong>Method:</strong> 
                             <span class="payment-method-badge">${order.paymentMethod}</span>
                         </p>
-                        <p><strong>Tổng tiền:</strong> 
+                        <p><strong>Total Amount:</strong> 
                             <span class="text-danger fw-bold">
-                                <fmt:formatNumber value="${finalAmount}" pattern="#,##0" />đ
+                                <fmt:formatNumber value="${finalAmount}" pattern="#,##0" />₫
                             </span>
                         </p>
                     </div>
@@ -384,7 +399,12 @@
                 <!-- Products Section -->
                 <h5 class="section-title">
                     <i class="fas fa-shopping-bag me-2"></i>
-                    Sản phẩm đã đặt (${orderDetailsWithProducts.size()} sản phẩm)
+                    Ordered Products (${orderDetailsWithProducts.size()} products)
+                    <c:if test="${order.orderStatus.toLowerCase() == 'shipped'}">
+                        <small class="text-info ms-3" style="font-size: 0.8rem;">
+                            <i class="fas fa-star"></i> You can review each product
+                        </small>
+                    </c:if>
                 </h5>
 
                 <div class="product-list">
@@ -399,27 +419,38 @@
                             <!-- Product Info -->
                             <div class="product-info">
                                 <div class="product-name">${item.product.proName}</div>
-                                <div class="product-id">Mã sản phẩm: ${item.product.proId}</div>
+                                <div class="product-id">Product ID: ${item.product.proId}</div>
                                 <div class="product-price">
-                                    <fmt:formatNumber value="${item.orderDetail.unitPrice}" pattern="#,##0" />đ / sản phẩm
+                                    <fmt:formatNumber value="${item.orderDetail.unitPrice}" pattern="#,##0" />₫ / product
                                 </div>
                             </div>
 
                             <!-- Quantity -->
                             <div class="quantity-info">
-                                <div class="quantity-label">Số lượng</div>
+                                <div class="quantity-label">Quantity</div>
                                 <div class="quantity-value">${item.orderDetail.quantity}</div>
                             </div>
 
                             <!-- Price -->
                             <div class="price-info">
                                 <div class="unit-price">
-                                    <fmt:formatNumber value="${item.orderDetail.unitPrice}" pattern="#,##0" />đ x ${item.orderDetail.quantity}
+                                    <fmt:formatNumber value="${item.orderDetail.unitPrice}" pattern="#,##0" />₫ x ${item.orderDetail.quantity}
                                 </div>
                                 <div class="subtotal">
-                                    <fmt:formatNumber value="${item.subtotal}" pattern="#,##0" />đ
+                                    <fmt:formatNumber value="${item.subtotal}" pattern="#,##0" />₫
                                 </div>
                             </div>
+
+                            <!-- Review Button for shipped orders -->
+                            <c:if test="${order.orderStatus.toLowerCase() == 'shipped'}">
+                                <div class="review-action ms-3">
+                                    <a href="${pageContext.request.contextPath}/product-detail?id=${item.product.proId}" 
+                                       class="btn btn-warning btn-sm text-white" 
+                                       title="Review this product">
+                                        <i class="fas fa-star me-1"></i>Review
+                                    </a>
+                                </div>
+                            </c:if>
                         </div>
                     </c:forEach>
                 </div>
@@ -430,12 +461,12 @@
                         <div class="d-flex align-items-center">
                             <i class="fas fa-ticket-alt voucher-icon"></i>
                             <div class="voucher-info flex-grow-1">
-                                <h6>Voucher áp dụng: ${voucher.codeName}</h6>
+                                <h6>Applied Voucher: ${voucher.codeName}</h6>
                                 <p class="voucher-desc">${voucher.description}</p>
                             </div>
                             <div class="text-end">
                                 <div class="fw-bold">
-                                    -<fmt:formatNumber value="${discountAmount}" pattern="#,##0" />đ
+                                    -<fmt:formatNumber value="${discountAmount}" pattern="#,##0" />₫
                                 </div>
                             </div>
                         </div>
@@ -447,30 +478,30 @@
                     <div class="row">
                         <div class="col-md-6 offset-md-6">
                             <div class="total-row">
-                                <span class="total-label">Tạm tính:</span>
+                                <span class="total-label">Subtotal:</span>
                                 <span class="total-value">
-                                    <fmt:formatNumber value="${subtotalAmount}" pattern="#,##0" />đ
+                                    <fmt:formatNumber value="${subtotalAmount}" pattern="#,##0" />₫
                                 </span>
                             </div>
 
                             <c:if test="${discountAmount > 0}">
                                 <div class="total-row">
-                                    <span class="total-label">Giảm giá:</span>
+                                    <span class="total-label">Discount:</span>
                                     <span class="total-value discount-value">
-                                        -<fmt:formatNumber value="${discountAmount}" pattern="#,##0" />đ
+                                        -<fmt:formatNumber value="${discountAmount}" pattern="#,##0" />₫
                                     </span>
                                 </div>
                             </c:if>
 
                             <div class="total-row">
-                                <span class="total-label">Phí vận chuyển:</span>
-                                <span class="total-value">Miễn phí</span>
+                                <span class="total-label">Shipping Fee:</span>
+                                <span class="total-value">30.000₫</span>
                             </div>
 
                             <div class="total-row">
-                                <span class="total-label">Tổng cộng:</span>
+                                <span class="total-label">Total:</span>
                                 <span class="total-value final-total">
-                                    <fmt:formatNumber value="${finalAmount}" pattern="#,##0" />đ
+                                    <fmt:formatNumber value="${finalAmount}" pattern="#,##0" />₫
                                 </span>
                             </div>
                         </div>
@@ -481,32 +512,19 @@
             <!-- Action Buttons -->
             <div class="text-center mt-4">
                 <a href="${pageContext.request.contextPath}/order-history" class="btn btn-primary btn-lg me-3">
-                    <i class="fas fa-list me-2"></i>Xem tất cả đơn hàng
+                    <i class="fas fa-list me-2"></i>View All Orders
                 </a>
 
                 <c:choose>
                     <c:when test="${order.orderStatus == 'pending' || order.orderStatus == 'Waiting for Payment'}">
                         <button class="btn btn-danger btn-lg me-3" data-order-id="${order.orderId}" onclick="cancelOrder(this.getAttribute('data-order-id'))">
-                            <i class="fas fa-times me-2"></i>Hủy đơn hàng
+                            <i class="fas fa-times me-2"></i>Cancel Order
                         </button>
                         <c:if test="${order.paymentMethod != 'COD'}">
                             <button class="btn btn-success btn-lg" data-order-id="${order.orderId}" onclick="payNow(this.getAttribute('data-order-id'))">
-                                <i class="fas fa-credit-card me-2"></i>Thanh toán ngay
+                                <i class="fas fa-credit-card me-2"></i>Pay Now
                             </button>
                         </c:if>
-                    </c:when>
-                    <c:when test="${order.orderStatus == 'completed'}">
-                        <button class="btn btn-warning btn-lg me-3" data-order-id="${order.orderId}" onclick="showReviewModal(this.getAttribute('data-order-id'))">
-                            <i class="fas fa-star me-2"></i>Đánh giá sản phẩm
-                        </button>
-                        <button class="btn btn-info btn-lg" data-order-id="${order.orderId}" onclick="requestRefund(this.getAttribute('data-order-id'))">
-                            <i class="fas fa-undo me-2"></i>Yêu cầu trả hàng
-                        </button>
-                    </c:when>
-                    <c:when test="${order.orderStatus == 'Shipping' || order.orderStatus == 'Processing'}">
-                        <button class="btn btn-info btn-lg" data-order-id="${order.orderId}" onclick="trackOrder(this.getAttribute('data-order-id'))">
-                            <i class="fas fa-truck me-2"></i>Theo dõi đơn hàng
-                        </button>
                     </c:when>
                 </c:choose>
             </div>
@@ -518,18 +536,18 @@
                 <div class="row">
                     <div class="col-md-4">
                         <h5><i class="fas fa-microchip me-2"></i>Tech Store</h5>
-                        <p>Your ultimate destination for quality tech products.</p>
+                        <p>Your ultimate destination for quality technology products.</p>
                     </div>
                     <div class="col-md-4">
                         <h5>Quick Links</h5>
                         <ul class="list-unstyled">
                             <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>About Us</a></li>
                             <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>Contact</a></li>
-                            <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>FAQs</a></li>
+                            <li><a href="#" class="text-light"><i class="fas fa-angle-right me-2"></i>FAQ</a></li>
                         </ul>
                     </div>
                     <div class="col-md-4">
-                        <h5>Connect With Us</h5>
+                        <h5>Connect with Us</h5>
                         <div class="social-links">
                             <a href="#" class="text-light me-3"><i class="fab fa-facebook fa-lg"></i></a>
                             <a href="#" class="text-light me-3"><i class="fab fa-instagram fa-lg"></i></a>
@@ -548,19 +566,12 @@
         <script>
                             // Order action functions (reuse from order-history.jsp)
                             function showReviewModal(orderId) {
-                                alert('Chức năng đánh giá sản phẩm đang được phát triển.\nBạn sẽ có thể đánh giá từng sản phẩm trong đơn hàng #' + orderId);
+                                alert('Product review feature is under development.\nYou will be able to review each product in order #' + orderId);
                             }
-
-                            function requestRefund(orderId) {
-                                if (confirm('Bạn có chắc chắn muốn yêu cầu trả hàng/hoàn tiền cho đơn hàng #' + orderId + '?\nChúng tôi sẽ liên hệ với bạn trong vòng 24h.')) {
-                                    alert('Yêu cầu trả hàng/hoàn tiền đã được gửi thành công!');
-                                    // TODO: Call refund API
-                                    // window.location.href = '${pageContext.request.contextPath}/OrderController?action=refund&orderId=' + orderId;
-                                }
-                            }
+                            
 
                             function cancelOrder(orderId) {
-                                if (confirm('Bạn có chắc chắn muốn hủy đơn hàng #' + orderId + '?\nHành động này không thể hoàn tác.')) {
+                                if (confirm('Are you sure you want to cancel order #' + orderId + '?\nThis action cannot be undone.')) {
                                     // TODO: Call cancel API
                                     window.location.href = '${pageContext.request.contextPath}/OrderController?action=cancel&orderId=' + orderId;
                                 }
@@ -572,7 +583,7 @@
                             }
 
                             function trackOrder(orderId) {
-                                alert('Chức năng theo dõi đơn hàng #' + orderId + ' đang được phát triển.\nBạn sẽ có thể theo dõi trạng thái giao hàng chi tiết.');
+                                alert('Order tracking feature for order #' + orderId + ' is under development.\nYou will be able to track detailed delivery status soon.');
                             }
         </script>
 

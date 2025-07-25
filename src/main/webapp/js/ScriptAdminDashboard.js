@@ -730,15 +730,40 @@ function viewProductAttribute(productId, attributeId) {
 function loadOrderDetails(orderId) {
     const modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
     const content = document.getElementById('orderDetailContent');
-    content.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+    
+    // Show loading state
+    content.innerHTML = `
+        <div class="text-center p-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Đang tải chi tiết đơn hàng #${orderId}...</p>
+        </div>
+    `;
 
     fetch(`AdminController?action=viewOrderDetails&orderId=${orderId}`)
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
             .then(data => {
                 content.innerHTML = data;
             })
             .catch(error => {
-                content.innerHTML = `<div class="alert alert-danger">Error loading order details.</div>`;
+                console.error('Error loading order details:', error);
+                content.innerHTML = `
+                    <div class="alert alert-danger m-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Lỗi:</strong> Không thể tải chi tiết đơn hàng #${orderId}.
+                        <br><small class="text-muted">${error.message}</small>
+                        <hr>
+                        <button class="btn btn-sm btn-outline-danger" onclick="loadOrderDetails(${orderId})">
+                            <i class="fas fa-redo me-1"></i>Thử lại
+                        </button>
+                    </div>
+                `;
             });
 
     modal.show();

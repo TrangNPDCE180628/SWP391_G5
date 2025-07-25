@@ -10,6 +10,20 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
         <style>
+            body {
+                background-color: #f8f9fa;
+            }
+            .navbar {
+                background-color: #fff;
+                box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            }
+            .navbar-brand {
+                font-weight: 600;
+                color: #333;
+            }
+            .search-form {
+                width: 300px;
+            }
             .profile-container {
                 max-width: 700px;
                 margin: 40px auto;
@@ -27,7 +41,7 @@
             }
         </style>
     </head>
-    <body class="bg-light">
+    <body>
 
         <!-- Navigation Bar -->
         <nav class="navbar navbar-expand-lg navbar-light sticky-top mb-4">
@@ -69,16 +83,10 @@
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a class="dropdown-item" href="ProfileCustomerController">Profile</a></li>
-
-                                        <!-- Orders (moved below Cart) -->
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="OrderHistoryController">
-                                                My Orders
-                                            </a>
-                                        </li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
+                                        <li><a class="dropdown-item" href="OrderHistoryController">My Orders</a></li>
+                                        <c:if test="${not empty sessionScope.LOGIN_USER.role and (sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff')}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
-                                            </c:if>
+                                        </c:if>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
                                                 <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
@@ -106,9 +114,11 @@
                 <div class="alert alert-danger">${error}</div>
             </c:if>
 
-            <!-- Multipart for file upload -->
-            <form  id="profileForm" action="ProfileCustomerController" method="post" enctype="multipart/form-data">
+            <!-- Profile Information Form (without file upload) -->
+            <form id="profileForm" action="ProfileCustomerController" method="post">
                 <input type="hidden" name="cusId" value="${customer.cusId}" />
+                <input type="hidden" name="action" value="updateProfile" />
+                <input type="hidden" name="existingImage" value="${customer.cusImage}" />
 
                 <div class="text-center">
                     <img src="${customer.cusImage}" alt="Avatar" class="profile-img">
@@ -127,7 +137,7 @@
                 <div class="mb-3">
                     <label>Gender:</label>
                     <select class="form-control" name="cusGender">
-                        <option value="Male" ${customer.cusGender == 'Male' ? 'selected' : ''}>Nam</option>
+                        <option value="Male" ${customer.cusGender == 'Male' ? 'selected' : ''}>Male</option>
                         <option value="Female" ${customer.cusGender == 'Female' ? 'selected' : ''}>Female</option>
                         <option value="Other" ${customer.cusGender == 'Other' ? 'selected' : ''}>Other</option>
                     </select>
@@ -154,17 +164,29 @@
                 </div>
 
                 <div class="text-center">
+                    <button type="submit" class="btn btn-primary px-4">Update Profile</button>
+                </div>
+            </form>
+
+            <!-- Separate File Upload Form -->
+            <div class="text-center mt-4">
+                <h5>Change Profile Picture</h5>
+                <form id="imageForm" action="ProfileCustomerController" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="cusId" value="${customer.cusId}" />
+                    <input type="hidden" name="action" value="updateImage" />
+                    <input type="hidden" name="existingImage" value="${customer.cusImage}" />
+                    
                     <div class="mt-2">
                         <label class="form-label">Upload New Photo:</label>
-                        <input type="file" class="form-control" name="imageFile">
-                        <input type="hidden" name="existingImage" value="${customer.cusImage}">
+                        <input type="file" class="form-control" name="imageFile" accept="image/*">
                     </div>
-                </div>
-                <div class="text-center">
-                    <button type="submit" class="btn btn-primary px-4">Update</button>
-                </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-outline-primary">Upload Image</button>
+                    </div>
+                </form>
+            </div>
 
-                <!-- Modal đổi mật khẩu -->
+                <!-- Change Password Modal -->
                 <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -174,17 +196,21 @@
                             </div>
                             <div class="modal-body">
                                 <div class="mb-3">
-                                    <label>Old password:</label>
-                                    <input type="password" class="form-control" name="oldPassword" form="profileForm">
+                                    <label>Old Password:</label>
+                                    <input type="password" class="form-control" id="oldPassword" name="oldPassword">
                                 </div>
                                 <div class="mb-3">
-                                    <label>New password:</label>
-                                    <input type="password" class="form-control" name="cusPassword" form="profileForm">
+                                    <label>New Password:</label>
+                                    <input type="password" class="form-control" id="newPassword" name="newPassword">
+                                </div>
+                                <div class="mb-3">
+                                    <label>Confirm New Password:</label>
+                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword">
                                 </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" onclick="submitForm()">Confirm</button>
+                                <button type="button" class="btn btn-primary" onclick="changePassword()">Confirm</button>
                             </div>
                         </div>
                     </div>
@@ -229,9 +255,75 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-                                    function submitForm() {
-                                        document.getElementById("profileForm").submit();
-                                    }
+            function submitForm() {
+                document.getElementById("profileForm").submit();
+            }
+            
+            function changePassword() {
+                const oldPassword = document.getElementById("oldPassword").value;
+                const newPassword = document.getElementById("newPassword").value;
+                const confirmPassword = document.getElementById("confirmPassword").value;
+                
+                // Validation
+                if (!oldPassword || !newPassword || !confirmPassword) {
+                    alert("Please fill in all password fields.");
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    alert("New password and confirm password do not match.");
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    alert("New password must be at least 6 characters long.");
+                    return;
+                }
+                
+                // Clear modal fields
+                document.getElementById("oldPassword").value = "";
+                document.getElementById("newPassword").value = "";
+                document.getElementById("confirmPassword").value = "";
+                
+                // Create a new form for password change
+                const passwordForm = document.createElement("form");
+                passwordForm.method = "post";
+                passwordForm.action = "ProfileCustomerController";
+                passwordForm.style.display = "none";
+                
+                // Add action field
+                const actionField = document.createElement("input");
+                actionField.type = "hidden";
+                actionField.name = "action";
+                actionField.value = "changePassword";
+                passwordForm.appendChild(actionField);
+                
+                // Add old password field
+                const oldPasswordField = document.createElement("input");
+                oldPasswordField.type = "hidden";
+                oldPasswordField.name = "oldPasswordHidden";
+                oldPasswordField.value = oldPassword;
+                passwordForm.appendChild(oldPasswordField);
+                
+                // Add new password field
+                const newPasswordField = document.createElement("input");
+                newPasswordField.type = "hidden";
+                newPasswordField.name = "newPasswordHidden";
+                newPasswordField.value = newPassword;
+                passwordForm.appendChild(newPasswordField);
+                
+                // Add form to body and submit
+                document.body.appendChild(passwordForm);
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // Submit the password form
+                passwordForm.submit();
+            }
         </script>
 
     </body>

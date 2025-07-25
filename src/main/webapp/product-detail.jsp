@@ -273,7 +273,7 @@
                                 </ul>
                                 <!-- [UPDATED]: Buttons with new styling -->
                                 <div class="d-grid gap-2 mb-4">
-                                    <button class="btn btn-buy-now" disabled>Buy Now</button>
+                                    
                                     <form action="CartController" method="POST" class="d-inline">
                                         <input type="hidden" name="action" value="add">
                                         <input type="hidden" name="productId" value="${product.proId}">
@@ -281,7 +281,7 @@
                                             <i class="fas fa-shopping-cart me-2"></i>Add to Cart
                                         </button>
                                     </form>
-                                    <button class="btn btn-installment" disabled>Installment Purchase</button>
+                                   
                                 </div>
                                 <!-- Back to Home -->
                                 <a href="HomeController" class="btn btn-outline-secondary btn-back">

@@ -30,7 +30,10 @@ public class AuthenticationFilter implements Filter {
         "/orderDetails.jsp",
         "/profileCustomer.jsp",
         "/order-history.jsp",
-        "/cart.jsp"
+        "/cart.jsp",
+        "/ProfileCustomerController",
+        "/CartController"
+           
     );
     
     // URLs that don't require authentication

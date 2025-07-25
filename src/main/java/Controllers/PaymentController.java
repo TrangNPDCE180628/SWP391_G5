@@ -135,12 +135,18 @@ public class PaymentController extends HttpServlet {
             order.setOrderDate(new Timestamp(System.currentTimeMillis()));
             order.setTotalAmount(totalAmount);
             order.setDiscountAmount(discount);
-            order.setFinalAmount(totalAmount.subtract(discount));
+
+            BigDecimal shippingFee = BigDecimal.valueOf(30000);
+            BigDecimal finalAmount = totalAmount.subtract(discount).add(shippingFee);
+            order.setFinalAmount(finalAmount);
+
+            System.out.println("Final amount: " + finalAmount);
+
             order.setOrderStatus("pending");
             order.setVoucherId(voucherId);
 
             OrderDAO orderDAO = new OrderDAO();
-            orderId = orderDAO.createOrder(order);             // trả về khóa
+            orderId = orderDAO.createOrder(order); // trả về khóa chính
             order.setOrderId(orderId);
 
             /* 6. Lưu OrderDetail */
@@ -207,7 +213,7 @@ public class PaymentController extends HttpServlet {
                 throw new IllegalArgumentException("Please select payment method.");
             }
             if (shippingAddress == null || shippingAddress.trim().length() < 10) {
-                throw new IllegalArgumentException("Please enter detailed shipping address.");
+                throw new IllegalArgumentException("Shipping address must be at least 10 characters.");
             }
 
             /* 4. Lấy đơn hàng */
@@ -313,28 +319,29 @@ public class PaymentController extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
 
-            /* Trường hợp lỗi -> quay lại payment.jsp với thông báo */
-            request.setAttribute("error", "Error confirming payment: " + e.getMessage());
+            request.setAttribute("error", e.getMessage());
 
             try {
                 int orderId = Integer.parseInt(request.getParameter("orderId"));
                 Order order = new OrderDAO().getById(orderId);
-                if (order != null && "paid".equals(order.getOrderStatus())) {
-                    // Nếu đơn đã thanh toán vẫn chuyển đến success
-                    session.setAttribute("order", order);
-                    session.setAttribute("message", "The order has been paid in advance.");
-                    session.setAttribute("orderDetails",
-                            new OrderDetailDAO().getByOrderId(order.getOrderId()));
-                    response.sendRedirect("payment_success.jsp");
-                    return;
+                if (order == null) {
+                    throw new IllegalArgumentException("Order not found.");
                 }
+
+                // Cập nhật lại thông tin user vừa nhập để hiển thị lại form
+                order.setReceiverName(request.getParameter("receiverName"));
+                order.setReceiverPhone(request.getParameter("receiverPhone"));
+                order.setShippingAddress(request.getParameter("shippingAddress"));
+                order.setPaymentMethod(request.getParameter("paymentMethod"));
+
+                request.setAttribute("order", order);
+
             } catch (Exception ignored) {
                 ignored.printStackTrace();
             }
 
             request.getRequestDispatcher("payment.jsp").forward(request, response);
         }
-
     }
 
     private void cancelOrder(HttpServletRequest request, HttpServletResponse response)
@@ -428,4 +435,5 @@ public class PaymentController extends HttpServlet {
             response.sendRedirect("CartController?action=view");
         }
     }
+
 }
