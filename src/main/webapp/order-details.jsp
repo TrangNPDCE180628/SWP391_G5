@@ -562,7 +562,7 @@
                             function cancelOrder(orderId) {
                                 if (confirm('Bạn có chắc chắn muốn hủy đơn hàng #' + orderId + '?\nHành động này không thể hoàn tác.')) {
                                     // TODO: Call cancel API
-                                    window.location.href = '${pageContext.request.contextPath}/OrderController?action=cancel&orderId=' + orderId;
+                                    window.location.href = '${pageContext.request.contextPath}/PaymentController?action=cancel&orderId=' + orderId;
                                 }
                             }
 
