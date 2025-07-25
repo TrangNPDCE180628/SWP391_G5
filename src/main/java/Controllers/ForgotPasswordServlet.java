@@ -11,6 +11,7 @@ import DAOs.ViewUserDAO;
 import Models.PasswordReset;
 import Models.User;
 import Ultis.EmailUtility;
+import Ultis.MD5Util;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.SecureRandom;
@@ -150,10 +151,10 @@ public class ForgotPasswordServlet extends HttpServlet {
 
             if (user.getRole().equals("Customer")) {
                 CustomerDAO cusDAO = new CustomerDAO();
-                updated = cusDAO.updatePassword(email, newPassword);
+                updated = cusDAO.updatePassword(email, MD5Util.hashPassword(newPassword));
             } else if (user.getRole().equals("Staff")) {
                 StaffDAO staffDAO = new StaffDAO();
-                updated = staffDAO.updatePassword(email, newPassword);
+                updated = staffDAO.updatePassword(email, MD5Util.hashPassword(newPassword));
             }
 
             if (updated) {

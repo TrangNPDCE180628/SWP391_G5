@@ -120,7 +120,7 @@
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
-                                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                     </ul>
                                 </li>
                             </c:when>

@@ -67,49 +67,181 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     /* ---- Hết kiểm tra ngày Voucher ---- */
 
-    /* ---- Vẽ chart revenue ---- */
-    const canvas = document.getElementById("revenueChart");
-    if (!canvas)
-        return; // Không có biểu đồ thì không vẽ
+    /* ---- Vẽ charts revenue ---- */
+    // Monthly Revenue Chart
+    const monthlyRevenueCanvas = document.getElementById("monthlyRevenueChart");
+    if (monthlyRevenueCanvas) {
+        const ctx = monthlyRevenueCanvas.getContext("2d");
+        const revenueData = JSON.parse(document.getElementById("monthlyRevenueData").textContent);
+        const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    const ctx = canvas.getContext("2d");
+        const data = [];
+        for (let i = 1; i <= 12; i++) {
+            const key = i < 10 ? "0" + i : "" + i;
+            data.push(revenueData[key] || 0);
+        }
 
-    // Lấy dữ liệu từ thẻ hidden được render từ JSP
-    const revenueData = JSON.parse(document.getElementById("monthlyRevenueData").textContent);
-    const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-    const data = [];
-    for (let i = 1; i <= 12; i++) {
-        const key = i < 10 ? "0" + i : "" + i;
-        data.push(revenueData[key] || 0);
-    }
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                    label: 'Monthly Revenue',
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Revenue ($)',
                     data: data,
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1
                 }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {position: 'top'},
-                title: {display: true, text: 'Monthly Revenue Overview'}
             },
-            scales: {
-                y: {
-                    beginAtZero: true
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {position: 'top'},
+                    title: {display: true, text: 'Monthly Revenue'}
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
                 }
             }
+        });
+    }
+
+    // Growth Rate Chart
+    const growthRateCanvas = document.getElementById("growthRateChart");
+    if (growthRateCanvas) {
+        const ctx = growthRateCanvas.getContext("2d");
+        const growthRateDataElement = document.getElementById("monthlyGrowthRateData");
+        
+        if (growthRateDataElement) {
+            const growthRateData = JSON.parse(growthRateDataElement.textContent);
+            const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            const data = [];
+            for (let i = 1; i <= 12; i++) {
+                const key = i < 10 ? "0" + i : "" + i;
+                data.push(growthRateData[key] || 0);
+            }
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Growth Rate (%)',
+                        data: data,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {position: 'top'},
+                        title: {display: true, text: 'Monthly Growth Rate'}
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
-    });
+    }
+
+    // Product Revenue Chart
+    const productRevenueCanvas = document.getElementById("productRevenueChart");
+    if (productRevenueCanvas) {
+        const ctx = productRevenueCanvas.getContext("2d");
+        const productRevenueDataElement = document.getElementById("productRevenueData");
+        
+        if (productRevenueDataElement) {
+            const productRevenueData = JSON.parse(productRevenueDataElement.textContent);
+            
+            const labels = productRevenueData.map(item => item.productName);
+            const revenues = productRevenueData.map(item => item.revenue);
+            const quantities = productRevenueData.map(item => item.quantity);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: revenues,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Quantity Sold',
+                        data: quantities,
+                        type: 'line',
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                        borderWidth: 2,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {position: 'top'},
+                        title: {display: true, text: 'Top Products by Revenue'}
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' units';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
 
     initStockSearch();
     initFeedbackSearch();

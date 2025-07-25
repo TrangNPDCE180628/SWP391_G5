@@ -15,6 +15,7 @@ import DAOs.StaffDAO;
 import DAOs.StockDAO;
 import DAOs.VoucherDAO;
 import DAOs.ViewProductAttributeDAO;
+import Ultis.MD5Util;
 
 import Models.Admin;
 import Models.Customer;
@@ -207,6 +208,9 @@ public class AdminController extends BaseController {
                 case "RevenueByMonth":
                     handleRevenueByMonth(request, response);
                     return;
+                case "RevenueByYear":
+                    handleRevenueByYear(request, response);
+                    return;
                 case "add":
                     addProduct(request, response);
                     return;
@@ -228,8 +232,15 @@ public class AdminController extends BaseController {
                 case "deleteFeedback":
                     deleteFeedback(request, response);
                     return;
+                case "getAttributesByType":
+                    getAttributesByType(request, response);
+                    return;
+                case "filterAttribute":
+                    filterAttribute(request, response);
+                    return;
                 default:
                     loadAdminPage(request, response);
+                    return;
             }
         } catch (Exception e) {
             log("Error at AdminController: " + e.toString());
@@ -248,6 +259,33 @@ public class AdminController extends BaseController {
             String activeTab = request.getParameter("tab");
             request.setAttribute("activeTab", activeTab);
 
+            // Check for revenue data in session (from redirect)
+            HttpSession revenueSession = request.getSession();
+            if (revenueSession.getAttribute("yearlyRevenueMap") != null) {
+                request.setAttribute("yearlyRevenueMap", revenueSession.getAttribute("yearlyRevenueMap"));
+                request.setAttribute("yearlyGrowthRateMap", revenueSession.getAttribute("yearlyGrowthRateMap"));
+                
+                // Move specific year data if available
+                if (revenueSession.getAttribute("selectedYear") != null) {
+                    request.setAttribute("selectedYear", revenueSession.getAttribute("selectedYear"));
+                    request.setAttribute("yearlyRevenue", revenueSession.getAttribute("yearlyRevenue"));
+                    request.setAttribute("monthlyRevenueMap", revenueSession.getAttribute("monthlyRevenueMap"));
+                    request.setAttribute("monthlyGrowthRateMap", revenueSession.getAttribute("monthlyGrowthRateMap"));
+                    request.setAttribute("productRevenueList", revenueSession.getAttribute("productRevenueList"));
+                    request.setAttribute("revenueYear", revenueSession.getAttribute("revenueYear"));
+                }
+                
+                // Clear session after moving to request
+                revenueSession.removeAttribute("yearlyRevenueMap");
+                revenueSession.removeAttribute("yearlyGrowthRateMap");
+                revenueSession.removeAttribute("selectedYear");
+                revenueSession.removeAttribute("yearlyRevenue");
+                revenueSession.removeAttribute("monthlyRevenueMap");
+                revenueSession.removeAttribute("monthlyGrowthRateMap");
+                revenueSession.removeAttribute("productRevenueList");
+                revenueSession.removeAttribute("revenueYear");
+            }
+
             // 1. Load common data
             CustomerDAO cusDAO = new CustomerDAO();
             StaffDAO staffDAO = new StaffDAO();
@@ -258,7 +296,6 @@ public class AdminController extends BaseController {
             ProductAttributeDAO paDAO = new ProductAttributeDAO();
             OrderDAO ordDao = new OrderDAO();
             StockDAO stockDAO = new StockDAO();
-            ProductTypeDAO productTypeDAO = new ProductTypeDAO();
 
             List<Customer> users = cusDAO.getAllCustomers();
             List<Staff> staffs = staffDAO.getAll();
@@ -275,8 +312,14 @@ public class AdminController extends BaseController {
             
             ProductTypeDAO typeDAO = new ProductTypeDAO();
             List<ProductTypes> types = typeDAO.getAllProductTypes();
+            
+            // Create a map for type ID to type name lookup
+            Map<Integer, String> typeMap = new HashMap<>();
+            for (ProductTypes type : types) {
+                typeMap.put(type.getId(), type.getName());
+            }
+            
             BigDecimal totalRevenue = ordDao.getTotalRevenue();
-            List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes();
 
             // 2. Load ViewProductAttributes
             Connection conn = DBContext.getConnection();
@@ -293,7 +336,9 @@ public class AdminController extends BaseController {
             request.setAttribute("attributes", attributes);
             request.setAttribute("productAttributes", productAttributes);
             request.setAttribute("totalRevenue", totalRevenue);
-            request.setAttribute("productTypes", productTypes);
+            request.setAttribute("types", types);
+            request.setAttribute("typeMap", typeMap); // Add typeMap for lookup
+            request.setAttribute("productTypes", types); // For backward compatibility
              request.setAttribute("prds", products);
 
             StockDAO dao = new StockDAO();
@@ -309,10 +354,21 @@ public class AdminController extends BaseController {
                 request.setAttribute("orders", orderData);
             }
 
-            // 5. Load doanh thu theo tháng của năm hiện tại
+            // 5. Load doanh thu theo tháng của năm hiện tại và dữ liệu yearly
             int currentYear = LocalDate.now().getYear();
             Map<String, BigDecimal> monthlyRevenue = ordDao.getMonthlyRevenueInYear(currentYear);
+            Map<String, Double> monthlyGrowthRate = ordDao.getMonthlyRevenueGrowthRate(currentYear);
+            List<Map<String, Object>> productRevenue = ordDao.getProductRevenue(currentYear);
+            
+            // Load yearly data
+            Map<String, BigDecimal> yearlyRevenue = ordDao.getYearlyRevenue();
+            Map<String, Double> yearlyGrowthRate = ordDao.getYearlyGrowthRate();
+            
             request.setAttribute("monthlyRevenueMap", monthlyRevenue);
+            request.setAttribute("monthlyGrowthRateMap", monthlyGrowthRate);
+            request.setAttribute("productRevenueList", productRevenue);
+            request.setAttribute("yearlyRevenueMap", yearlyRevenue);
+            request.setAttribute("yearlyGrowthRateMap", yearlyGrowthRate);
             request.setAttribute("revenueYear", currentYear);
 
             // 6. Load profile info từ LOGIN_USER
@@ -472,7 +528,7 @@ public class AdminController extends BaseController {
             Staff staff = new Staff();
             staff.setStaffId(id);
             staff.setStaffName(username);
-            staff.setStaffPassword(password);
+            staff.setStaffPassword(MD5Util.hashPassword(password)); // Hash password before storing
             staff.setStaffFullName(fullname);
             staff.setStaffGender(gender);
             staff.setStaffImage(fileName);
@@ -525,7 +581,7 @@ public class AdminController extends BaseController {
             }
 
             // Cập nhật dữ liệu
-            Staff updatedStaff = new Staff(id, username, fullname, password,
+            Staff updatedStaff = new Staff(id, username, fullname, MD5Util.hashPassword(password),
                     gender, imageFileName, gmail, phone, position);
 
             StaffDAO dao = new StaffDAO();
@@ -979,6 +1035,65 @@ public class AdminController extends BaseController {
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
+
+    private void handleRevenueByYear(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String yearParam = request.getParameter("year");
+            OrderDAO orderDAO = new OrderDAO();
+
+            // Declare variables outside if block
+            BigDecimal yearlyRevenue = null;
+            Map<String, BigDecimal> monthlyRevenue = null;
+            Map<String, Double> monthlyGrowthRate = null;
+            List<Map<String, Object>> productRevenue = null;
+            Integer selectedYear = null;
+
+            if (yearParam != null && !yearParam.isEmpty()) {
+                selectedYear = Integer.parseInt(yearParam);
+                
+                // Get specific year revenue
+                yearlyRevenue = orderDAO.getRevenueByYear(selectedYear);
+                
+                // Get monthly data for selected year
+                monthlyRevenue = orderDAO.getMonthlyRevenueInYear(selectedYear);
+                monthlyGrowthRate = orderDAO.getMonthlyRevenueGrowthRate(selectedYear);
+                productRevenue = orderDAO.getProductRevenue(selectedYear);
+                
+                request.setAttribute("selectedYear", yearParam);
+                request.setAttribute("yearlyRevenue", yearlyRevenue);
+                request.setAttribute("monthlyRevenueMap", monthlyRevenue);
+                request.setAttribute("monthlyGrowthRateMap", monthlyGrowthRate);
+                request.setAttribute("productRevenueList", productRevenue);
+                request.setAttribute("revenueYear", selectedYear);
+            }
+
+            // Get yearly revenue for all years (for year selector)
+            Map<String, BigDecimal> allYearlyRevenue = orderDAO.getYearlyRevenue();
+            Map<String, Double> yearlyGrowthRate = orderDAO.getYearlyGrowthRate();
+            
+            // Store data in session to persist through redirect
+            HttpSession session = request.getSession();
+            session.setAttribute("yearlyRevenueMap", allYearlyRevenue);
+            session.setAttribute("yearlyGrowthRateMap", yearlyGrowthRate);
+            
+            // Also store specific year data if available
+            if (yearParam != null && !yearParam.isEmpty()) {
+                session.setAttribute("selectedYear", yearParam);
+                session.setAttribute("yearlyRevenue", yearlyRevenue);
+                session.setAttribute("monthlyRevenueMap", monthlyRevenue);
+                session.setAttribute("monthlyGrowthRateMap", monthlyGrowthRate);
+                session.setAttribute("productRevenueList", productRevenue);
+                session.setAttribute("revenueYear", selectedYear);
+            }
+            
+            // Redirect to admin page with revenue tab active
+            response.sendRedirect("AdminController?tab=revenue");
+        } catch (Exception e) {
+            request.setAttribute("error", "Error loading revenue data: " + e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
+    }
     
     private void addProductType(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -1290,14 +1405,27 @@ public class AdminController extends BaseController {
             String proNameToUse = (proName != null && !proName.trim().isEmpty()) ? proName : existingProduct.getProName();
             String proDescriptionToUse = (proDescription != null && !proDescription.trim().isEmpty()) ? proDescription : existingProduct.getProDescription();
             int proTypeId = (proTypeIdStr != null && !proTypeIdStr.trim().isEmpty()) ? Integer.parseInt(proTypeIdStr) : existingProduct.getProTypeId();
-            java.math.BigDecimal proPrice = (proPriceStr != null && !proPriceStr.trim().isEmpty()) ? new java.math.BigDecimal(proPriceStr) : existingProduct.getProPrice();
+            
+            // Handle price conversion properly
+            java.math.BigDecimal proPrice;
+            if (proPriceStr != null && !proPriceStr.trim().isEmpty()) {
+                // Remove any currency formatting, spaces, and Vietnamese dong symbol
+                String cleanPriceStr = proPriceStr.replaceAll("[^0-9.]", "");
+                if (!cleanPriceStr.isEmpty()) {
+                    proPrice = new java.math.BigDecimal(cleanPriceStr);
+                } else {
+                    proPrice = existingProduct.getProPrice();
+                }
+            } else {
+                proPrice = existingProduct.getProPrice();
+            }
 
-            // Sử dụng hình ảnh cũ nếu không có hình ảnh mới
-            String imageFileName = oldImage;
-            javax.servlet.http.Part imagePart = request.getPart("proImageMain");
+            // Handle image upload
+            String imageFileName = (oldImage != null && !oldImage.trim().isEmpty()) ? oldImage : existingProduct.getProImageMain();
+            Part imagePart = request.getPart("proImageMain");
 
-            // Kiểm tra nếu có phần hình ảnh được tải lên
-            if (imagePart != null && imagePart.getSize() > 0) {
+            // Check if a new image has been uploaded
+            if (imagePart != null && imagePart.getSize() > 0 && imagePart.getSubmittedFileName() != null && !imagePart.getSubmittedFileName().trim().isEmpty()) {
                 imageFileName = java.nio.file.Paths.get(imagePart.getSubmittedFileName()).getFileName().toString();
                 String uploadPath = getServletContext().getRealPath("/") + "images" + java.io.File.separator + "products";
                 java.io.File uploadDir = new java.io.File(uploadPath);
@@ -1307,15 +1435,16 @@ public class AdminController extends BaseController {
                 imagePart.write(uploadPath + java.io.File.separator + imageFileName);
             }
 
-            // Cập nhật sản phẩm nếu có thay đổi
+            // Update product
             Product product = new Product(proId, proTypeId, proNameToUse, proDescriptionToUse, proPrice, imageFileName);
             productDAO.updateProduct(product);
 
-            // Chuyển hướng về trang admin với tab sản phẩm
+            // Redirect to admin page with products tab
             response.sendRedirect("AdminController?tab=products");
         } catch (Exception e) {
             e.printStackTrace();
-            throw new ServletException(e);
+            request.getSession().setAttribute("error", "Error updating product: " + e.getMessage());
+            response.sendRedirect("AdminController?tab=products");
         }
     }
 
@@ -1513,5 +1642,223 @@ public class AdminController extends BaseController {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
+    }
+    
+    /**
+     * Load basic admin data needed for admin.jsp
+     */
+    private void loadBasicAdminData(HttpServletRequest request) throws Exception {
+        // Load profile info from LOGIN_USER
+        User loginUser = (User) request.getSession().getAttribute("LOGIN_USER");
+        if (loginUser != null) {
+            String role = loginUser.getRole();
+            if ("Admin".equals(role)) {
+                AdminDAO adminDAO = new AdminDAO();
+                Admin adminProfile = adminDAO.getAdminById(String.valueOf(loginUser.getId()));
+                request.setAttribute("profile", adminProfile);
+            } else if ("Staff".equals(role)) {
+                StaffDAO staffDAO2 = new StaffDAO();
+                Staff staffProfile = staffDAO2.getById(String.valueOf(loginUser.getId()));
+                request.setAttribute("profile", staffProfile);
+            }
+        }
+        
+        // Load basic data for navigation and common functionality
+        CustomerDAO cusDAO = new CustomerDAO();
+        StaffDAO staffDAO = new StaffDAO();
+        ProductDAO productDAO = new ProductDAO();
+        
+        List<Customer> users = cusDAO.getAllCustomers();
+        List<Staff> staffs = staffDAO.getAll();
+        List<Product> products = productDAO.getAllProducts();
+        
+        request.setAttribute("users", users);
+        request.setAttribute("staffs", staffs);
+        request.setAttribute("prds", products);
+    }
+
+    /**
+     * Filter attributes by type or name
+     */
+    private void filterAttribute(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String filterTypeId = request.getParameter("filterTypeId");
+            String filterAttributeName = request.getParameter("filterAttributeName");
+
+            AttributeDAO attributeDAO = new AttributeDAO();
+            List<Attribute> attributes = attributeDAO.getAll();
+            
+            // Apply filters
+            if (filterTypeId != null && !filterTypeId.trim().isEmpty()) {
+                attributes = attributes.stream()
+                    .filter(attr -> String.valueOf(attr.getProTypeId()).equals(filterTypeId))
+                    .collect(java.util.stream.Collectors.toList());
+            }
+            
+            if (filterAttributeName != null && !filterAttributeName.trim().isEmpty()) {
+                attributes = attributes.stream()
+                    .filter(attr -> attr.getAttributeName().toLowerCase().contains(filterAttributeName.toLowerCase()))
+                    .collect(java.util.stream.Collectors.toList());
+            }
+
+            // Set filtered attributes BEFORE loading admin page
+            request.setAttribute("attributes", attributes);
+            request.setAttribute("activeTab", "attributes");
+            
+            // Preserve filter parameters
+            request.setAttribute("filterTypeId", filterTypeId);
+            request.setAttribute("filterAttributeName", filterAttributeName);
+            
+            // Load other data but preserve filtered attributes  
+            loadAdminPageWithFilteredAttributes(request, response);
+        } catch (Exception e) {
+            log("Error in filterAttribute: " + e.getMessage());
+            request.setAttribute("ERROR", "Error filtering attributes: " + e.getMessage());
+            loadAdminPage(request, response);
+        }
+    }
+
+    /**
+     * Load admin page data while preserving already set attributes
+     */
+    private void loadAdminPageWithFilteredAttributes(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String activeTab = request.getParameter("tab");
+            request.setAttribute("activeTab", activeTab);
+
+            // Check for revenue data in session (from redirect)
+            HttpSession revenueSession = request.getSession();
+            if (revenueSession.getAttribute("yearlyRevenueMap") != null) {
+                request.setAttribute("yearlyRevenueMap", revenueSession.getAttribute("yearlyRevenueMap"));
+                request.setAttribute("yearlyGrowthRateMap", revenueSession.getAttribute("yearlyGrowthRateMap"));
+                
+                // Move specific year data if available
+                if (revenueSession.getAttribute("selectedYear") != null) {
+                    request.setAttribute("selectedYear", revenueSession.getAttribute("selectedYear"));
+                    request.setAttribute("yearlyRevenue", revenueSession.getAttribute("yearlyRevenue"));
+                    request.setAttribute("monthlyRevenueMap", revenueSession.getAttribute("monthlyRevenueMap"));
+                    request.setAttribute("monthlyGrowthRateMap", revenueSession.getAttribute("monthlyGrowthRateMap"));
+                    request.setAttribute("productRevenueList", revenueSession.getAttribute("productRevenueList"));
+                    request.setAttribute("revenueYear", revenueSession.getAttribute("revenueYear"));
+                }
+                
+                // Clear session after moving to request
+                revenueSession.removeAttribute("yearlyRevenueMap");
+                revenueSession.removeAttribute("yearlyGrowthRateMap");
+                revenueSession.removeAttribute("selectedYear");
+                revenueSession.removeAttribute("yearlyRevenue");
+                revenueSession.removeAttribute("monthlyRevenueMap");
+                revenueSession.removeAttribute("monthlyGrowthRateMap");
+                revenueSession.removeAttribute("productRevenueList");
+                revenueSession.removeAttribute("revenueYear");
+            }
+
+            // 1. Load common data
+            CustomerDAO cusDAO = new CustomerDAO();
+            StaffDAO staffDAO = new StaffDAO();
+            VoucherDAO voucherDAO = new VoucherDAO();
+            FeedbackDAO feedbackDAO = new FeedbackDAO();
+            FeedbackReplyViewDAO viewfeedbackDAO = new FeedbackReplyViewDAO();
+            ProductAttributeDAO paDAO = new ProductAttributeDAO();
+            OrderDAO ordDao = new OrderDAO();
+            StockDAO stockDAO = new StockDAO();
+
+            List<Customer> users = cusDAO.getAllCustomers();
+            List<Staff> staffs = staffDAO.getAll();
+            List<Voucher> vouchers = voucherDAO.getAll();
+            List<Feedback> feedbacks = feedbackDAO.getAllFeedbacks();
+            List<FeedbackReplyView> viewFeedbacks = viewfeedbackDAO.getAllFeedbackReplies();
+            // DON'T load attributes - they are already filtered and set
+            List<ProductAttribute> productAttributes = paDAO.getAll();
+            
+           
+            // Add: Load all products for product tab
+            ProductDAO productDAO = new ProductDAO();
+            List<Product> products = productDAO.getAllProducts();
+            
+            ProductTypeDAO typeDAO = new ProductTypeDAO();
+            List<ProductTypes> types = typeDAO.getAllProductTypes();
+            
+            // Create a map for type ID to type name lookup
+            Map<Integer, String> typeMap = new HashMap<>();
+            for (ProductTypes type : types) {
+                typeMap.put(type.getId(), type.getName());
+            }
+            
+            BigDecimal totalRevenue = ordDao.getTotalRevenue();
+
+            // 2. Load ViewProductAttributes
+            Connection conn = DBContext.getConnection();
+            ViewProductAttributeDAO viewProductAttributeDAO = new ViewProductAttributeDAO(conn);
+            List<ViewProductAttribute> viewProductAttributes = viewProductAttributeDAO.getAll();
+            request.setAttribute("viewProductAttributes", viewProductAttributes);
+
+            // 3. Set data to request (DON'T override attributes)
+            request.setAttribute("users", users);
+            request.setAttribute("staffs", staffs);
+            request.setAttribute("vouchers", vouchers);
+            request.setAttribute("feedbacks", feedbacks);
+            request.setAttribute("viewFeedbacks", viewFeedbacks);
+            // request.setAttribute("attributes", attributes); // Skip this line
+            request.setAttribute("productAttributes", productAttributes);
+            request.setAttribute("totalRevenue", totalRevenue);
+            request.setAttribute("types", types);
+            request.setAttribute("typeMap", typeMap); // Add typeMap for lookup
+            request.setAttribute("productTypes", types); // For backward compatibility
+            request.setAttribute("prds", products);
+
+            StockDAO dao = new StockDAO();
+            List<Map<String, Object>> productStockList = dao.getAllProductStockData();
+            request.setAttribute("productStockList", productStockList);
+            
+            List<String> noStockProIds = stockDAO.getProductsWithoutStock();
+            request.setAttribute("noStockProIds", noStockProIds);
+
+            // 4. Forward to admin page
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        } catch (Exception e) {
+            log("Error loading admin page: " + e.getMessage());
+            e.printStackTrace();
+            request.setAttribute("ERROR", "System error occurred");
+            request.getRequestDispatcher("admin.jsp").forward(request, response);
+        }
+    }
+
+    /**
+     * Get attributes by product type ID for AJAX request
+     */
+    private void getAttributesByType(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String typeId = request.getParameter("typeId");
+            if (typeId == null || typeId.trim().isEmpty()) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+
+            AttributeDAO attributeDAO = new AttributeDAO();
+            List<Attribute> attributes = attributeDAO.getAll();
+            
+            // Filter attributes by type ID
+            List<Attribute> filteredAttributes = new ArrayList<>();
+            for (Attribute attr : attributes) {
+                if (String.valueOf(attr.getProTypeId()).equals(typeId)) {
+                    filteredAttributes.add(attr);
+                }
+            }
+
+            // Convert to JSON
+            Gson gson = new Gson();
+            String json = gson.toJson(filteredAttributes);
+
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(json);
+        } catch (Exception e) {
+            log("Error in getAttributesByType: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 }

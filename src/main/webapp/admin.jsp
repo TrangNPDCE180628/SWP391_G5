@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -307,7 +308,7 @@
                                         <tr>
                                             <th>ID</th>
                                             <th>Name</th>
-                                            <th>Type ID</th>
+                                            <th>Product Type</th>
                                             <th>Description</th>
                                             <th>Price</th>
                                             <th>Image</th>
@@ -319,9 +320,9 @@
                                             <tr>
                                                 <td>${product.proId}</td>
                                                 <td>${product.proName}</td>
-                                                <td>${product.proTypeId}</td>
+                                                <td>${typeMap[product.proTypeId]}</td>
                                                 <td>${product.proDescription}</td>
-                                                <td>${product.proPrice}</td>
+                                                <td>${product.proPrice}Đ</td>
                                                 <td>
                                                     <img src="${pageContext.request.contextPath}/images/products/${product.proImageMain}" alt="Product Image" width="80" height="80">
                                                 </td>
@@ -410,7 +411,7 @@
                         <!-- Feedback Tab -->
                         <div class="tab-pane fade" id="feedbacks">
                             <h2>Feedback Management</h2>
-                            
+
                             <!-- Search and Filter Controls -->
                             <div class="row mb-3">
                                 <div class="col-md-6">
@@ -436,7 +437,7 @@
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <div class="table-responsive">
                                 <table class="table table-striped" id="feedbackTable">
                                     <thead>
@@ -505,7 +506,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
+
                             <!-- No results message -->
                             <div id="noFeedbackResults" class="alert alert-info text-center" style="display: none;">
                                 <i class="fas fa-search"></i> No feedback found matching your criteria.
@@ -514,113 +515,173 @@
                         <!-- Tab Attributes -->
                         <div class="tab-pane fade" id="attributes">
                             <h2>Attributes Management</h2>
-                            <!-- Filter + Sort -->
-                            <form method="get" action="AdminController" class="mb-3">
-                                <input type="hidden" name="action" value="filterProductAttribute">
-                                <input type="hidden" name="tab" value="attributes">
 
-                                <div class="row g-3 align-items-end mb-2">
-                                    <div class="col-md-2">
-                                        <label for="filterProductId" class="form-label">Product ID</label>
-                                        <input type="text" class="form-control" name="filterProductId" id="filterProductId"
-                                               value="${filterProductId != null ? filterProductId : ''}">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label for="filterAttributeName" class="form-label">Attribute Name</label>
-                                        <input type="text" class="form-control" name="filterAttributeName" id="filterAttributeName"
-                                               value="${filterAttributeName != null ? filterAttributeName : ''}">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label for="filterAttributeValue" class="form-label">Value</label>
-                                        <input type="text" class="form-control" name="filterAttributeValue" id="filterAttributeValue"
-                                               value="${filterAttributeValue != null ? filterAttributeValue : ''}">
-                                    </div>
-
-                                    <div class="col-md-2">
-                                        <label for="sortField" class="form-label">Sort By</label>
-                                        <select class="form-select" name="sortField" id="sortField">
-                                            <option value="">-- None --</option>
-                                            <option value="attributeName" ${sortField == 'attributeName' ? 'selected' : ''}>Attribute Name</option>
-                                            <option value="productId" ${sortField == 'productId' ? 'selected' : ''}>Product ID</option>
-                                            <option value="value" ${sortField == 'value' ? 'selected' : ''}>Value</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label for="sortOrder" class="form-label">Order</label>
-                                        <select class="form-select" name="sortOrder" id="sortOrder">
-                                            <option value="asc" ${sortOrder == 'asc' ? 'selected' : ''}>Ascending</option>
-                                            <option value="desc" ${sortOrder == 'desc' ? 'selected' : ''}>Descending</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <button type="submit" class="btn btn-primary w-100">
-                                            <i class="fas fa-filter"></i> Apply
-                                        </button>
-                                        <a href="AdminController?tab=attributes" class="btn btn-secondary mt-1 w-100">Reset</a>
-                                    </div>
-                                </div>
-                            </form>
-
-                            <!-- Buttons Row -->
-                            <div class="row mt-2 mb-3">
-                                <div class="col d-flex gap-2">
-                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductAttributeModal">
-                                        <i class="fas fa-plus"></i> Add Product Attribute
+                            <!-- Nav tabs for sub-sections -->
+                            <ul class="nav nav-tabs mb-3" id="attributeSubTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="manage-attributes-tab" data-bs-toggle="tab" data-bs-target="#manage-attributes" type="button" role="tab">
+                                        <i class="fas fa-tags"></i> Manage Attributes
                                     </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="product-attributes-tab" data-bs-toggle="tab" data-bs-target="#product-attributes" type="button" role="tab">
+                                        <i class="fas fa-link"></i> Product Attributes
+                                    </button>
+                                </li>
+                            </ul>
 
+                            <div class="tab-content" id="attributeSubTabContent">
+                                <!-- Manage Attributes Tab -->
+                                <div class="tab-pane fade show active" id="manage-attributes" role="tabpanel">
+                                    <h4>Attribute by Product Type</h4>
+
+                                    <!-- Filter and Add button -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-8">
+                                            <form method="get" action="AdminController" class="d-flex gap-2">
+                                                <input type="hidden" name="action" value="filterAttribute">
+                                                <input type="hidden" name="tab" value="attributes">
+
+                                                <select class="form-select" name="filterTypeId" style="max-width: 200px;">
+                                                    <option value="">All Types</option>
+                                                    <c:forEach var="type" items="${types}">
+                                                        <option value="${type.id}" 
+                                                            ${(filterTypeId != null && filterTypeId == type.id.toString()) || (param.filterTypeId == type.id.toString()) ? 'selected' : ''}>
+                                                            ${type.name}
+                                                        </option>
+                                                    </c:forEach>
+                                                </select>
+
+                                                <input type="text" class="form-control" name="filterAttributeName" placeholder="Attribute Name" value="${filterAttributeName != null ? filterAttributeName : param.filterAttributeName}" style="max-width: 200px;">
+
+                                                <button type="submit" class="btn btn-outline-primary">
+                                                    <i class="fas fa-filter"></i> Filter
+                                                </button>
+                                                <a href="AdminController?tab=attributes" class="btn btn-outline-secondary">Reset</a>
+                                            </form>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAttributeModal">
+                                                <i class="fas fa-plus"></i> Add Attribute
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Attributes Table -->
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Attribute Name</th>
+                                                    <th>Unit</th>
+                                                    <th>Product Type</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach var="attr" items="${attributes}">
+                                                    <tr>
+                                                        <td>${attr.attributeId}</td>
+                                                        <td>${attr.attributeName}</td>
+                                                        <td>${attr.unit}</td>
+                                                        <td>
+                                                            <c:forEach var="type" items="${types}">
+                                                                <c:if test="${type.id == attr.proTypeId}">
+                                                                    <span class="badge bg-info">${type.name}</span>
+                                                                </c:if>
+                                                            </c:forEach>
+                                                        </td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-warning" onclick="editAttribute('${attr.attributeId}', '${fn:escapeXml(attr.attributeName)}', '${fn:escapeXml(attr.unit)}', '${attr.proTypeId}')" data-bs-toggle="modal" data-bs-target="#editAttributeModal">
+                                                                <i class="fas fa-edit"></i> Edit
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger" onclick="deleteAttribute('${attr.attributeId}')">
+                                                                <i class="fas fa-trash"></i> Delete
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Product Attributes Tab -->
+                                <div class="tab-pane fade" id="product-attributes" role="tabpanel">
+                                    <h4>Product Attribute Assignment</h4>
+
+                                    <!-- Filter + Add button -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-8">
+                                            <form method="get" action="AdminController" class="d-flex gap-2">
+                                                <input type="hidden" name="action" value="filterProductAttribute">
+                                                <input type="hidden" name="tab" value="attributes">
+
+                                                <input type="text" class="form-control" name="filterProductId" placeholder="Product ID" value="${param.filterProductId}" style="max-width: 150px;">
+
+                                                <input type="text" class="form-control" name="filterAttributeName" placeholder="Attribute Name" value="${param.filterAttributeName}" style="max-width: 150px;">
+
+                                                <input type="text" class="form-control" name="filterAttributeValue" placeholder="Value" value="${param.filterAttributeValue}" style="max-width: 150px;">
+
+                                                <button type="submit" class="btn btn-outline-primary">
+                                                    <i class="fas fa-filter"></i> Filter
+                                                </button>
+                                                <a href="AdminController?tab=attributes" class="btn btn-outline-secondary">Reset</a>
+                                            </form>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductAttributeModal">
+                                                <i class="fas fa-link"></i> Assign Attribute to Product
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Product Attributes Table -->
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Product ID</th>
+                                                    <th>Product Name</th>
+                                                    <th>Product Type</th>
+                                                    <th>Attribute</th>
+                                                    <th>Value</th>
+                                                    <th>Unit</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach var="pa" items="${viewProductAttributes}">
+                                                    <tr data-product-id="${pa.productId}" data-attribute-id="${pa.attributeId}" data-attribute-value="${pa.value}">
+                                                        <td>${pa.productId}</td>
+                                                        <td>${pa.productName}</td>
+                                                        <td><span class="badge bg-secondary">${pa.productType}</span></td>
+                                                        <td>${pa.attributeName}</td>
+                                                        <td><strong>${pa.value}</strong></td>
+                                                        <td>${pa.unit}</td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-info" onclick="viewProductAttribute('${pa.productId}', '${pa.attributeId}')">
+                                                                <i class="fas fa-eye"></i> View
+                                                            </button>
+                                                            <button class="btn btn-sm btn-warning" onclick="editProductAttribute('${pa.productId}', '${pa.attributeId}', '${pa.value}')">
+                                                                <i class="fas fa-edit"></i> Edit
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger" onclick="deleteProductAttribute('${pa.productId}', '${pa.attributeId}')">
+                                                                <i class="fas fa-trash"></i> Delete
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Attribute ID</th>
-                                            <th>Attribute Name</th>
-                                            <th>Product ID</th>
-                                            <th>Product Name</th>
-                                            <th>Value</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach var="pa" items="${viewProductAttributes}">
-
-                                            <tr
-                                                data-product-id="${pa.productId}"
-                                                data-attribute-id="${pa.attributeId}"
-                                                data-attribute-value="${pa.value}"
-                                                data-product-name="${pa.productName}"
-                                                data-attribute-name="${pa.attributeName}"
-                                                data-unit="${pa.unit}"
-                                                data-product-type="${pa.productType}">
-                                                <td>${pa.attributeId}</td>
-                                                <td>${pa.attributeName}</td>
-                                                <td>${pa.productId}</td>
-                                                <td>${pa.productName}</td>
-                                                <td>${pa.value}</td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-info"
-                                                            onclick="viewProductAttribute('${pa.productId}', '${pa.attributeId}')">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </button>
-                                                    <button class="btn btn-sm btn-warning"
-                                                            onclick="editProductAttribute('${pa.productId}', '${pa.attributeId}', '${pa.value}')">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger"
-                                                            onclick="deleteProductAttribute('${pa.productId}', '${pa.attributeId}')">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-
-                                    </tbody>
-                                </table>
-                            </div>
-
                         </div>
+
+
+
 
                         <!-- Orders Tab -->
                         <div class="tab-pane fade" id="orders">
@@ -635,13 +696,13 @@
                             <jsp:include page="Revenue.jsp" />
                         </div>
 
-
                     </div>
                 </div>
             </div>
-
-
         </div>
+
+
+
 
         <!-- Edit Profile Modal -->
         <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
@@ -1076,51 +1137,144 @@
                 </div>
             </div>
         </div>
+        <!-- Add Attribute Modal -->
+        <div class="modal fade" id="addAttributeModal" tabindex="-1" aria-labelledby="addAttributeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="AdminController" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addAttributeModalLabel">Add New Attribute</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="addAttribute">
+                            <input type="hidden" name="tab" value="attributes">
+
+                            <div class="mb-3">
+                                <label for="addAttributeName" class="form-label">Attribute Name</label>
+                                <input type="text" class="form-control" id="addAttributeName" name="attributeName" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="addAttributeUnit" class="form-label">Unit</label>
+                                <input type="text" class="form-control" id="addAttributeUnit" name="unit" placeholder="e.g., cm, kg, inch">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="addProTypeId" class="form-label">Product Type</label>
+                                <select class="form-select" id="addProTypeId" name="proTypeId" required>
+                                    <option value="">-- Select Product Type --</option>
+                                    <c:forEach var="type" items="${types}">
+                                        <option value="${type.id}">${type.name}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Attribute</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Attribute Modal -->
+        <div class="modal fade" id="editAttributeModal" tabindex="-1" aria-labelledby="editAttributeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="AdminController" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editAttributeModalLabel">Edit Attribute</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="updateAttribute">
+                            <input type="hidden" name="tab" value="attributes">
+                            <input type="hidden" id="editAttributeId" name="attributeId">
+
+                            <div class="mb-3">
+                                <label for="editAttributeName" class="form-label">Attribute Name</label>
+                                <input type="text" class="form-control" id="editAttributeName" name="attributeName" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editAttributeUnit" class="form-label">Unit</label>
+                                <input type="text" class="form-control" id="editAttributeUnit" name="unit" placeholder="e.g., cm, kg, inch">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editProTypeId" class="form-label">Product Type</label>
+                                <select class="form-select" id="editProTypeId" name="proTypeId" required>
+                                    <option value="">-- Select Product Type --</option>
+                                    <c:forEach var="type" items="${types}">
+                                        <option value="${type.id}">${type.name}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Attribute</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal Add Product Attribute -->
         <div class="modal fade" id="addProductAttributeModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <form action="AdminController" method="post">
                         <div class="modal-header">
-                            <h5 class="modal-title">Add Product Attribute</h5>
+                            <h5 class="modal-title">Assign Attribute to Product</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
 
                         <div class="modal-body">
                             <input type="hidden" name="action" value="addProductAttribute">
-                            <input type="hidden" name="tab" value="productAttributes">
+                            <input type="hidden" name="tab" value="attributes">
 
-                            <!-- Product -->
+                            <!-- Product Selection -->
                             <div class="mb-3">
-                                <label for="proId" class="form-label">Product</label>
-                                <select class="form-select" id="proId" name="proId" required>
+                                <label for="addPAProductId" class="form-label">Product</label>
+                                <select class="form-select" id="addPAProductId" name="proId" required onchange="loadAttributesByProduct(this.value)">
                                     <option value="">-- Select Product --</option>
-                                    <option value="L001">L001 - Dell XPS</option>
-                                    <option value="S001">S001 - iPhone</option>
-                                    <!-- Bạn tự thêm nếu cần -->
-                                </select>
-                            </div>
-
-                            <!-- Attribute -->
-                            <div class="mb-3">
-                                <label for="attributeId" class="form-label">Attribute</label>
-                                <select class="form-select" id="attributeId" name="attributeId" required>
-                                    <option value="">-- Select Attribute --</option>
-                                    <c:forEach var="attr" items="${attributes}">
-                                        <option value="${attr.attributeId}">${attr.attributeId} - ${attr.attributeName}</option>
+                                    <c:forEach var="product" items="${prds}">
+                                        <option value="${product.proId}" data-type-id="${product.proTypeId}">
+                                            ${product.proId} - ${product.proName}
+                                        </option>
                                     </c:forEach>
                                 </select>
                             </div>
 
-                            <!-- Value -->
+                            <!-- Product Type Display -->
                             <div class="mb-3">
-                                <label for="value" class="form-label">Attribute Value</label>
-                                <input type="text" class="form-control" id="value" name="value" required>
+                                <label class="form-label">Product Type</label>
+                                <input type="text" class="form-control" id="addPAProductType" readonly placeholder="Select a product first">
+                            </div>
+
+                            <!-- Attribute Selection (will be populated based on product type) -->
+                            <div class="mb-3">
+                                <label for="addPAAttributeId" class="form-label">Attribute</label>
+                                <select class="form-select" id="addPAAttributeId" name="attributeId" required disabled>
+                                    <option value="">-- Select Product First --</option>
+                                </select>
+                            </div>
+
+                            <!-- Attribute Value -->
+                            <div class="mb-3">
+                                <label for="addPAValue" class="form-label">Attribute Value</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="addPAValue" name="value" required>
+                                    <span class="input-group-text" id="addPAUnit">Unit</span>
+                                </div>
                             </div>
                         </div>
 
                         <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Add</button>
+                            <button type="submit" class="btn btn-success">Assign Attribute</button>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         </div>
                     </form>
@@ -1163,13 +1317,19 @@
                             <input type="hidden" name="action" value="editProduct" />
                             <input type="hidden" name="tab" value="products" />
                             <input type="hidden" name="proId" id="prdId" />
+                            <input type="hidden" name="oldImage" id="editOldImage" />
                             <div class="mb-3">
                                 <label for="editProName" class="form-label">Name</label>
                                 <input type="text" class="form-control" name="proName" id="editProName" required />
                             </div>
                             <div class="mb-3">
-                                <label for="editProTypeId" class="form-label">Type ID</label>
-                                <input type="number" class="form-control" name="proTypeId" id="editProTypeId" required />
+                                <label for="editProTypeId" class="form-label">Product Type</label>
+                                <select class="form-select" name="proTypeId" id="editProTypeId" required>
+                                    <option value="">-- Select Type --</option>
+                                    <c:forEach var="type" items="${requestScope.types}">
+                                        <option value="${type.id}">${type.name}</option>
+                                    </c:forEach>
+                                </select>
                             </div>
                             <div class="mb-3">
                                 <label for="editProDescription" class="form-label">Description</label>
@@ -1177,7 +1337,10 @@
                             </div>
                             <div class="mb-3">
                                 <label for="editProPrice" class="form-label">Price</label>
-                                <input type="text" class="form-control" name="proPrice" id="editProPrice" required />
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="proPrice" id="editProPrice" required placeholder="0" />
+                                    <span class="input-group-text">đ</span>
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <label for="editProImageMain" class="form-label">Image</label>
@@ -1243,8 +1406,11 @@
                             <textarea name="proDescription" class="form-control" rows="3"></textarea>
                         </div>
                         <div class="mb-2">
-                            <label for="editProPrice" class="form-label">Price</label>
-                            <input type="text" id="addProPrice" name="proPrice" class="form-control" required/>
+                            <label for="addProPrice" class="form-label">Price</label>
+                            <div class="input-group">
+                                <input type="text" id="addProPrice" name="proPrice" class="form-control" required placeholder="0"/>
+                                <span class="input-group-text">đ</span>
+                            </div>
                         </div>
                         <div class="mb-2">
                             <label>Upload Image</label>
@@ -1271,29 +1437,132 @@
             </div>
         </div>
         <script>
+            // Define contextPath for use in JavaScript
+            var contextPath = '${pageContext.request.contextPath}';
+
+            // Price formatting functions
+            function formatPrice(num) {
+                if (!num)
+                    return '';
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+
+            function unformatPrice(str) {
+                if (!str)
+                    return '';
+                return str.replace(/[,đ]/g, '').trim();
+            }
+
             var editProductModal = document.getElementById('editProductModal');
             if (editProductModal) {
                 editProductModal.addEventListener('show.bs.modal', function (event) {
                     var button = event.relatedTarget; // Nút Edit mà người dùng nhấn
+
+                    // Debug: Log all data attributes
+                    console.log('Button data attributes:');
+                    console.log('proId:', button.getAttribute('data-proid'));
+                    console.log('proName:', button.getAttribute('data-proname'));
+                    console.log('proTypeId:', button.getAttribute('data-protypeid'));
+                    console.log('proDescription:', button.getAttribute('data-prodescription'));
+                    console.log('proPrice:', button.getAttribute('data-proprice'));
+                    console.log('proImageMain:', button.getAttribute('data-proimagemain'));
+
                     document.getElementById('prdId').value = button.getAttribute('data-proid'); // Lấy proId và gán vào input ẩn
 
                     // Điền các giá trị khác vào modal
-                    document.getElementById('editProName').value = button.getAttribute('data-proname');
-                    document.getElementById('editProTypeId').value = button.getAttribute('data-protypeid');
-                    document.getElementById('editProDescription').value = button.getAttribute('data-prodescription');
-                    document.getElementById('editProPrice').value = button.getAttribute('data-proprice');
+                    document.getElementById('editProName').value = button.getAttribute('data-proname') || '';
+                    document.getElementById('editProTypeId').value = button.getAttribute('data-protypeid') || '';
+                    document.getElementById('editProDescription').value = button.getAttribute('data-prodescription') || '';
+
+                    // Format price for display
+                    var rawPrice = button.getAttribute('data-proprice');
+                    document.getElementById('editProPrice').value = formatPrice(rawPrice);
 
                     // Cập nhật hình ảnh nếu có
                     var img = button.getAttribute('data-proimagemain');
                     var preview = document.getElementById('editProductImagePreview');
+                    document.getElementById('editOldImage').value = img; // Store current image name
+
                     if (img) {
-                        preview.src = contextPath + '/images/products/' + img; // Đảm bảo rằng contextPath được xác định chính xác
+                        preview.src = contextPath + '/images/products/' + img;
                         preview.style.display = 'block';
                     } else {
                         preview.style.display = 'none';
                     }
                 });
+
+                // Add price formatting on input
+                var priceInput = document.getElementById('editProPrice');
+                if (priceInput) {
+                    priceInput.addEventListener('input', function (event) {
+                        var value = event.target.value;
+                        var unformatted = unformatPrice(value);
+
+                        // Only allow numbers
+                        if (!/^\d*$/.test(unformatted)) {
+                            event.target.value = event.target.value.slice(0, -1);
+                            return;
+                        }
+
+                        // Format the number
+                        if (unformatted) {
+                            event.target.value = formatPrice(unformatted);
+                        }
+                    });
+
+                    // Remove formatting before form submission
+                    priceInput.closest('form').addEventListener('submit', function () {
+                        priceInput.value = unformatPrice(priceInput.value);
+                    });
+                }
+
+                // Add image preview functionality for file input
+                var editImageInput = document.getElementById('editProImageMain');
+                if (editImageInput) {
+                    editImageInput.addEventListener('change', function (event) {
+                        var file = event.target.files[0];
+                        var preview = document.getElementById('editProductImagePreview');
+
+                        if (file) {
+                            var reader = new FileReader();
+                            reader.onload = function (e) {
+                                preview.src = e.target.result;
+                                preview.style.display = 'block';
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
             }
+
+            // Setup Add Product form
+            var addProductModal = document.getElementById('addProductModal');
+            if (addProductModal) {
+                var addPriceInput = document.getElementById('addProPrice');
+                if (addPriceInput) {
+                    addPriceInput.addEventListener('input', function (event) {
+                        var value = event.target.value;
+                        var unformatted = unformatPrice(value);
+
+                        // Only allow numbers
+                        if (!/^\d*$/.test(unformatted)) {
+                            event.target.value = event.target.value.slice(0, -1);
+                            return;
+                        }
+
+                        // Format the number
+                        if (unformatted) {
+                            event.target.value = formatPrice(unformatted);
+                        }
+                    });
+
+                    // Remove formatting before form submission
+                    addPriceInput.closest('form').addEventListener('submit', function () {
+                        addPriceInput.value = unformatPrice(addPriceInput.value);
+                    });
+                }
+            }
+
             var viewProductModal = document.getElementById('viewProductModal');
             if (viewProductModal) {
                 viewProductModal.addEventListener('show.bs.modal', function (event) {
@@ -1345,6 +1614,86 @@
                 });
             }
 
+            // Attribute Management Functions
+            function editAttribute(attributeId, attributeName, unit, proTypeId) {
+                document.getElementById('editAttributeId').value = attributeId;
+                document.getElementById('editAttributeName').value = attributeName;
+                document.getElementById('editAttributeUnit').value = unit;
+                document.getElementById('editProTypeId').value = proTypeId;
+            }
+
+            function deleteAttribute(attributeId) {
+                if (confirm('Are you sure you want to delete this attribute?')) {
+                    window.location.href = `${contextPath}/AdminController?action=deleteAttribute&attributeId=${attributeId}&tab=attributes`;
+                }
+            }
+
+            // Product Attribute Management Functions
+            function loadAttributesByProduct(productId) {
+                if (!productId) {
+                    resetProductAttributeForm();
+                    return;
+                }
+
+                // Get product type from selected option  
+                const productSelect = document.getElementById('addPAProductId');
+                const selectedOption = productSelect.options[productSelect.selectedIndex];
+                const typeId = selectedOption.getAttribute('data-type-id');
+
+                // Show product type - find type name by iterating through options
+                const typeOptions = document.querySelectorAll('#addProTypeId option');
+                let typeName = 'Unknown Type';
+                typeOptions.forEach(option => {
+                    if (option.value === typeId) {
+                        typeName = option.textContent;
+                    }
+                });
+                document.getElementById('addPAProductType').value = typeName;
+
+                // Load attributes for this product type via AJAX
+                loadAttributesForType(typeId);
+            }
+
+            function resetProductAttributeForm() {
+                document.getElementById('addPAProductType').value = '';
+                document.getElementById('addPAAttributeId').innerHTML = '<option value="">-- Select Product First --</option>';
+                document.getElementById('addPAAttributeId').disabled = true;
+                document.getElementById('addPAUnit').textContent = 'Unit';
+            }
+
+            function loadAttributesForType(typeId) {
+                const attributeSelect = document.getElementById('addPAAttributeId');
+                attributeSelect.innerHTML = '<option value="">Loading...</option>';
+
+                // Make AJAX call to get attributes for the type
+                fetch(contextPath + '/AdminController?action=getAttributesByType&typeId=' + typeId)
+                        .then(response => response.json())
+                        .then(attributes => {
+                            attributeSelect.innerHTML = '<option value="">-- Select Attribute --</option>';
+
+                            attributes.forEach(attr => {
+                                const option = document.createElement('option');
+                                option.value = attr.attributeId;
+                                option.textContent = attr.attributeName;
+                                option.setAttribute('data-unit', attr.unit || '');
+                                attributeSelect.appendChild(option);
+                            });
+
+                            attributeSelect.disabled = false;
+
+                            // Add event listener for unit display
+                            attributeSelect.addEventListener('change', function () {
+                                const selectedAttr = this.options[this.selectedIndex];
+                                const unit = selectedAttr.getAttribute('data-unit') || 'Unit';
+                                document.getElementById('addPAUnit').textContent = unit;
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error loading attributes:', error);
+                            attributeSelect.innerHTML = '<option value="">Error loading attributes</option>';
+                        });
+            }
+
             function setupPriceInputFormat(inputId) {
                 const priceInput = document.getElementById(inputId);
                 if (priceInput) {
@@ -1356,18 +1705,23 @@
                             this.value = '';
                         }
                     });
-
-                    const form = priceInput.closest("form");
-                    if (form) {
-                        form.addEventListener("submit", function () {
-                            priceInput.value = priceInput.value.replace(/\./g, '');
-                        });
-                    }
                 }
             }
-            setupPriceInputFormat('editProPrice');
-            setupPriceInputFormat('addProPrice');
 
+            // Auto-activate tabs based on URL parameter or session attribute
+            document.addEventListener('DOMContentLoaded', function () {
+                const urlParams = new URLSearchParams(window.location.search);
+                const activeTab = urlParams.get('tab') || '${param.tab}' || 'products';
+
+                if (activeTab) {
+                    // Activate the tab link
+                    const tabLink = document.querySelector(`a[href="#${activeTab}"]`);
+                    if (tabLink) {
+                        const tab = new bootstrap.Tab(tabLink);
+                        tab.show();
+                    }
+                }
+            });
         </script>
 
 

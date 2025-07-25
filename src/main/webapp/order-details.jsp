@@ -495,7 +495,7 @@
                             </button>
                         </c:if>
                     </c:when>
-                    <c:when test="${order.orderStatus == 'Completed'}">
+                    <c:when test="${order.orderStatus == 'completed'}">
                         <button class="btn btn-warning btn-lg me-3" data-order-id="${order.orderId}" onclick="showReviewModal(this.getAttribute('data-order-id'))">
                             <i class="fas fa-star me-2"></i>Đánh giá sản phẩm
                         </button>

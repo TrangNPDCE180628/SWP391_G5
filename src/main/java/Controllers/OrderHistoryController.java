@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 @WebServlet(name = "OrderHistoryController", urlPatterns = {"/order-history", "/OrderHistoryController"})
@@ -63,27 +62,24 @@ public class OrderHistoryController extends HttpServlet {
             List<Order> orders;
             
             switch (tab.toLowerCase()) {
-                case "pending-payment":
-                    orders = orderDAO.getOrdersByCustomerIdAndStatuses(customerId, 
-                            Arrays.asList("Pending", "Waiting for Payment"));
+                case "pending":
+                    orders = orderDAO.getOrdersByCustomerIdAndStatus(customerId, "pending");
                     break;
                     
-                case "shipping":
-                    orders = orderDAO.getOrdersByCustomerIdAndStatuses(customerId, 
-                            Arrays.asList("Processing", "Preparing", "Shipping"));
+                case "processing":
+                    orders = orderDAO.getOrdersByCustomerIdAndStatus(customerId, "processing");
                     break;
                     
-                case "delivery":
-                    orders = orderDAO.getOrdersByCustomerIdAndStatuses(customerId, 
-                            Arrays.asList("Out for Delivery", "Ready for Pickup"));
+                case "shipped":
+                    orders = orderDAO.getOrdersByCustomerIdAndStatus(customerId, "shipped");
                     break;
                     
                 case "completed":
-                    orders = orderDAO.getOrdersByCustomerIdAndStatus(customerId, "Completed");
+                    orders = orderDAO.getOrdersByCustomerIdAndStatus(customerId, "completed");
                     break;
                     
                 case "cancelled":
-                    orders = orderDAO.getOrdersByCustomerIdAndStatus(customerId, "Cancelled");
+                    orders = orderDAO.getOrdersByCustomerIdAndStatus(customerId, "cancel");
                     break;
                     
                 
@@ -97,15 +93,15 @@ public class OrderHistoryController extends HttpServlet {
             List<Order> allOrders = orderDAO.getOrdersByCustomerId(customerId);
             int allCount = allOrders.size();
             int pendingCount = (int) allOrders.stream().filter(o -> 
-                Arrays.asList("Pending", "Waiting for Payment").contains(o.getOrderStatus())).count();
-            int shippingCount = (int) allOrders.stream().filter(o -> 
-                Arrays.asList("Processing", "Preparing", "Shipping").contains(o.getOrderStatus())).count();
-            int deliveryCount = (int) allOrders.stream().filter(o -> 
-                Arrays.asList("Out for Delivery", "Ready for Pickup").contains(o.getOrderStatus())).count();
+                "pending".equals(o.getOrderStatus())).count();
+            int processingCount = (int) allOrders.stream().filter(o -> 
+                "processing".equals(o.getOrderStatus())).count();
+            int shippedCount = (int) allOrders.stream().filter(o -> 
+                "shipped".equals(o.getOrderStatus())).count();
             int completedCount = (int) allOrders.stream().filter(o -> 
-                "Completed".equals(o.getOrderStatus())).count();
+                "completed".equals(o.getOrderStatus())).count();
             int cancelledCount = (int) allOrders.stream().filter(o -> 
-                "Cancelled".equals(o.getOrderStatus())).count();
+                "cancel".equals(o.getOrderStatus())).count();
             
             
             // Set attributes for JSP
@@ -113,8 +109,8 @@ public class OrderHistoryController extends HttpServlet {
             request.setAttribute("currentTab", tab);
             request.setAttribute("allCount", allCount);
             request.setAttribute("pendingCount", pendingCount);
-            request.setAttribute("shippingCount", shippingCount);
-            request.setAttribute("deliveryCount", deliveryCount);
+            request.setAttribute("processingCount", processingCount);
+            request.setAttribute("shippedCount", shippedCount);
             request.setAttribute("completedCount", completedCount);
             request.setAttribute("cancelledCount", cancelledCount);
             

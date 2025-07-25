@@ -3,6 +3,7 @@ package Controllers;
 import DAOs.CustomerDAO;
 import Models.Customer;
 import Models.User;
+import Ultis.MD5Util;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -89,14 +90,16 @@ public class ProfileCustomerController extends HttpServlet {
             customer.setCusGmail(email);
             customer.setCusPhone(phone);
             if (newPassword != null && !newPassword.trim().isEmpty()) {
-                if (oldPassword == null || !oldPassword.equals(customer.getCusPassword())) {
+                // Verify old password using MD5 hash
+                if (oldPassword == null || !MD5Util.verifyPassword(oldPassword, customer.getCusPassword())) {
                     // Sai mật khẩu cũ
                     request.setAttribute("error", "Mật khẩu cũ không đúng. Vui lòng thử lại.");
                     request.setAttribute("customer", customer);
                     request.getRequestDispatcher(PROFILE_PAGE).forward(request, response);
                     return;
                 } else {
-                    customer.setCusPassword(newPassword);
+                    // Hash new password before storing
+                    customer.setCusPassword(MD5Util.hashPassword(newPassword));
                 }
             }
 
