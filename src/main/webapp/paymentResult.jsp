@@ -186,7 +186,7 @@
                         </div>
                         <h4 class="fw-bold mb-3">Thank you for your order!</h4>
                         <p class="text-muted mb-4">You will receive updates in the notification section of your inbox.</p>
-                        <a href="OrderController?action=view" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
+                        <a href="OrderHistoryController" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
                     </div>
                 </c:if>
 
@@ -200,7 +200,7 @@
                         </div>
                         <h4 class="fw-bold mb-3 text-danger">Transaction Failed!</h4>
                         <p class="text-muted mb-4">Your payment could not be processed. Please try again or contact support.</p>
-                        <a href="OrderController?action=view" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
+                        <a href="OrderHistoryController" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
                     </div>
                 </c:if>
 
@@ -214,7 +214,7 @@
                         </div>
                         <h4 class="fw-bold mb-3 text-warning">Transaction Processing</h4>
                         <p class="text-muted mb-4">Your payment is being processed. Please wait for confirmation.</p>
-                        <a href="OrderController?action=view" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
+                        <a href="OrderHistoryController" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
                     </div>
                 </c:if>
             </div>

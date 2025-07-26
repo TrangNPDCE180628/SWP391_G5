@@ -496,8 +496,6 @@
                             <div class="total-row">
                                 <span class="total-label">Shipping Fee:</span>
                                 <span class="total-value">30.000₫</span>
-                            </div>
-
                             <div class="total-row">
                                 <span class="total-label">Total:</span>
                                 <span class="total-value final-total">
@@ -573,7 +571,7 @@
                             function cancelOrder(orderId) {
                                 if (confirm('Are you sure you want to cancel order #' + orderId + '?\nThis action cannot be undone.')) {
                                     // TODO: Call cancel API
-                                    window.location.href = '${pageContext.request.contextPath}/OrderController?action=cancel&orderId=' + orderId;
+                                    window.location.href = '${pageContext.request.contextPath}/PaymentController?action=cancel&orderId=' + orderId;
                                 }
                             }
 

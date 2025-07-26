@@ -186,7 +186,7 @@
                             <div class="text-end">
                                 <div><strong>Subtotal:</strong> <span id="subtotal">₫0</span></div>
                                 <div><strong>Discount:</strong> <span id="discount">₫0</span></div>
-                                <div><strong>Shipping Fee:</strong> <span id="shippingFee">₫30000</span></div>
+                                <div><strong>Shipping Fee:</strong> <span id="shippingFee">30000₫</span></div>
                                 <div><strong>Total (selected):</strong> <span id="selectedTotal">₫0</span></div>
                                 <button type="submit" class="btn btn-danger ms-3">
                                     Checkout <i class="fas fa-arrow-right"></i>
@@ -369,7 +369,13 @@
                 const cartForm = document.getElementById('cartForm');
                 let voucher = null;
                 const currencyFormatter = new Intl.NumberFormat('vi-VN');
-                const formatCurrency = (number) => currencyFormatter.format(number) + " ₫";
+                const formatCurrency = (number) => {
+                    return new Intl.NumberFormat('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND',
+                        minimumFractionDigits: 0, // bỏ phần lẻ .00
+                    }).format(number);
+                };
                 const updateTotal = () => {
                     let subtotal = 0;
                     checkboxes.forEach(cb => {
