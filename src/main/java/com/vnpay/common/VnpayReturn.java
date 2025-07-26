@@ -69,7 +69,7 @@ public class VnpayReturn extends HttpServlet {
                 if ("00".equals(request.getParameter("vnp_TransactionStatus"))) {
                     order.setOrderStatus("completed");
 
-                    // 1. Giảm số lượng voucher (nếu có)
+                    // 1. Giảm số lượng vouchr (nếu có)
                     if (order.getVoucherId() != null) {
                         VoucherDAO vDao = new VoucherDAO();
                         Voucher usedV = vDao.getById(order.getVoucherId());

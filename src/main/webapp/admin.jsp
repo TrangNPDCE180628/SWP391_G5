@@ -545,14 +545,11 @@
                                                 <select class="form-select" name="filterTypeId" style="max-width: 200px;">
                                                     <option value="">All Types</option>
                                                     <c:forEach var="type" items="${types}">
-                                                        <option value="${type.id}" 
-                                                            ${(filterTypeId != null && filterTypeId == type.id.toString()) || (param.filterTypeId == type.id.toString()) ? 'selected' : ''}>
-                                                            ${type.name}
-                                                        </option>
+                                                        <option value="${type.id}" ${param.filterTypeId == type.id ? 'selected' : ''}>${type.name}</option>
                                                     </c:forEach>
                                                 </select>
 
-                                                <input type="text" class="form-control" name="filterAttributeName" placeholder="Attribute Name" value="${filterAttributeName != null ? filterAttributeName : param.filterAttributeName}" style="max-width: 200px;">
+                                                <input type="text" class="form-control" name="filterAttributeName" placeholder="Attribute Name" value="${param.filterAttributeName}" style="max-width: 200px;">
 
                                                 <button type="submit" class="btn btn-outline-primary">
                                                     <i class="fas fa-filter"></i> Filter

@@ -92,10 +92,9 @@
 
                     <label for="modalStatusSelect" class="form-label">Order Status:</label>
                     <select name="status" id="modalStatusSelect" class="form-select">
-                        <option value="pending">Pending</option>
-                        <option value="shipped">Shipped</option>
+                        <option value="processing">Processing</option>
                         <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="cancel">Cancel</option>
                     </select>
                 </div>
 
@@ -112,17 +111,28 @@
 <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="orderDetailModalLabel">Order Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="orderDetailModalLabel">
+                    <i class="fas fa-receipt me-2"></i>Order Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="orderDetailContent">
+            <div class="modal-body p-0" id="orderDetailContent">
                 <!-- Order detail will be loaded here via AJAX -->
-                <div class="text-center">
+                <div class="text-center p-5">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
+                    <p class="mt-3 text-muted">Loading order details...</p>
                 </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
+                <button type="button" class="btn btn-primary" onclick="printOrderDetails()">
+                    <i class="fas fa-print me-2"></i>Print Order
+                </button>
             </div>
         </div>
     </div>
@@ -131,10 +141,43 @@
 
 <!-- Script mở modal -->
 <script>
-//    function openEditModal(orderId, currentStatus) {
-//        document.getElementById("modalOrderId").value = orderId;
-//        document.getElementById("modalStatusSelect").value = currentStatus;
-//    }
-
-    
+    function printOrderDetails() {
+        const modalContent = document.getElementById('orderDetailContent');
+        if (modalContent) {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Order Details</title>
+                        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+                        <style>
+                            @media print {
+                                .no-print { display: none !important; }
+                                body { margin: 0; }
+                                .order-details-container { box-shadow: none !important; }
+                            }
+                            body { font-family: Arial, sans-serif; }
+                        </style>
+                    </head>
+                    <body>
+                        ${modalContent.innerHTML}
+                        <script>
+                            // Remove action buttons for print
+                            const actionButtons = document.querySelectorAll('.btn, .no-print');
+                            actionButtons.forEach(btn => btn.style.display = 'none');
+                            
+                            // Auto print when loaded
+                            window.onload = function() {
+                                window.print();
+                                window.onafterprint = function() {
+                                    window.close();
+                                }
+                            }
+                        <\/script>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+    }
 </script>

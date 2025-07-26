@@ -539,9 +539,13 @@
                                                 <div class="action-buttons">
                                                     <c:choose>
                                                         <c:when test="${order.orderStatus == 'completed'}">
-                                                            <button class="btn btn-action btn-review" data-order-id="${order.orderId}" onclick="showReviewModal(this.getAttribute('data-order-id'))">
-                                                                <i class="fas fa-star me-1"></i>Review
-                                                            </button>
+                                                            <!-- Review removed from here - available per product in order details -->
+                                                            <span class="text-success">
+                                                                <i class="fas fa-check-circle me-1"></i>Order Completed
+                                                            </span>
+                                                            <small class="text-info d-block mt-1">
+                                                                <i class="fas fa-star me-1"></i>Review individual products in Order Details
+                                                            </small>
                                                         </c:when>
                                                         <c:when test="${order.orderStatus == 'pending'}">
                                                             <button class="btn btn-action btn-cancel" data-order-id="${order.orderId}" onclick="cancelOrder(this.getAttribute('data-order-id'))">
@@ -560,6 +564,9 @@
                                                         </c:when>
                                                         <c:when test="${order.orderStatus == 'shipped'}">
                                                             <!-- No action button for shipped status -->
+                                                            <small class="text-info d-block mt-1">
+                                                                <i class="fas fa-star me-1"></i>Review individual products in Order Details
+                                                            </small>
                                                         </c:when>
                                                     </c:choose>
 
@@ -728,7 +735,7 @@
                                                                 button.disabled = true;
 
                                                                 // Update status to completed
-                                                                window.location.href = '${pageContext.request.contextPath}/OrderController?action=update-status&orderId=' + orderId + '&status=completed';
+                                                                window.location.href = '${pageContext.request.contextPath}/OrderController?action=update-status&orderId=' + orderId + '&status=shipped';
                                                             }
                                                         }
 

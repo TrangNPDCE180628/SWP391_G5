@@ -160,7 +160,7 @@ public class OrderController extends HttpServlet {
                 redirectUrl = "/AdminController?tab=orders";
             } else if (order.getCusId().equals(loginUser.getId())) {
                 // Customer can only update their own order from "processing" to "completed"
-                if ("shipped".equals(newStatus) && "processing".equalsIgnoreCase(order.getOrderStatus())) {
+                if ("processing".equalsIgnoreCase(order.getOrderStatus())) {
                     isAuthorized = true;
                     redirectUrl = "/order-history?tab=shipped";
                 }
