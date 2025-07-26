@@ -135,12 +135,18 @@ public class PaymentController extends HttpServlet {
             order.setOrderDate(new Timestamp(System.currentTimeMillis()));
             order.setTotalAmount(totalAmount);
             order.setDiscountAmount(discount);
-            order.setFinalAmount(totalAmount.subtract(discount));
+
+            BigDecimal shippingFee = BigDecimal.valueOf(30000);
+            BigDecimal finalAmount = totalAmount.subtract(discount).add(shippingFee);
+            order.setFinalAmount(finalAmount);
+
+            System.out.println("Final amount: " + finalAmount);
+
             order.setOrderStatus("pending");
             order.setVoucherId(voucherId);
 
             OrderDAO orderDAO = new OrderDAO();
-            orderId = orderDAO.createOrder(order);             // trả về khóa
+            orderId = orderDAO.createOrder(order); // trả về khóa chính
             order.setOrderId(orderId);
 
             /* 6. Lưu OrderDetail */

@@ -25,25 +25,25 @@ public class CartController extends BaseController {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         String action = request.getParameter("action");
-        
+
         // Check authentication manually first
         HttpSession session = request.getSession(false);
         User loginUser = null;
         if (session != null) {
             loginUser = (User) session.getAttribute("LOGIN_USER");
         }
-         // If not authenticated, store current URL and redirect to login
+        // If not authenticated, store current URL and redirect to login
         if (loginUser == null) {
             String originalURL = request.getRequestURI();
             String queryString = request.getQueryString();
             if (queryString != null) {
                 originalURL += "?" + queryString;
             }
-            
+
             // Create session to store redirect URL
             session = request.getSession(true);
             session.setAttribute("REDIRECT_URL", originalURL);
-            
+
             response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }

@@ -60,12 +60,7 @@ public class OrderDAO {
             stmt.setBigDecimal(4, order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
 
             // Tính finalAmount = totalAmount - discountAmount
-            BigDecimal finalAmount = order.getTotalAmount().subtract(
-                    order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO
-            );
-            order.setFinalAmount(finalAmount);
-            stmt.setBigDecimal(5, finalAmount);
-
+            stmt.setBigDecimal(5, order.getFinalAmount());
             stmt.setString(6, order.getOrderStatus());
             stmt.setString(7, order.getPaymentMethod());
             stmt.setString(8, order.getShippingAddress());

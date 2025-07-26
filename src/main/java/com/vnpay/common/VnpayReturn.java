@@ -67,7 +67,7 @@ public class VnpayReturn extends HttpServlet {
 
                 boolean transSuccess = false;
                 if ("00".equals(request.getParameter("vnp_TransactionStatus"))) {
-                    order.setOrderStatus("Completed");
+                    order.setOrderStatus("completed");
 
                     // 1. Giảm số lượng voucher (nếu có)
                     if (order.getVoucherId() != null) {

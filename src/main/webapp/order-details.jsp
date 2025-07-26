@@ -464,7 +464,7 @@
 
                             <div class="total-row">
                                 <span class="total-label">Phí vận chuyển:</span>
-                                <span class="total-value">Miễn phí</span>
+                                <span class="total-value">30000 đ</span>
                             </div>
 
                             <div class="total-row">
