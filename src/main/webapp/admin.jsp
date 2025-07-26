@@ -93,7 +93,7 @@
                             </li>
                             <li class="nav-item">
                                 <a href="#inventory" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fa-solid fa-ticket me-2"></i>Manage Inventory
+                                    <i class="fa-solid fa-ticket me-2"></i>Manage Product Quantity
                                 </a>
                             </li>
                             <li class="nav-item">

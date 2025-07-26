@@ -133,7 +133,7 @@
                                 <tr>
                                     <th style="width: 5%;">Select</th>
                                     <th style="width: 10%;">Image</th>
-                                    <th style="width: 30%;">Product ame</th>
+                                    <th style="width: 30%;">Product Name</th>
                                     <th style="width: 15%;">Price</th>
                                     <th style="width: 15%;">Quantity</th>
                                     <th style="width: 15%;">Total amount</th>
@@ -147,8 +147,9 @@
                                             <input type="checkbox" name="selectedProductIds" value="${item.key}" />
                                         </td>
                                         <td>
-                                            <img src="${item.value.proImageUrl}" class="product-img rounded" alt="${item.value.proName}">
-                                        </td>
+                                            <img src="images/products/${item.value.proImageUrl}" 
+                                                 class="card-img-top product-img" 
+                                                 alt="${item.value.proName}"> </td>
                                         <td class="text-start">${item.value.proName}</td>
                                         <td>
                                             <fmt:formatNumber value="${item.value.proPrice}" type="currency" currencySymbol="" /> ₫
