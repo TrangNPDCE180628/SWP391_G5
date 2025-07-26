@@ -87,12 +87,12 @@ document.addEventListener("DOMContentLoaded", function () {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Revenue ($)',
-                    data: data,
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
+                        label: 'Revenue ($)',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
             },
             options: {
                 responsive: true,
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            callback: function(value) {
+                            callback: function (value) {
                                 return '$' + value.toLocaleString();
                             }
                         }
@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (growthRateCanvas) {
         const ctx = growthRateCanvas.getContext("2d");
         const growthRateDataElement = document.getElementById("monthlyGrowthRateData");
-        
+
         if (growthRateDataElement) {
             const growthRateData = JSON.parse(growthRateDataElement.textContent);
             const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -136,14 +136,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Growth Rate (%)',
-                        data: data,
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
+                            label: 'Growth Rate (%)',
+                            data: data,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
                 },
                 options: {
                     responsive: true,
@@ -154,7 +154,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     scales: {
                         y: {
                             ticks: {
-                                callback: function(value) {
+                                callback: function (value) {
                                     return value.toFixed(1) + '%';
                                 }
                             }
@@ -170,10 +170,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (productRevenueCanvas) {
         const ctx = productRevenueCanvas.getContext("2d");
         const productRevenueDataElement = document.getElementById("productRevenueData");
-        
+
         if (productRevenueDataElement) {
             const productRevenueData = JSON.parse(productRevenueDataElement.textContent);
-            
+
             const labels = productRevenueData.map(item => item.productName);
             const revenues = productRevenueData.map(item => item.revenue);
             const quantities = productRevenueData.map(item => item.quantity);
@@ -183,21 +183,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Revenue ($)',
-                        data: revenues,
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1,
-                        yAxisID: 'y'
-                    }, {
-                        label: 'Quantity Sold',
-                        data: quantities,
-                        type: 'line',
-                        borderColor: 'rgba(255, 206, 86, 1)',
-                        backgroundColor: 'rgba(255, 206, 86, 0.2)',
-                        borderWidth: 2,
-                        yAxisID: 'y1'
-                    }]
+                            label: 'Revenue ($)',
+                            data: revenues,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Quantity Sold',
+                            data: quantities,
+                            type: 'line',
+                            borderColor: 'rgba(255, 206, 86, 1)',
+                            backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }]
                 },
                 options: {
                     responsive: true,
@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             position: 'left',
                             beginAtZero: true,
                             ticks: {
-                                callback: function(value) {
+                                callback: function (value) {
                                     return '$' + value.toLocaleString();
                                 }
                             }
@@ -232,7 +232,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 drawOnChartArea: false,
                             },
                             ticks: {
-                                callback: function(value) {
+                                callback: function (value) {
                                     return value + ' units';
                                 }
                             }
@@ -392,6 +392,7 @@ function deleteUser(id) {
         window.location.href = '/AdminController?action=deleteUser&id=' + id;
     }
 }
+
 
 function editProductType(id, name) {
     document.getElementById('editTypeId').value = id;
@@ -607,19 +608,19 @@ function viewReply(feedbackId) {
 function deleteReply() {
     const replyId = window.currentReplyId;
     const feedbackId = window.currentFeedbackId;
-    
+
     if (!replyId || replyId === "null" || replyId === "") {
         alert("No reply to delete.");
         return;
     }
-    
+
     if (confirm("Are you sure you want to delete this reply? This action cannot be undone.")) {
         // Show loading state
         const deleteBtn = document.getElementById("deleteReplyBtn");
         const originalText = deleteBtn.innerHTML;
         deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
         deleteBtn.disabled = true;
-        
+
         // Send AJAX request to delete reply
         fetch('AdminController', {
             method: 'POST',
@@ -628,36 +629,36 @@ function deleteReply() {
             },
             body: `action=deleteReply&replyId=${replyId}`
         })
-        .then(response => {
-            if (response.redirected) {
-                // Close modal and reload page
-                const modal = bootstrap.Modal.getInstance(document.getElementById("replyModal"));
-                modal.hide();
-                window.location.href = response.url;
-            } else if (response.ok) {
-                // Close modal and reload page for successful deletion
-                const modal = bootstrap.Modal.getInstance(document.getElementById("replyModal"));
-                modal.hide();
-                window.location.reload();
-            } else {
-                return response.text();
-            }
-        })
-        .then(data => {
-            if (data) {
-                alert("Error deleting reply: " + data);
-                // Restore button state
-                deleteBtn.innerHTML = originalText;
-                deleteBtn.disabled = false;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("An error occurred while deleting the reply.");
-            // Restore button state
-            deleteBtn.innerHTML = originalText;
-            deleteBtn.disabled = false;
-        });
+                .then(response => {
+                    if (response.redirected) {
+                        // Close modal and reload page
+                        const modal = bootstrap.Modal.getInstance(document.getElementById("replyModal"));
+                        modal.hide();
+                        window.location.href = response.url;
+                    } else if (response.ok) {
+                        // Close modal and reload page for successful deletion
+                        const modal = bootstrap.Modal.getInstance(document.getElementById("replyModal"));
+                        modal.hide();
+                        window.location.reload();
+                    } else {
+                        return response.text();
+                    }
+                })
+                .then(data => {
+                    if (data) {
+                        alert("Error deleting reply: " + data);
+                        // Restore button state
+                        deleteBtn.innerHTML = originalText;
+                        deleteBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("An error occurred while deleting the reply.");
+                    // Restore button state
+                    deleteBtn.innerHTML = originalText;
+                    deleteBtn.disabled = false;
+                });
     }
 }
 
@@ -730,7 +731,7 @@ function viewProductAttribute(productId, attributeId) {
 function loadOrderDetails(orderId) {
     const modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
     const content = document.getElementById('orderDetailContent');
-    
+
     // Show loading state
     content.innerHTML = `
         <div class="text-center p-5">
@@ -811,7 +812,7 @@ function viewCustomerInfo(cusId) {
     document.getElementById('modalCusEmail').textContent = 'Loading...';
     document.getElementById('modalCusPhone').textContent = 'Loading...';
     document.getElementById('modalCusGender').textContent = 'Loading...';
-    
+
     // Show loading spinner for order history
     document.getElementById('customerOrderHistory').innerHTML = `
         <div class="text-center">
@@ -823,33 +824,33 @@ function viewCustomerInfo(cusId) {
 
     // Fetch customer info and order history
     fetch(`${contextPath}/AdminController?action=getCustomerInfo&cusId=${cusId}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Update customer info
-                const customer = data.customer;
-                document.getElementById('modalCusFullName').textContent = customer.cusFullName || '-';
-                document.getElementById('modalCusEmail').textContent = customer.cusGmail || '-';
-                document.getElementById('modalCusPhone').textContent = customer.cusPhone || '-';
-                document.getElementById('modalCusGender').textContent = customer.cusGender || '-';
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update customer info
+                    const customer = data.customer;
+                    document.getElementById('modalCusFullName').textContent = customer.cusFullName || '-';
+                    document.getElementById('modalCusEmail').textContent = customer.cusGmail || '-';
+                    document.getElementById('modalCusPhone').textContent = customer.cusPhone || '-';
+                    document.getElementById('modalCusGender').textContent = customer.cusGender || '-';
 
-                // Update order history
-                const orders = data.orders || [];
-                let orderHistoryHtml = '';
-                
-                if (orders.length === 0) {
-                    orderHistoryHtml = '<div class="alert alert-info">No orders found</div>';
-                } else {
-                    orderHistoryHtml = '<div class="list-group">';
-                    orders.forEach(order => {
-                        const statusClass = order.orderStatus === 'Done' ? 'success' : 
-                                          order.orderStatus === 'Cancel' ? 'danger' : 'warning';
-                        orderHistoryHtml += `
+                    // Update order history
+                    const orders = data.orders || [];
+                    let orderHistoryHtml = '';
+
+                    if (orders.length === 0) {
+                        orderHistoryHtml = '<div class="alert alert-info">No orders found</div>';
+                    } else {
+                        orderHistoryHtml = '<div class="list-group">';
+                        orders.forEach(order => {
+                            const statusClass = order.orderStatus === 'Done' ? 'success' :
+                                    order.orderStatus === 'Cancel' ? 'danger' : 'warning';
+                            orderHistoryHtml += `
                             <div class="list-group-item">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">Order #${order.orderId}</h6>
@@ -859,30 +860,30 @@ function viewCustomerInfo(cusId) {
                                 <small>Date: ${order.orderDate || 'N/A'}</small>
                             </div>
                         `;
-                    });
-                    orderHistoryHtml += '</div>';
+                        });
+                        orderHistoryHtml += '</div>';
+                    }
+
+                    document.getElementById('customerOrderHistory').innerHTML = orderHistoryHtml;
+                } else {
+                    // Handle error
+                    document.getElementById('modalCusFullName').textContent = 'Error loading data';
+                    document.getElementById('modalCusEmail').textContent = 'Error loading data';
+                    document.getElementById('modalCusPhone').textContent = 'Error loading data';
+                    document.getElementById('modalCusGender').textContent = 'Error loading data';
+                    document.getElementById('customerOrderHistory').innerHTML =
+                            '<div class="alert alert-danger">Failed to load customer information</div>';
                 }
-                
-                document.getElementById('customerOrderHistory').innerHTML = orderHistoryHtml;
-            } else {
-                // Handle error
+            })
+            .catch(error => {
+                console.error('Error fetching customer info:', error);
                 document.getElementById('modalCusFullName').textContent = 'Error loading data';
                 document.getElementById('modalCusEmail').textContent = 'Error loading data';
                 document.getElementById('modalCusPhone').textContent = 'Error loading data';
                 document.getElementById('modalCusGender').textContent = 'Error loading data';
-                document.getElementById('customerOrderHistory').innerHTML = 
-                    '<div class="alert alert-danger">Failed to load customer information</div>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching customer info:', error);
-            document.getElementById('modalCusFullName').textContent = 'Error loading data';
-            document.getElementById('modalCusEmail').textContent = 'Error loading data';
-            document.getElementById('modalCusPhone').textContent = 'Error loading data';
-            document.getElementById('modalCusGender').textContent = 'Error loading data';
-            document.getElementById('customerOrderHistory').innerHTML = 
-                '<div class="alert alert-danger">Error loading customer information</div>';
-        });
+                document.getElementById('customerOrderHistory').innerHTML =
+                        '<div class="alert alert-danger">Error loading customer information</div>';
+            });
 }
 
 // Initialize Feedback Search and Filter functionality
@@ -892,7 +893,7 @@ function initFeedbackSearch() {
     const sortOrder = document.getElementById("feedbackSortOrder");
     const table = document.getElementById("feedbackTable");
     const noResultsDiv = document.getElementById("noFeedbackResults");
-    
+
     if (!searchInput || !statusFilter || !sortOrder || !table) {
         return; // Elements not found, probably not on feedback tab
     }
@@ -915,12 +916,12 @@ function initFeedbackSearch() {
             const productName = (row.dataset.proName || '').toLowerCase();
             const content = (row.dataset.content || '').toLowerCase();
             const feedbackId = (row.dataset.feedbackId || '').toLowerCase();
-            
-            const matchesSearch = !searchTerm || 
-                customerName.includes(searchTerm) ||
-                productName.includes(searchTerm) ||
-                content.includes(searchTerm) ||
-                feedbackId.includes(searchTerm);
+
+            const matchesSearch = !searchTerm ||
+                    customerName.includes(searchTerm) ||
+                    productName.includes(searchTerm) ||
+                    content.includes(searchTerm) ||
+                    feedbackId.includes(searchTerm);
 
             // Status filter
             const rowStatus = row.dataset.status || '';
@@ -935,16 +936,16 @@ function initFeedbackSearch() {
                 case 'newest':
                     // Assuming feedbackId is sequential, higher ID = newer
                     return parseInt(b.dataset.feedbackId || '0') - parseInt(a.dataset.feedbackId || '0');
-                
+
                 case 'oldest':
                     return parseInt(a.dataset.feedbackId || '0') - parseInt(b.dataset.feedbackId || '0');
-                
+
                 case 'highest-rating':
                     return parseInt(b.dataset.rate || '0') - parseInt(a.dataset.rate || '0');
-                
+
                 case 'lowest-rating':
                     return parseInt(a.dataset.rate || '0') - parseInt(b.dataset.rate || '0');
-                
+
                 default:
                     return 0;
             }

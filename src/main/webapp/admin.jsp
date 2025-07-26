@@ -938,7 +938,7 @@
                 <form action="AdminController" method="post" class="modal-content">
                     <input type="hidden" name="action" value="updateProductType">
                     <input type="hidden" name="tab" value="productTypes">
-                    <input type="hidden" name="proTypeId" id="editProTypeId">
+                    <input type="hidden" name="proTypeId" id="editTypeId">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editProductTypeModalLabel">Edit Product Type</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -956,6 +956,7 @@
                 </form>
             </div>
         </div>
+
 
         <!-- Add Staff Modal -->
         <div class="modal fade" id="addStaffModal" tabindex="-1">

@@ -152,7 +152,7 @@
                                                  alt="${item.value.proName}"> </td>
                                         <td class="text-start">${item.value.proName}</td>
                                         <td>
-                                            <fmt:formatNumber value="${item.value.proPrice}" type="currency" currencySymbol="" /> ₫
+                                            <fmt:formatNumber value="${item.value.proPrice}" type="number" currencySymbol="" /> ₫
                                         </td>
                                         <td>
                                             <div class="d-inline-flex align-items-center">
@@ -163,7 +163,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <fmt:formatNumber value="${item.value.proPrice * item.value.quantity}" type="currency" currencySymbol="" /> ₫
+                                            <fmt:formatNumber value="${item.value.proPrice * item.value.quantity}" type="number" currencySymbol="" /> ₫
                                         </td>
                                         <td>
                                             <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="${item.key}" title="Remove product">
@@ -224,13 +224,13 @@
                                                     <c:choose>
                                                         <c:when test="${voucher.discountType == 'percentage'}">${voucher.discountValue}%</c:when>
                                                         <c:otherwise>
-                                                            <fmt:formatNumber value="${voucher.discountValue}" type="currency" currencySymbol="" /> ₫
+                                                            <fmt:formatNumber value="${voucher.discountValue}" type="number" currencySymbol="" /> ₫
                                                         </c:otherwise>
                                                     </c:choose><br>
                                                     Minimum order:
-                                                    <fmt:formatNumber value="${voucher.minOrderAmount}" type="currency" currencySymbol="" /> ₫<br>
+                                                    <fmt:formatNumber value="${voucher.minOrderAmount}" type="number" currencySymbol="" /> ₫<br>
                                                     Max Discount Value: 
-                                                    <fmt:formatNumber value="${voucher.maxDiscountValue}" type="currency" currencySymbol=""/> ₫
+                                                    <fmt:formatNumber value="${voucher.maxDiscountValue}" type="number" currencySymbol=""/> ₫
                                                     <br>
                                                     <span style="color:#ed7b2f;">
                                                         End Date: 
@@ -383,27 +383,28 @@
                         if (cb.checked) {
                             const row = cb.closest("tr");
                             const priceText = row.querySelector("td:nth-child(6)").textContent.trim();
-                            const price = parseInt(priceText.replace(/\D/g, ''));
+                            const cleanNumber = priceText.replace(/[^\d]/g, '');
+                            const price = cleanNumber ? parseInt(cleanNumber, 10) : 0;
                             subtotal += price;
                         }
                     });
+
                     let discount = 0;
                     if (voucher && subtotal >= voucher.minOrder) {
                         discount = voucher.type === "percentage"
                                 ? subtotal * voucher.value / 100
                                 : voucher.value;
                         if (voucher.maxDiscountValue && voucher.maxDiscountValue > 0 && discount >= voucher.maxDiscountValue) {
-
                             discount = voucher.maxDiscountValue;
                         }
                     }
 
+                    const shippingFee = 30000;
                     subtotalEl.textContent = formatCurrency(subtotal);
                     discountEl.textContent = formatCurrency(discount);
-                    const shippingFee = 30000;
                     selectedTotal.textContent = formatCurrency(subtotal - discount + shippingFee);
-
                 };
+
                 checkboxes.forEach(cb => cb.addEventListener("change", updateTotal));
                 updateTotal();
                 document.querySelectorAll(".select-voucher-btn").forEach(btn => {

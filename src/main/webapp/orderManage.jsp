@@ -14,6 +14,7 @@
         <option value="All" ${filterStatus == 'All' ? 'selected' : ''}>All</option>
         <option value="pending" ${filterStatus == 'pending' ? 'selected' : ''}>Pending</option>
         <option value="shipped" ${filterStatus == 'shipped' ? 'selected' : ''}>Shipped</option>
+        <option value="shipped" ${filterStatus == 'processing' ? 'selected' : ''}>Processing</option>
         <option value="completed" ${filterStatus == 'completed' ? 'selected' : ''}>Completed</option>
         <option value="cancelled" ${filterStatus == 'cancelled' ? 'selected' : ''}>Cancelled</option>
     </select>
@@ -62,6 +63,7 @@
                             <form method="post" action="AdminController" onsubmit="return confirm('Are you sure you want to delete this order?');">
                                 <input type="hidden" name="action" value="deleteOrder"/>
                                 <input type="hidden" name="orderId" value="${row.orderId}"/>
+                                <input type="hidden" name="tab" value="orders"/>
                                 <button type="submit" class="btn btn-sm btn-danger">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
@@ -88,13 +90,15 @@
                 <div class="modal-body">
                     <input type="hidden" name="action" value="updateOrderStatus"/>
                     <input type="hidden" name="orderId" id="modalOrderId"/>
+                    <input type="hidden" name="tab" value="orders"/>
                     <input type="hidden" name="currentFilterStatus" value="${filterStatus}"/>
 
                     <label for="modalStatusSelect" class="form-label">Order Status:</label>
                     <select name="status" id="modalStatusSelect" class="form-select">
-                        <option value="processing">Processing</option>
+                        <option value="pending">Pending</option>
+                        <option value="processing">Shipping</option>
                         <option value="completed">Completed</option>
-                        <option value="cancel">Cancel</option>
+                        <option value="cancel">Cancelled</option>
                     </select>
                 </div>
 
@@ -141,6 +145,15 @@
 
 <!-- Script mở modal -->
 <script>
+    function openEditModal(orderId, currentStatus) {
+        // Set order ID in hidden input
+        document.getElementById('modalOrderId').value = orderId;
+        
+        // Set current status as selected
+        const statusSelect = document.getElementById('modalStatusSelect');
+        statusSelect.value = currentStatus.toLowerCase();
+    }
+
     function printOrderDetails() {
         const modalContent = document.getElementById('orderDetailContent');
         if (modalContent) {
