@@ -244,7 +244,8 @@
                                 <!-- [UPDATED]: Product name and price -->
                                 <h2 class="fw-bold mb-3">${product.proName}</h2>
                                 <p class="text-danger fs-3 fw-bold mb-4">
-                                    <fmt:formatNumber value="${product.proPrice}" type="currency" currencySymbol="$" maxFractionDigits="${product.proPrice % 1 == 0 ? 0 : 2}"/>
+                                    <fmt:formatNumber value="${product.proPrice}" type="number" maxFractionDigits="0"/>
+                                    <span>₫</span>
                                 </p>
 
                                 <!-- Description -->

@@ -207,12 +207,12 @@
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a class="dropdown-item" href="ProfileCustomerController">Profile</a></li>
                                         <li><a class="dropdown-item" href="OrderHistoryController">My Orders</a></li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
+                                            <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
-                                            <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                     </ul>
                                 </li>
                             </c:when>
@@ -284,7 +284,8 @@
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <!-- [UPDATED]: Fixed price display to remove .00 for whole numbers -->
                                         <span class="product-price">
-                                            <fmt:formatNumber value="${product.proPrice}" type="currency" currencySymbol="$" maxFractionDigits="${product.proPrice % 1 == 0 ? 0 : 2}"/>
+                                            <fmt:formatNumber value="${product.proPrice}" type="number" maxFractionDigits="0"/>
+                                            <span>₫</span>
                                         </span>
                                     </div>
                                 </div>
