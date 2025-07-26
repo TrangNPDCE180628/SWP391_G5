@@ -62,24 +62,27 @@
                                     <i class="fa-solid fa-box me-2"></i>Product
                                 </a>
                             </li>
-
-                            <li class="nav-item">
-                                <a href="#productTypes" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-list-alt me-2"></i>Product Types
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fa-solid fa-ticket me-2"></i>Voucher
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#attributes" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-list me-2"></i>Attributes
-                                </a>
-                            </li>
-
+                            <c:if test="${LOGIN_USER.role == 'Admin'}">
+                                <li class="nav-item">
+                                    <a href="#productTypes" class="nav-link" data-bs-toggle="tab">
+                                        <i class="fas fa-list-alt me-2"></i>Product Types
+                                    </a>
+                                </li>
+                            </c:if>
+                            <c:if test="${LOGIN_USER.role == 'Admin'}">
+                                <li class="nav-item">
+                                    <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
+                                        <i class="fa-solid fa-ticket me-2"></i>Voucher
+                                    </a>
+                                </li>
+                            </c:if>
+                            <c:if test="${LOGIN_USER.role == 'Admin'}">
+                                <li class="nav-item">
+                                    <a href="#attributes" class="nav-link" data-bs-toggle="tab">
+                                        <i class="fas fa-list me-2"></i>Attributes
+                                    </a>
+                                </li>
+                            </c:if>
                             <li class="nav-item">
                                 <a href="#feedbacks" class="nav-link" data-bs-toggle="tab">
                                     <i class="fa-solid fa-ticket me-2"></i>FeedBack Manage
