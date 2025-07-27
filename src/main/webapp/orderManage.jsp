@@ -14,12 +14,13 @@
         <option value="All" ${filterStatus == 'All' ? 'selected' : ''}>All</option>
         <option value="pending" ${filterStatus == 'pending' ? 'selected' : ''}>Pending</option>
         <option value="shipped" ${filterStatus == 'shipped' ? 'selected' : ''}>Shipped</option>
-        <option value="shipped" ${filterStatus == 'processing' ? 'selected' : ''}>Processing</option>
+        <option value="processing" ${filterStatus == 'processing' ? 'selected' : ''}>Processing</option>
         <option value="completed" ${filterStatus == 'completed' ? 'selected' : ''}>Completed</option>
-        <option value="cancelled" ${filterStatus == 'cancelled' ? 'selected' : ''}>Cancelled</option>
+        <option value="cancel" ${filterStatus == 'cancelled' ? 'selected' : ''}>Cancelled</option>
     </select>
 
     <button type="submit" class="btn btn-primary">Apply Filter</button>
+    <a href="AdminController?tab=orders" class="btn btn-secondary">Reset</a>
 </form>
 
 <div class="table-responsive">
@@ -133,9 +134,6 @@
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-2"></i>Close
-                </button>
-                <button type="button" class="btn btn-primary" onclick="printOrderDetails()">
-                    <i class="fas fa-print me-2"></i>Print Order
                 </button>
             </div>
         </div>

@@ -291,7 +291,7 @@
                                 </div>
                             </a>
                             <!-- [END UPDATED] -->
-                            <form action="CartController" method="POST">
+                            <form action="CartController" method="GET">
                                 <input type="hidden" name="action" value="add">
                                 <input type="hidden" name="productId" value="${product.proId}">
                                 <button type="submit" class="btn btn-add-cart">

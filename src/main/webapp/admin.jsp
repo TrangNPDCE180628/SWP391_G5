@@ -165,7 +165,7 @@
                                                     <td>${staff.staffName}</td>
                                                     <td>${staff.staffFullName}</td>
                                                     <td>
-                                                        <img src="${pageContext.request.contextPath}/images/staff/${staff.staffImage}" 
+                                                        <img src="${pageContext.request.contextPath}/images/${staff.staffImage}" 
                                                              alt="Staff Image" width="80" height="100">
                                                     </td>
                                                     <td class="action-buttons">
@@ -325,7 +325,7 @@
                                                 <td>${product.proName}</td>
                                                 <td>${typeMap[product.proTypeId]}</td>
                                                 <td>${product.proDescription}</td>
-                                                <td>${product.proPrice}Đ</td>
+                                                <td> <fmt:formatNumber value="${product.proPrice}" maxFractionDigits="2" minFractionDigits="0"/> Đ</td>
                                                 <td>
                                                     <img src="${pageContext.request.contextPath}/images/products/${product.proImageMain}" alt="Product Image" width="80" height="80">
                                                 </td>

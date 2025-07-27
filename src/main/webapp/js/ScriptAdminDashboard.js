@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
             data: {
                 labels: labels,
                 datasets: [{
-                        label: 'Revenue ($)',
+                        label: 'Revenue (đ)',
                         data: data,
                         backgroundColor: 'rgba(54, 162, 235, 0.6)',
                         borderColor: 'rgba(54, 162, 235, 1)',
@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         beginAtZero: true,
                         ticks: {
                             callback: function (value) {
-                                return '$' + value.toLocaleString();
+                                return 'đ' + value.toLocaleString();
                             }
                         }
                     }
@@ -183,7 +183,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 data: {
                     labels: labels,
                     datasets: [{
-                            label: 'Revenue ($)',
+                            label: 'Revenue (đ)',
                             data: revenues,
                             backgroundColor: 'rgba(75, 192, 192, 0.6)',
                             borderColor: 'rgba(75, 192, 192, 1)',
@@ -219,7 +219,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             beginAtZero: true,
                             ticks: {
                                 callback: function (value) {
-                                    return '$' + value.toLocaleString();
+                                    return 'đ' + value.toLocaleString();
                                 }
                             }
                         },
@@ -440,8 +440,8 @@ function viewOrderDetails(orderId) {
                     row.innerHTML = `
                             <td>${item.productName}</td>
                             <td>${item.quantity}</td>
-                            <td>$${item.unitPrice}</td>
-                            <td>$${item.totalPrice}</td>
+                            <td>${item.unitPrice}</td>
+                            <td>${item.totalPrice}</td>
                         `;
                     itemsTable.appendChild(row);
                 });
@@ -537,7 +537,7 @@ function editStaff(staffId) {
     // Preview ảnh cũ
     const preview = document.getElementById('editStaffImagePreview');
     if (preview) {
-        preview.src = `${contextPath}/images/staff/${staffImage}`;
+        preview.src = `${contextPath}/images/${staffImage}`;
         preview.style.display = 'block';
     }
 
@@ -554,7 +554,7 @@ function editStaff(staffId) {
                 };
                 reader.readAsDataURL(file);
             } else {
-                preview.src = `${contextPath}/images/staff/${staffImage}`;
+                preview.src = `${contextPath}/images/${staffImage}`;
             }
         };
     }
@@ -856,7 +856,7 @@ function viewCustomerInfo(cusId) {
                                     <h6 class="mb-1">Order #${order.orderId}</h6>
                                     <small class="badge bg-${statusClass}">${order.orderStatus}</small>
                                 </div>
-                                <p class="mb-1">Total: $${order.orderTotalAmount || 0}</p>
+                                <p class="mb-1">Total: ${order.orderTotalAmount || 0}</p>
                                 <small>Date: ${order.orderDate || 'N/A'}</small>
                             </div>
                         `;

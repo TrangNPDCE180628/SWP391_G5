@@ -44,7 +44,7 @@
 
             <!-- Create New Stock Button -->
             <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#createStockModal">Create New Stock</button>
-            <form action="AdminController" method="get" onsubmit="return validateDateRange()">
+<!--            <form action="AdminController" method="get" onsubmit="return validateDateRange()">
                 <input type="hidden" name="action" value="excelcreate" >
                 <div class="date-range-container" style="margin-bottom: 1rem;">
                     <label for="startDate">Start Date:</label>
@@ -55,7 +55,7 @@
 
                     <button type="submit" style="margin-left: 1rem;">Generate Excel</button>
                 </div>
-            </form>
+            </form>-->
 
             <!-- Stock Table -->
             <div class="table-responsive">
@@ -78,7 +78,7 @@
                                 <td>${item.proId}</td>
                                 <td>${item.proName}</td>
                                 <td><fmt:formatNumber value="${item.proPrice}" type="currency" currencySymbol="₫"/></td>
-                                <td><img src="${item.proImageUrl}" class="img-thumbnail" style="max-width: 80px;" /></td>
+                                <td><img src="/images/products/${item.proImageUrl}" class="img-thumbnail" style="max-width: 80px;" /></td>
                                 <td>${item.proTypeName}</td>
                                 <td>${item.stockQuantity}</td>
                                 <td><fmt:formatDate value="${item.lastUpdated}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
