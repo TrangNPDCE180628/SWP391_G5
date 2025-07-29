@@ -204,15 +204,16 @@
 
                                         <!-- Orders (moved below Cart) -->
                                         <li class="nav-item">
-                                            <a class="nav-link" href="OrderController?action=view">
+                                            <a class="nav-link" href="OrderHistoryController">
                                                 My Orders
                                             </a>
                                         </li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="MainController?action=Logout">Logout</a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                     </ul>
                                 </li>
                             </c:when>
@@ -243,14 +244,10 @@
                                 <!-- [UPDATED]: Product name and price -->
                                 <h2 class="fw-bold mb-3">${product.proName}</h2>
                                 <p class="text-danger fs-3 fw-bold mb-4">
-                                    <fmt:formatNumber value="${product.proPrice}" type="currency" currencySymbol="$" maxFractionDigits="${product.proPrice % 1 == 0 ? 0 : 2}"/>
+                                    <fmt:formatNumber value="${product.proPrice}" type="number" maxFractionDigits="0"/>
+                                    <span>₫</span>
                                 </p>
-                                <!-- [ADDED]: Color selection -->
-                                <div class="mb-4">
-                                    <span class="fw-bold me-2">Color:</span>
-                                    <span class="color-dot bg-dark selected" title="Space Gray"></span>
-                                    <span class="color-dot bg-light border" title="Silver"></span>
-                                </div>
+
                                 <!-- Description -->
                                 <div class="mb-4">
                                     <h5 class="fw-bold">Description</h5>
@@ -277,7 +274,6 @@
                                 </ul>
                                 <!-- [UPDATED]: Buttons with new styling -->
                                 <div class="d-grid gap-2 mb-4">
-                                    <button class="btn btn-buy-now" disabled>Buy Now</button>
                                     <form action="CartController" method="POST" class="d-inline">
                                         <input type="hidden" name="action" value="add">
                                         <input type="hidden" name="productId" value="${product.proId}">
@@ -285,7 +281,6 @@
                                             <i class="fas fa-shopping-cart me-2"></i>Add to Cart
                                         </button>
                                     </form>
-                                    <button class="btn btn-installment" disabled>Installment Purchase</button>
                                 </div>
                                 <!-- Back to Home -->
                                 <a href="HomeController" class="btn btn-outline-secondary btn-back">

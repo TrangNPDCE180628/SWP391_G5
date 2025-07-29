@@ -90,9 +90,9 @@
                         <li class="nav-item">
                             <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
                                 <i class="fas fa-shopping-cart fa-lg"></i>
-                                <c:if test="${sessionScope.cartTotalQuantity > 0}">
+                                <c:if test="${sessionScope.cartSize > 0}">
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        ${sessionScope.cartTotalQuantity}
+                                        ${sessionScope.cartSize}
                                     </span>
                                 </c:if>
                             </a>
@@ -111,15 +111,16 @@
 
                                         <!-- Orders (moved below Cart) -->
                                         <li class="nav-item">
-                                            <a class="nav-link" href="OrderController?action=view">
+                                            <a class="nav-link" href="OrderHistoryController">
                                                 My Orders
                                             </a>
                                         </li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="MainController?action=Logout">Logout</a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                     </ul>
                                 </li>
                             </c:when>
@@ -185,7 +186,7 @@
                         </div>
                         <h4 class="fw-bold mb-3">Thank you for your order!</h4>
                         <p class="text-muted mb-4">You will receive updates in the notification section of your inbox.</p>
-                        <a href="OrderController?action=view" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
+                        <a href="OrderHistoryController" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
                     </div>
                 </c:if>
 
@@ -199,7 +200,7 @@
                         </div>
                         <h4 class="fw-bold mb-3 text-danger">Transaction Failed!</h4>
                         <p class="text-muted mb-4">Your payment could not be processed. Please try again or contact support.</p>
-                        <a href="OrderController?action=view" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
+                        <a href="OrderHistoryController" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
                     </div>
                 </c:if>
 
@@ -213,7 +214,7 @@
                         </div>
                         <h4 class="fw-bold mb-3 text-warning">Transaction Processing</h4>
                         <p class="text-muted mb-4">Your payment is being processed. Please wait for confirmation.</p>
-                        <a href="OrderController?action=view" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
+                        <a href="OrderHistoryController" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
                     </div>
                 </c:if>
             </div>

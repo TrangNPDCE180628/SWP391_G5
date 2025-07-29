@@ -47,7 +47,8 @@ public class Order {
 
     public Order(int orderId, String cusId, Timestamp orderDate, BigDecimal totalAmount,
             BigDecimal discountAmount, Integer voucherId,
-            String orderStatus, String paymentMethod, String shippingAddress) {
+            String orderStatus, String paymentMethod, String shippingAddress,
+            String receiverName, String receiverPhone) {
         this.orderId = orderId;
         this.cusId = cusId;
         this.orderDate = orderDate;
@@ -57,6 +58,8 @@ public class Order {
         this.orderStatus = orderStatus;
         this.paymentMethod = paymentMethod;
         this.shippingAddress = shippingAddress;
+        this.receiverName = receiverName;
+        this.receiverPhone = receiverPhone;
     }
 
     public int getOrderId() {

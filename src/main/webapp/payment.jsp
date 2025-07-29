@@ -55,15 +55,16 @@
 
                                         <!-- Orders (moved below Cart) -->
                                         <li class="nav-item">
-                                            <a class="nav-link" href="OrderController?action=view">
+                                            <a class="nav-link" href="OrderHistoryController">
                                                 My Orders
                                             </a>
                                         </li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="MainController?action=Logout">Logout</a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                     </ul>
                                 </li>
                             </c:when>
@@ -167,14 +168,14 @@
                                     </div>
                                     <div class="col-md-6">
                                         <p><strong>Total:</strong>
-                                            <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol=""/> ₫
+                                            <fmt:formatNumber value="${order.totalAmount}" type="number" currencySymbol=""/> ₫
                                         </p>
                                         <p><strong>Discount:</strong>
-                                            <fmt:formatNumber value="${order.discountAmount}" type="currency" currencySymbol=""/> ₫
+                                            <fmt:formatNumber value="${order.discountAmount}" type="number" currencySymbol=""/> ₫
                                         </p>
                                         <p><strong>Total amount:</strong>
                                             <span class="final-amount">
-                                                <fmt:formatNumber value="${order.totalAmount - order.discountAmount}" type="currency" currencySymbol=""/> ₫
+                                                <fmt:formatNumber value="${order.finalAmount}" type="number" currencySymbol=""/> ₫
                                             </span>
                                         </p>
                                     </div>
@@ -257,18 +258,19 @@
                                             <h6 class="card-title">Order Summary</h6>
                                             <div class="d-flex justify-content-between mb-2">
                                                 <span>Total cost of goods:</span>
-                                                <span><fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol=""/> ₫</span>
+                                                <span><fmt:formatNumber value="${order.totalAmount}" type="number" currencySymbol=""/> ₫</span>
                                             </div>
                                             <div class="d-flex justify-content-between mb-2">
                                                 <span>Discount:</span>
-                                                <span class="text-success">-<fmt:formatNumber value="${order.discountAmount}" type="currency" currencySymbol=""/> ₫</span>
+                                                <span class="text-success">-<fmt:formatNumber value="${order.discountAmount}" type="number" currencySymbol=""/> ₫</span>
                                             </div>
                                             <hr>
                                             <div class="d-flex justify-content-between">
                                                 <strong>Total:</strong>
                                                 <strong class="text-danger">
-                                                    <fmt:formatNumber value="${order.totalAmount - order.discountAmount}" type="currency" currencySymbol=""/> ₫
+                                                    <fmt:formatNumber value="${order.finalAmount}" type="number" currencySymbol=""/> ₫
                                                 </strong>
+
                                             </div>
                                         </div>
                                     </div>
@@ -277,7 +279,7 @@
                                     <div class="d-flex justify-content-end">
                                         <input type="hidden" name="bankCode" value="" />
                                         <input type="hidden" name="language" value="vn" />
-                                        <input type="hidden" name="totalBill" value="${order.totalAmount - order.discountAmount}" />
+                                        <input type="hidden" name="totalBill" value="${order.finalAmount}" />
 
                                         <button type="submit" class="btn btn-success btn-lg">
                                             <i class="fas fa-check me-2"></i>Payment Confirmation

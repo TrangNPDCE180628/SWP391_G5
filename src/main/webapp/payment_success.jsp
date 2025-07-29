@@ -107,15 +107,16 @@
 
                                         <!-- Orders (moved below Cart) -->
                                         <li class="nav-item">
-                                            <a class="nav-link" href="OrderController?action=view">
+                                            <a class="nav-link" href="OrderHistoryController">
                                                 My Orders
                                             </a>
                                         </li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="MainController?action=Logout">Logout</a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                     </ul>
                                 </li>
                             </c:when>
@@ -168,7 +169,8 @@
                     </div>
                     <h4 class="fw-bold mb-3">Thank you for your order!</h4>
                     <p class="text-muted mb-4">You will receive updates in the notification section of your inbox.</p>
-                    <a href="OrderController?action=view" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
+                    <a href="OrderHistoryController" class="btn btn-light border px-4 py-2 fw-medium">View My Orders</a>
+                    <a href="HomeController" class="btn btn-light border px-4 py-2 fw-medium">Continue Shopping</a>
                 </div>
             </div>
 

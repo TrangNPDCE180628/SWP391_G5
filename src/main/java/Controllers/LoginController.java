@@ -7,6 +7,7 @@ import DAOs.StaffDAO;
 import Models.Admin;
 import Models.Staff;
 import Models.Customer;
+import Ultis.MD5Util;
 
 import Models.User;
 
@@ -44,39 +45,62 @@ public class LoginController extends HttpServlet {
             User loginUser = viewDao.getUserByUsername(username);
 
             if (loginUser != null) {
-                // Check password
-                if (password.equals(loginUser.getPassword())) {
+                // Check password using MD5 hash
+                if (MD5Util.verifyPassword(password, loginUser.getPassword())) {
                     System.out.println("Password correct - Role: " + loginUser.getRole());
 
                     HttpSession session = request.getSession();
                     session.setAttribute("LOGIN_USER", loginUser);
                     session.setAttribute("cusId", loginUser.getId()); // hoặc getCusId() nếu tên khác
 
-                    // Role-based redirection
-                    String role = loginUser.getRole();
-                    if (AD.equals(role) || ST.equals(role)) {
-                        url = ADMIN_PAGE;
-                    } else if (CS.equals(role)) {
-                        url = CUSTOMER_PAGE;
+                    // Check if there's a redirect URL stored
+                    String redirectURL = (String) session.getAttribute("REDIRECT_URL");
+                    System.out.println("Redirect URL from session: " + redirectURL);
+
+                    if (redirectURL != null && !redirectURL.isEmpty()) {
+                        // Remove the redirect URL from session
+                        session.removeAttribute("REDIRECT_URL");
+                        System.out.println("Redirecting to original URL: " + redirectURL);
+                        // Redirect to original URL (full URL) - FIX: don't use sendRedirect in finally block
+                        response.sendRedirect(redirectURL);
+                        return; // Important: return here to avoid further processing
                     } else {
-                        request.setAttribute("ERROR", "Your role is not supported!");
-                        url = ERROR;
+                        // Role-based redirection
+                        String role = loginUser.getRole();
+                        if (AD.equals(role) || ST.equals(role)) {
+                            response.sendRedirect(ADMIN_PAGE);
+                            return;
+                        } else if (CS.equals(role)) {
+                            response.sendRedirect(CUSTOMER_PAGE);
+                            return;
+                        } else {
+                            request.setAttribute("ERROR", "Your role is not supported!");
+                            url = ERROR;
+                        }
                     }
                 } else {
                     System.out.println("Password incorrect");
                     request.setAttribute("ERROR", "Incorrect username or password");
+                    url = ERROR;
                 }
             } else {
                 System.out.println("User not found");
                 request.setAttribute("ERROR", "Incorrect username or password");
+                url = ERROR;
             }
         } catch (Exception e) {
             log("Error at LoginController: " + e.toString());
             request.setAttribute("ERROR", "An error occurred during login. Please try again.");
+            url = ERROR;
         } finally {
-            // Chuyển hướng lại trang theo kết quả xử lý
-
-            response.sendRedirect(url);
+            // Only forward if we haven't already redirected and url is set
+            if (!response.isCommitted() && url != null && !url.isEmpty()) {
+                try {
+                    request.getRequestDispatcher(url).forward(request, response);
+                } catch (Exception e) {
+                    log("Error forwarding: " + e.toString());
+                }
+            }
         }
     }
 

@@ -5,6 +5,7 @@ import DAOs.StockDAO;
 import DAOs.ProductDAO;
 import DAOs.VoucherDAO;
 import Models.Product;
+import Models.User;
 import Models.ViewCartCustomer;
 import Models.Voucher;
 
@@ -18,19 +19,32 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @WebServlet(name = "CartController", urlPatterns = {"/CartController"})
-public class CartController extends HttpServlet {
+public class CartController extends BaseController {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         String action = request.getParameter("action");
-        HttpSession session = request.getSession(false);
-        String cusId = (session != null) ? (String) session.getAttribute("cusId") : null;
 
-        if (cusId == null) {
-            session = request.getSession(); // tạo session nếu chưa có
-            session.setAttribute("LOGIN_MESSAGE", "You must login to access your cart.");
-            response.sendRedirect("login.jsp");
+        // Check authentication manually first
+        HttpSession session = request.getSession(false);
+        User loginUser = null;
+        if (session != null) {
+            loginUser = (User) session.getAttribute("LOGIN_USER");
+        }
+        // If not authenticated, store current URL and redirect to login
+        if (loginUser == null) {
+            String originalURL = request.getRequestURI();
+            String queryString = request.getQueryString();
+            if (queryString != null) {
+                originalURL += "?" + queryString;
+            }
+
+            // Create session to store redirect URL
+            session = request.getSession(true);
+            session.setAttribute("REDIRECT_URL", originalURL);
+
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
 
@@ -119,16 +133,34 @@ public class CartController extends HttpServlet {
 
     private void addToCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        HttpSession session = request.getSession();
+        
         String productId = request.getParameter("productId");
-        String cusId = (String) session.getAttribute("cusId");
+        String cusId ="";
 
-        try {
-            if (cusId == null) {
-                session.setAttribute("error", "You need to login to add products to cart!");
-                response.sendRedirect("login.jsp");
-                return;
+         // Check authentication manually first
+        HttpSession session = request.getSession(false);
+        User loginUser = null;
+        if (session != null) {
+            loginUser = (User) session.getAttribute("LOGIN_USER");
+            cusId = loginUser.getId();
+        }
+        // If not authenticated, store current URL and redirect to login
+        if (loginUser == null) {
+            String originalURL = request.getRequestURI();
+            String queryString = request.getQueryString();
+            if (queryString != null) {
+                originalURL += "?" + queryString;
             }
+
+            // Create session to store redirect URL
+            session = request.getSession(true);
+            session.setAttribute("REDIRECT_URL", originalURL);
+
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
+        }
+        try {
+            
 
             ProductDAO productDAO = new ProductDAO();
             StockDAO stockDAO = new StockDAO();

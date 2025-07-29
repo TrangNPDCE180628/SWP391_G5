@@ -14,7 +14,7 @@ public class EmailUtility {
         
         // Cấu hình thông tin SMTP  
         final String fromEmail = "DuanNTCE171842@fpt.edu.vn";           // Gmail của bạn
-        final String appPassword = "xfkw oghu hdkq cjuk";            // App password (bắt buộc dùng khi bật 2FA)
+        final String appPassword = "cdau yofi twhl hmee";            // App password (bắt buộc dùng khi bật 2FA)
 
         Properties props = new Properties();
         props.put("mail.smtp.host", "smtp.gmail.com");         

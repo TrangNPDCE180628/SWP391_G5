@@ -8,8 +8,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Tech Store - Your Ultimate Tech Destination</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
- 
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
         <style>
             body {
                 background-color: #f8f9fa;
@@ -34,30 +34,35 @@
                 margin-bottom: 40px;
             }
             .product-card {
-                background: white;
+                display: flex;
+                flex-direction: column;
+                background: #fff;
                 border-radius: 10px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                transition: transform 0.3s;
-                margin-bottom: 20px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+                overflow: hidden;
                 height: 100%;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
             }
+
             .product-card:hover {
                 transform: translateY(-5px);
-                box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                box-shadow: 0 8px 16px rgba(0,0,0,0.12);
             }
+
             .product-image {
-                height: 200px;
-                object-fit: contain;
-                border-radius: 10px 10px 0 0;
                 width: 100%;
-                padding: 10px;
-                background-color: #f8f9fa;
+                height: 200px;
+                object-fit: cover;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+                display: block;
             }
+
             .product-info {
                 padding: 15px;
                 display: flex;
                 flex-direction: column;
-                height: calc(100% - 200px);
+                flex-grow: 1;
             }
             .product-title {
                 font-weight: 600;
@@ -181,7 +186,7 @@
                     <ul class="navbar-nav ms-auto">
                         <!-- Cart icon (moved up) -->
                         <li class="nav-item">
-                            <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
+                            <a class="nav-link position-relative" href="CartController?action=view" title="View Cart">
                                 <i class="fas fa-shopping-cart fa-lg"></i>
                                 <c:if test="${sessionScope.cartSize > 0}">
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -201,18 +206,13 @@
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a class="dropdown-item" href="ProfileCustomerController">Profile</a></li>
-
-                                        <!-- Orders (moved below Cart) -->
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="OrderController?action=view">
-                                                My Orders
-                                            </a>
-                                        </li>
-                                        <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                        <li><a class="dropdown-item" href="OrderHistoryController">My Orders</a></li>
+                                            <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                             <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                             </c:if>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="MainController?action=Logout">Logout</a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                     </ul>
                                 </li>
                             </c:when>
@@ -271,7 +271,7 @@
             </div>
 
             <!-- Products Grid -->
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 align-items-stretch">
                 <c:forEach items="${products}" var="product">
                     <div class="col">
                         <div class="product-card position-relative">
@@ -284,13 +284,14 @@
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <!-- [UPDATED]: Fixed price display to remove .00 for whole numbers -->
                                         <span class="product-price">
-                                            <fmt:formatNumber value="${product.proPrice}" type="currency" currencySymbol="$" maxFractionDigits="${product.proPrice % 1 == 0 ? 0 : 2}"/>
+                                            <fmt:formatNumber value="${product.proPrice}" type="number" maxFractionDigits="0"/>
+                                            <span>₫</span>
                                         </span>
                                     </div>
                                 </div>
                             </a>
                             <!-- [END UPDATED] -->
-                            <form action="CartController" method="POST">
+                            <form action="CartController" method="GET">
                                 <input type="hidden" name="action" value="add">
                                 <input type="hidden" name="productId" value="${product.proId}">
                                 <button type="submit" class="btn btn-add-cart">

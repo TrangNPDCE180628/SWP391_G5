@@ -73,7 +73,7 @@
                         <ul class="navbar-nav ms-auto">
                             <!-- Cart icon (moved up) -->
                             <li class="nav-item">
-                                <a class="nav-link position-relative" href="CartController?action=view" title="Xem giỏ hàng">
+                                <a class="nav-link position-relative" href="CartController?action=view" title="View Cart">
                                     <i class="fas fa-shopping-cart fa-lg"></i>
                                     <c:if test="${sessionScope.cartTotalQuantity > 0}">
                                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -93,18 +93,13 @@
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             <li><a class="dropdown-item" href="ProfileCustomerController">Profile</a></li>
-
-                                            <!-- Orders (moved below Cart) -->
-                                            <li class="nav-item">
-                                                <a class="nav-link" href="OrderController?action=view">
-                                                    My Orders
-                                                </a>
-                                            </li>
-                                            <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin'}">
+                                            <li><a class="dropdown-item" href="OrderHistoryController">My Orders</a></li>
+                                                <c:if test="${sessionScope.LOGIN_USER.role eq 'Admin' or sessionScope.LOGIN_USER.role eq 'Staff'}">
                                                 <li><a class="dropdown-item" href="AdminController">Admin Panel</a></li>
                                                 </c:if>
                                             <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item" href="MainController?action=Logout">Logout</a></li>
+                                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/LogoutController">
+                                                    <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                                         </ul>
                                     </li>
                                 </c:when>
@@ -138,7 +133,7 @@
                                 <tr>
                                     <th style="width: 5%;">Select</th>
                                     <th style="width: 10%;">Image</th>
-                                    <th style="width: 30%;">Product ame</th>
+                                    <th style="width: 30%;">Product Name</th>
                                     <th style="width: 15%;">Price</th>
                                     <th style="width: 15%;">Quantity</th>
                                     <th style="width: 15%;">Total amount</th>
@@ -152,25 +147,26 @@
                                             <input type="checkbox" name="selectedProductIds" value="${item.key}" />
                                         </td>
                                         <td>
-                                            <img src="${item.value.proImageUrl}" class="product-img rounded" alt="${item.value.proName}">
-                                        </td>
+                                            <img src="images/products/${item.value.proImageUrl}" 
+                                                 class="card-img-top product-img" 
+                                                 alt="${item.value.proName}"> </td>
                                         <td class="text-start">${item.value.proName}</td>
                                         <td>
-                                            <fmt:formatNumber value="${item.value.proPrice}" type="currency" currencySymbol="" /> ₫
+                                            <fmt:formatNumber value="${item.value.proPrice}" type="number" currencySymbol="" /> ₫
                                         </td>
                                         <td>
                                             <div class="d-inline-flex align-items-center">
-                                                <button type="button" class="btn btn-sm btn-outline-secondary update-btn" data-id="${item.key}" data-change="-1" aria-label="Giảm số lượng">−</button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary update-btn" data-id="${item.key}" data-change="-1" aria-label="Decrease quantity">−</button>
                                                 <input type="text" readonly class="form-control form-control-sm mx-2 text-center" 
                                                        style="width: 100px; user-select:none;" value="${item.value.quantity}" />
-                                                <button type="button" class="btn btn-sm btn-outline-secondary update-btn" data-id="${item.key}" data-change="1" aria-label="Tăng số lượng">+</button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary update-btn" data-id="${item.key}" data-change="1" aria-label="Increase quantity">+</button>
                                             </div>
                                         </td>
                                         <td>
-                                            <fmt:formatNumber value="${item.value.proPrice * item.value.quantity}" type="currency" currencySymbol="" /> ₫
+                                            <fmt:formatNumber value="${item.value.proPrice * item.value.quantity}" type="number" currencySymbol="" /> ₫
                                         </td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="${item.key}" title="Xóa sản phẩm">
+                                            <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="${item.key}" title="Remove product">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </td>
@@ -191,11 +187,13 @@
                             <div class="text-end">
                                 <div><strong>Subtotal:</strong> <span id="subtotal">₫0</span></div>
                                 <div><strong>Discount:</strong> <span id="discount">₫0</span></div>
+                                <div><strong>Shipping Fee:</strong> <span id="shippingFee">30000₫</span></div>
                                 <div><strong>Total (selected):</strong> <span id="selectedTotal">₫0</span></div>
                                 <button type="submit" class="btn btn-danger ms-3">
                                     Checkout <i class="fas fa-arrow-right"></i>
                                 </button>
                             </div>
+
                         </div>
                     </form>
                 </c:if>
@@ -226,13 +224,13 @@
                                                     <c:choose>
                                                         <c:when test="${voucher.discountType == 'percentage'}">${voucher.discountValue}%</c:when>
                                                         <c:otherwise>
-                                                            <fmt:formatNumber value="${voucher.discountValue}" type="currency" currencySymbol="" /> ₫
+                                                            <fmt:formatNumber value="${voucher.discountValue}" type="number" currencySymbol="" /> ₫
                                                         </c:otherwise>
                                                     </c:choose><br>
                                                     Minimum order:
-                                                    <fmt:formatNumber value="${voucher.minOrderAmount}" type="currency" currencySymbol="" /> ₫<br>
+                                                    <fmt:formatNumber value="${voucher.minOrderAmount}" type="number" currencySymbol="" /> ₫<br>
                                                     Max Discount Value: 
-                                                    <fmt:formatNumber value="${voucher.maxDiscountValue}" type="currency" currencySymbol=""/> ₫
+                                                    <fmt:formatNumber value="${voucher.maxDiscountValue}" type="number" currencySymbol=""/> ₫
                                                     <br>
                                                     <span style="color:#ed7b2f;">
                                                         End Date: 
@@ -372,32 +370,41 @@
                 const cartForm = document.getElementById('cartForm');
                 let voucher = null;
                 const currencyFormatter = new Intl.NumberFormat('vi-VN');
-                const formatCurrency = (number) => currencyFormatter.format(number) + " ₫";
+                const formatCurrency = (number) => {
+                    return new Intl.NumberFormat('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND',
+                        minimumFractionDigits: 0, // bỏ phần lẻ .00
+                    }).format(number);
+                };
                 const updateTotal = () => {
                     let subtotal = 0;
                     checkboxes.forEach(cb => {
                         if (cb.checked) {
                             const row = cb.closest("tr");
                             const priceText = row.querySelector("td:nth-child(6)").textContent.trim();
-                            const price = parseInt(priceText.replace(/\D/g, ''));
+                            const cleanNumber = priceText.replace(/[^\d]/g, '');
+                            const price = cleanNumber ? parseInt(cleanNumber, 10) : 0;
                             subtotal += price;
                         }
                     });
+
                     let discount = 0;
                     if (voucher && subtotal >= voucher.minOrder) {
                         discount = voucher.type === "percentage"
                                 ? subtotal * voucher.value / 100
                                 : voucher.value;
                         if (voucher.maxDiscountValue && voucher.maxDiscountValue > 0 && discount >= voucher.maxDiscountValue) {
-
                             discount = voucher.maxDiscountValue;
                         }
                     }
 
+                    const shippingFee = 30000;
                     subtotalEl.textContent = formatCurrency(subtotal);
                     discountEl.textContent = formatCurrency(discount);
-                    selectedTotal.textContent = formatCurrency(subtotal - discount);
+                    selectedTotal.textContent = formatCurrency(subtotal - discount + shippingFee);
                 };
+
                 checkboxes.forEach(cb => cb.addEventListener("change", updateTotal));
                 updateTotal();
                 document.querySelectorAll(".select-voucher-btn").forEach(btn => {
@@ -449,9 +456,9 @@
                 });
 
                 cartForm.addEventListener("submit", (e) => {
-                    const submitter = e.submitter; // <-- Lấy nút đã nhấn
+                    const submitter = e.submitter;
                     if (!submitter || !submitter.innerText.includes("Checkout")) {
-                        return; // nếu không phải nút Checkout thì bỏ qua
+                        return;
                     }
 
                     const checkedBoxes = document.querySelectorAll('input[name="selectedProductIds"]:checked');
@@ -463,6 +470,7 @@
 
                     cartForm.querySelectorAll("input[name='selectedProductIds']").forEach(el => el.remove());
                     cartForm.querySelectorAll("input[name='voucherCode']").forEach(el => el.remove());
+
                     checkedBoxes.forEach(cb => {
                         const hidden = document.createElement("input");
                         hidden.type = "hidden";
@@ -470,6 +478,7 @@
                         hidden.value = cb.value;
                         cartForm.appendChild(hidden);
                     });
+
                     if (voucher) {
                         const hiddenVoucher = document.createElement("input");
                         hiddenVoucher.type = "hidden";
@@ -478,8 +487,15 @@
                         cartForm.appendChild(hiddenVoucher);
                     }
 
-                    // Form will submit automatically after this
+                    const hiddenShipping = document.createElement("input");
+                    hiddenShipping.type = "hidden";
+                    hiddenShipping.name = "shippingFee";
+                    hiddenShipping.value = 30000;
+                    cartForm.appendChild(hiddenShipping);
+
+                    // Form sẽ submit sau đó
                 });
+
             });
             document.querySelectorAll(".delete-btn").forEach(btn => {
                 btn.addEventListener("click", () => {

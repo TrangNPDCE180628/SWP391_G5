@@ -21,7 +21,7 @@ public class CustomerDAO {
             stmt.setString(1, customer.getCusId());
             stmt.setString(2, customer.getUsername());
             stmt.setString(3, customer.getCusPassword());
-            stmt.setString(4, customer.getFullName());
+            stmt.setString(4, customer.getCusFullName()); // Use getCusFullName() method
             stmt.setString(5, customer.getCusGender());
             stmt.setString(6, customer.getCusImage());
             stmt.setString(7, customer.getCusGmail());
@@ -86,7 +86,7 @@ public class CustomerDAO {
 
             stmt.setString(1, customer.getUsername());
             stmt.setString(2, customer.getCusPassword());
-            stmt.setString(3, customer.getFullName());
+            stmt.setString(3, customer.getCusFullName()); // Use getCusFullName() method
             stmt.setString(4, customer.getCusGender());
             stmt.setString(5, customer.getCusImage());
             stmt.setString(6, customer.getCusGmail());
@@ -96,13 +96,11 @@ public class CustomerDAO {
             stmt.executeUpdate();
         }
     }
-    
+
     //Update password customer
-    
-    public boolean updatePassword(String email, String newPassword) throws SQLException,ClassNotFoundException {
+    public boolean updatePassword(String email, String newPassword) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE Customer SET cusPassword = ? WHERE cusGmail = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newPassword);
             ps.setString(2, email);
             return ps.executeUpdate() > 0;
@@ -132,22 +130,51 @@ public class CustomerDAO {
     }
 
     public String generateNextCusId() throws SQLException, ClassNotFoundException {
-        String sql = "SELECT TOP 1 cusId FROM Customer ORDER BY cusId DESC";
-        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql);  ResultSet rs = stmt.executeQuery()) {
-
-            if (rs.next()) {
-                String lastId = rs.getString("cusId"); // VD: "C0012"
-                try {
-                    int num = Integer.parseInt(lastId.substring(1)); // Bỏ ký tự 'C' và parse số
-                    return String.format("C%04d", num + 1); // VD: "C0013"
-                } catch (NumberFormatException e) {
-                    // Trường hợp chuỗi không đúng định dạng
-                    throw new SQLException("Invalid cusId format: " + lastId);
+        // Sử dụng UUID để đảm bảo tính duy nhất
+        String uuid = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        String cusId = "C" + uuid.toUpperCase();
+        
+        // Kiểm tra xem ID đã tồn tại chưa (rất hiếm khi xảy ra với UUID)
+        String checkSql = "SELECT COUNT(*) FROM Customer WHERE cusId = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(checkSql)) {
+            
+            stmt.setString(1, cusId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    // Nếu trùng (rất hiếm), tạo ID mới
+                    uuid = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+                    cusId = "C" + uuid.toUpperCase();
                 }
-            } else {
-                return "C0001"; // Nếu chưa có dữ liệu nào
             }
         }
+        
+        System.out.println("Generated Customer ID: " + cusId);
+        return cusId;
+    }
 
+    public String getCusNameById(String cusId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT cusFullName FROM Customer WHERE cusId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, cusId);
+            try ( ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("cusFullName");
+                }
+            }
+        }
+        return null; // Not found
+    }
+
+    public boolean checkEmailExists(String email) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT 1 FROM Customer WHERE cusGmail = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, email);
+            try ( ResultSet rs = stmt.executeQuery()) {
+                return rs.next(); // Return true if email exists
+            }
+        }
     }
 }
