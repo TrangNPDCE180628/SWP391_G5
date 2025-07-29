@@ -637,7 +637,7 @@ public class OrderDAO {
     }
 
     /**
-     * Get yearly revenue statistics (last 5 years)
+     * Get yearly revenue statistics ordered from earliest to latest year
      */
     public Map<String, BigDecimal> getYearlyRevenue() throws SQLException, ClassNotFoundException {
         Map<String, BigDecimal> yearlyRevenueMap = new LinkedHashMap<>();
@@ -646,7 +646,7 @@ public class OrderDAO {
                 + "FROM [Order] "
                 + "WHERE orderStatus = 'Completed' "
                 + "GROUP BY YEAR(orderDate) "
-                + "ORDER BY year DESC";
+                + "ORDER BY year ASC";
 
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -684,10 +684,11 @@ public class OrderDAO {
 
     /**
      * Get yearly growth rate compared to previous year
+     * Returns data ordered from earliest year to latest year
      */
     public Map<String, Double> getYearlyGrowthRate() throws SQLException, ClassNotFoundException {
         Map<String, Double> growthRateMap = new LinkedHashMap<>();
-        Map<String, BigDecimal> yearlyRevenue = getYearlyRevenue();
+        Map<String, BigDecimal> yearlyRevenue = getYearlyRevenue(); // Already ordered ASC by year
 
         BigDecimal previousRevenue = null;
         for (Map.Entry<String, BigDecimal> entry : yearlyRevenue.entrySet()) {
@@ -695,12 +696,13 @@ public class OrderDAO {
             BigDecimal currentRevenue = entry.getValue();
 
             if (previousRevenue != null && previousRevenue.compareTo(BigDecimal.ZERO) > 0) {
-                // Calculate growth rate: (current - previous) / previous * 100
+                // Calculate growth rate: (current year - previous year) / previous year * 100
                 BigDecimal growth = currentRevenue.subtract(previousRevenue)
                         .divide(previousRevenue, 4, BigDecimal.ROUND_HALF_UP)
                         .multiply(new BigDecimal("100"));
                 growthRateMap.put(year, growth.doubleValue());
             } else {
+                // First year or previous year was 0, set growth to 0
                 growthRateMap.put(year, 0.0);
             }
             previousRevenue = currentRevenue;

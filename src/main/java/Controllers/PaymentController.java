@@ -20,6 +20,8 @@ public class PaymentController extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
         try {
             String action = request.getParameter("action");
             if (action == null) {
@@ -50,6 +52,8 @@ public class PaymentController extends HttpServlet {
 
     private void createOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException, ClassNotFoundException {
+        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
 
         HttpSession session = request.getSession(false);
         int orderId = -1;

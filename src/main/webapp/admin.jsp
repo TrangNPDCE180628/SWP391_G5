@@ -62,24 +62,27 @@
                                     <i class="fa-solid fa-box me-2"></i>Product
                                 </a>
                             </li>
-
-                            <li class="nav-item">
-                                <a href="#productTypes" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-list-alt me-2"></i>Product Types
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fa-solid fa-ticket me-2"></i>Voucher
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#attributes" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fas fa-list me-2"></i>Attributes
-                                </a>
-                            </li>
-
+                            <c:if test="${LOGIN_USER.role == 'Admin'}">
+                                <li class="nav-item">
+                                    <a href="#productTypes" class="nav-link" data-bs-toggle="tab">
+                                        <i class="fas fa-list-alt me-2"></i>Product Types
+                                    </a>
+                                </li>
+                            </c:if>
+                            <c:if test="${LOGIN_USER.role == 'Admin'}">
+                                <li class="nav-item">
+                                    <a href="#vouchers" class="nav-link" data-bs-toggle="tab">
+                                        <i class="fa-solid fa-ticket me-2"></i>Voucher
+                                    </a>
+                                </li>
+                            </c:if>
+                            <c:if test="${LOGIN_USER.role == 'Admin'}">
+                                <li class="nav-item">
+                                    <a href="#attributes" class="nav-link" data-bs-toggle="tab">
+                                        <i class="fas fa-list me-2"></i>Attributes
+                                    </a>
+                                </li>
+                            </c:if>
                             <li class="nav-item">
                                 <a href="#feedbacks" class="nav-link" data-bs-toggle="tab">
                                     <i class="fa-solid fa-ticket me-2"></i>FeedBack Manage
@@ -93,7 +96,7 @@
                             </li>
                             <li class="nav-item">
                                 <a href="#inventory" class="nav-link" data-bs-toggle="tab">
-                                    <i class="fa-solid fa-ticket me-2"></i>Manage Inventory
+                                    <i class="fa-solid fa-ticket me-2"></i>Manage Product Quantity
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -162,7 +165,7 @@
                                                     <td>${staff.staffName}</td>
                                                     <td>${staff.staffFullName}</td>
                                                     <td>
-                                                        <img src="${pageContext.request.contextPath}/images/staff/${staff.staffImage}" 
+                                                        <img src="${pageContext.request.contextPath}/images/${staff.staffImage}" 
                                                              alt="Staff Image" width="80" height="100">
                                                     </td>
                                                     <td class="action-buttons">
@@ -322,7 +325,7 @@
                                                 <td>${product.proName}</td>
                                                 <td>${typeMap[product.proTypeId]}</td>
                                                 <td>${product.proDescription}</td>
-                                                <td>${product.proPrice}Đ</td>
+                                                <td> <fmt:formatNumber value="${product.proPrice}" maxFractionDigits="2" minFractionDigits="0"/> Đ</td>
                                                 <td>
                                                     <img src="${pageContext.request.contextPath}/images/products/${product.proImageMain}" alt="Product Image" width="80" height="80">
                                                 </td>
@@ -935,7 +938,7 @@
                 <form action="AdminController" method="post" class="modal-content">
                     <input type="hidden" name="action" value="updateProductType">
                     <input type="hidden" name="tab" value="productTypes">
-                    <input type="hidden" name="proTypeId" id="editProTypeId">
+                    <input type="hidden" name="proTypeId" id="editTypeId">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editProductTypeModalLabel">Edit Product Type</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -953,6 +956,7 @@
                 </form>
             </div>
         </div>
+
 
         <!-- Add Staff Modal -->
         <div class="modal fade" id="addStaffModal" tabindex="-1">

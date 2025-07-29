@@ -124,7 +124,7 @@ public class VnpayReturn extends HttpServlet {
 
                     transSuccess = true;
                 } else {
-                    order.setOrderStatus("Failed");
+                    order.setOrderStatus("cancel");
                 }
 
                 orderDao.updateStatus(order);

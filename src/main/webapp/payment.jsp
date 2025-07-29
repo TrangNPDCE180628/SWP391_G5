@@ -168,14 +168,14 @@
                                     </div>
                                     <div class="col-md-6">
                                         <p><strong>Total:</strong>
-                                            <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol=""/> ₫
+                                            <fmt:formatNumber value="${order.totalAmount}" type="number" currencySymbol=""/> ₫
                                         </p>
                                         <p><strong>Discount:</strong>
-                                            <fmt:formatNumber value="${order.discountAmount}" type="currency" currencySymbol=""/> ₫
+                                            <fmt:formatNumber value="${order.discountAmount}" type="number" currencySymbol=""/> ₫
                                         </p>
                                         <p><strong>Total amount:</strong>
                                             <span class="final-amount">
-                                                <fmt:formatNumber value="${order.finalAmount}" type="currency" currencySymbol=""/> ₫
+                                                <fmt:formatNumber value="${order.finalAmount}" type="number" currencySymbol=""/> ₫
                                             </span>
                                         </p>
                                     </div>
@@ -258,17 +258,17 @@
                                             <h6 class="card-title">Order Summary</h6>
                                             <div class="d-flex justify-content-between mb-2">
                                                 <span>Total cost of goods:</span>
-                                                <span><fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol=""/> ₫</span>
+                                                <span><fmt:formatNumber value="${order.totalAmount}" type="number" currencySymbol=""/> ₫</span>
                                             </div>
                                             <div class="d-flex justify-content-between mb-2">
                                                 <span>Discount:</span>
-                                                <span class="text-success">-<fmt:formatNumber value="${order.discountAmount}" type="currency" currencySymbol=""/> ₫</span>
+                                                <span class="text-success">-<fmt:formatNumber value="${order.discountAmount}" type="number" currencySymbol=""/> ₫</span>
                                             </div>
                                             <hr>
                                             <div class="d-flex justify-content-between">
                                                 <strong>Total:</strong>
                                                 <strong class="text-danger">
-                                                    <fmt:formatNumber value="${order.finalAmount}" type="currency" currencySymbol=""/> ₫
+                                                    <fmt:formatNumber value="${order.finalAmount}" type="number" currencySymbol=""/> ₫
                                                 </strong>
 
                                             </div>

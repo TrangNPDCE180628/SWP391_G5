@@ -81,14 +81,14 @@ public class AdminController extends BaseController {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
-        
+
         // Check authentication manually first
         HttpSession session = request.getSession(false);
         User loginUser = null;
         if (session != null) {
             loginUser = (User) session.getAttribute("LOGIN_USER");
         }
-        
+
         // If not authenticated, store current URL and redirect to login
         if (loginUser == null) {
             String originalURL = request.getRequestURI();
@@ -96,22 +96,22 @@ public class AdminController extends BaseController {
             if (queryString != null) {
                 originalURL += "?" + queryString;
             }
-            
+
             // Create session to store redirect URL
             session = request.getSession(true);
             session.setAttribute("REDIRECT_URL", originalURL);
-            
+
             response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
-        
+
         // Check if user has admin/staff role
         String role = loginUser.getRole();
         if (!"Admin".equals(role) && !"Staff".equals(role)) {
             response.sendRedirect(request.getContextPath() + "/HomeController?error=access_denied");
             return;
         }
-        
+
         String action = request.getParameter("action");
 
         try {
@@ -238,6 +238,15 @@ public class AdminController extends BaseController {
                 case "filterAttribute":
                     filterAttribute(request, response);
                     return;
+                case "addProductType":
+                    addProductType(request, response);
+                    break;
+                case "updateProductType":
+                    updateProductType(request, response);
+                    break;
+                case "deleteProductType":
+                    deleteProductType(request, response);
+                    break;
                 default:
                     loadAdminPage(request, response);
                     return;
@@ -264,7 +273,7 @@ public class AdminController extends BaseController {
             if (revenueSession.getAttribute("yearlyRevenueMap") != null) {
                 request.setAttribute("yearlyRevenueMap", revenueSession.getAttribute("yearlyRevenueMap"));
                 request.setAttribute("yearlyGrowthRateMap", revenueSession.getAttribute("yearlyGrowthRateMap"));
-                
+
                 // Move specific year data if available
                 if (revenueSession.getAttribute("selectedYear") != null) {
                     request.setAttribute("selectedYear", revenueSession.getAttribute("selectedYear"));
@@ -274,7 +283,7 @@ public class AdminController extends BaseController {
                     request.setAttribute("productRevenueList", revenueSession.getAttribute("productRevenueList"));
                     request.setAttribute("revenueYear", revenueSession.getAttribute("revenueYear"));
                 }
-                
+
                 // Clear session after moving to request
                 revenueSession.removeAttribute("yearlyRevenueMap");
                 revenueSession.removeAttribute("yearlyGrowthRateMap");
@@ -304,21 +313,20 @@ public class AdminController extends BaseController {
             List<FeedbackReplyView> viewFeedbacks = viewfeedbackDAO.getAllFeedbackReplies();
             List<Attribute> attributes = attributeDAO.getAll();
             List<ProductAttribute> productAttributes = paDAO.getAll();
-            
-           
+
             // Add: Load all products for product tab
             ProductDAO productDAO = new ProductDAO();
             List<Product> products = productDAO.getAllProducts();
-            
+
             ProductTypeDAO typeDAO = new ProductTypeDAO();
             List<ProductTypes> types = typeDAO.getAllProductTypes();
-            
+
             // Create a map for type ID to type name lookup
             Map<Integer, String> typeMap = new HashMap<>();
             for (ProductTypes type : types) {
                 typeMap.put(type.getId(), type.getName());
             }
-            
+
             BigDecimal totalRevenue = ordDao.getTotalRevenue();
 
             // 2. Load ViewProductAttributes
@@ -339,12 +347,12 @@ public class AdminController extends BaseController {
             request.setAttribute("types", types);
             request.setAttribute("typeMap", typeMap); // Add typeMap for lookup
             request.setAttribute("productTypes", types); // For backward compatibility
-             request.setAttribute("prds", products);
+            request.setAttribute("prds", products);
 
             StockDAO dao = new StockDAO();
             List<Map<String, Object>> productStockList = dao.getAllProductStockData();
             request.setAttribute("productStockList", productStockList);
-            
+
             List<String> noStockProIds = stockDAO.getProductsWithoutStock();
             request.setAttribute("noStockProIds", noStockProIds);
 
@@ -359,11 +367,11 @@ public class AdminController extends BaseController {
             Map<String, BigDecimal> monthlyRevenue = ordDao.getMonthlyRevenueInYear(currentYear);
             Map<String, Double> monthlyGrowthRate = ordDao.getMonthlyRevenueGrowthRate(currentYear);
             List<Map<String, Object>> productRevenue = ordDao.getProductRevenue(currentYear);
-            
+
             // Load yearly data
             Map<String, BigDecimal> yearlyRevenue = ordDao.getYearlyRevenue();
             Map<String, Double> yearlyGrowthRate = ordDao.getYearlyGrowthRate();
-            
+
             request.setAttribute("monthlyRevenueMap", monthlyRevenue);
             request.setAttribute("monthlyGrowthRateMap", monthlyGrowthRate);
             request.setAttribute("productRevenueList", productRevenue);
@@ -647,8 +655,6 @@ public class AdminController extends BaseController {
         }
     }
 
-    
-
     // Helper classes for JSON response
     private static class OrderDetailsResponse {
 
@@ -714,7 +720,7 @@ public class AdminController extends BaseController {
             new ProductAttributeDAO().create(new ProductAttribute(proId, attributeId, value));
             response.sendRedirect("AdminController?tab=productAttributes");
         } catch (Exception e) {
-            throw new ServletException(e);  
+            throw new ServletException(e);
         }
     }
 
@@ -1051,15 +1057,15 @@ public class AdminController extends BaseController {
 
             if (yearParam != null && !yearParam.isEmpty()) {
                 selectedYear = Integer.parseInt(yearParam);
-                
+
                 // Get specific year revenue
                 yearlyRevenue = orderDAO.getRevenueByYear(selectedYear);
-                
+
                 // Get monthly data for selected year
                 monthlyRevenue = orderDAO.getMonthlyRevenueInYear(selectedYear);
                 monthlyGrowthRate = orderDAO.getMonthlyRevenueGrowthRate(selectedYear);
                 productRevenue = orderDAO.getProductRevenue(selectedYear);
-                
+
                 request.setAttribute("selectedYear", yearParam);
                 request.setAttribute("yearlyRevenue", yearlyRevenue);
                 request.setAttribute("monthlyRevenueMap", monthlyRevenue);
@@ -1071,12 +1077,12 @@ public class AdminController extends BaseController {
             // Get yearly revenue for all years (for year selector)
             Map<String, BigDecimal> allYearlyRevenue = orderDAO.getYearlyRevenue();
             Map<String, Double> yearlyGrowthRate = orderDAO.getYearlyGrowthRate();
-            
+
             // Store data in session to persist through redirect
             HttpSession session = request.getSession();
             session.setAttribute("yearlyRevenueMap", allYearlyRevenue);
             session.setAttribute("yearlyGrowthRateMap", yearlyGrowthRate);
-            
+
             // Also store specific year data if available
             if (yearParam != null && !yearParam.isEmpty()) {
                 session.setAttribute("selectedYear", yearParam);
@@ -1086,7 +1092,7 @@ public class AdminController extends BaseController {
                 session.setAttribute("productRevenueList", productRevenue);
                 session.setAttribute("revenueYear", selectedYear);
             }
-            
+
             // Redirect to admin page with revenue tab active
             response.sendRedirect("AdminController?tab=revenue");
         } catch (Exception e) {
@@ -1094,7 +1100,7 @@ public class AdminController extends BaseController {
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
-    
+
     private void addProductType(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -1191,7 +1197,7 @@ public class AdminController extends BaseController {
             throw new ServletException("Error deleting product type: " + e.getMessage());
         }
     }
-    
+
     // Levenshtein distance for minor spelling change detection
     private int getLevenshteinDistance(String s1, String s2) {
         int len1 = s1.length();
@@ -1225,35 +1231,35 @@ public class AdminController extends BaseController {
             OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
             ProductDAO productDAO = new ProductDAO();
             VoucherDAO voucherDAO = new VoucherDAO();
-            
+
             // Get order information
             Order order = orderDAO.getOrderById(orderId);
             if (order == null) {
                 response.getWriter().write("<div class='alert alert-danger'>Không tìm thấy đơn hàng</div>");
                 return;
             }
-            
+
             // Get order details with product information
             List<OrderDetail> orderDetails = orderDetailDAO.getOrderDetailByOrderId(orderId);
             List<OrderDetailsController.OrderDetailWithProduct> orderDetailsWithProducts = new ArrayList<>();
-            
+
             for (OrderDetail detail : orderDetails) {
                 try {
                     Product product = productDAO.getById(detail.getProId());
                     OrderDetailsController.OrderDetailWithProduct detailWithProduct = new OrderDetailsController.OrderDetailWithProduct();
                     detailWithProduct.setOrderDetail(detail);
                     detailWithProduct.setProduct(product);
-                    
+
                     // Calculate subtotal for this item
                     double subtotal = detail.getQuantity() * detail.getUnitPrice();
                     detailWithProduct.setSubtotal(subtotal);
-                    
+
                     orderDetailsWithProducts.add(detailWithProduct);
                 } catch (Exception e) {
                     // Continue with other products even if one fails
                 }
             }
-            
+
             // Get voucher information if exists
             Voucher voucher = null;
             if (order.getVoucherId() != null) {
@@ -1263,17 +1269,17 @@ public class AdminController extends BaseController {
                     // Voucher not found, continue without it
                 }
             }
-            
+
             // Calculate totals
             double subtotalAmount = orderDetailsWithProducts.stream()
                     .mapToDouble(OrderDetailsController.OrderDetailWithProduct::getSubtotal)
                     .sum();
-            
-            double discountAmount = order.getDiscountAmount() != null ? 
-                    order.getDiscountAmount().doubleValue() : 0.0;
-            
+
+            double discountAmount = order.getDiscountAmount() != null
+                    ? order.getDiscountAmount().doubleValue() : 0.0;
+
             double finalAmount = subtotalAmount - discountAmount;
-            
+
             // Set attributes for JSP
             request.setAttribute("order", order);
             request.setAttribute("orderDetailsWithProducts", orderDetailsWithProducts);
@@ -1281,7 +1287,7 @@ public class AdminController extends BaseController {
             request.setAttribute("subtotalAmount", subtotalAmount);
             request.setAttribute("discountAmount", discountAmount);
             request.setAttribute("finalAmount", finalAmount);
-            
+
             // Forward to the admin order details JSP
             request.getRequestDispatcher("admin-order-details.jsp").forward(request, response);
 
@@ -1328,7 +1334,7 @@ public class AdminController extends BaseController {
             SimpleDateFormat dateOnlyFormat = new SimpleDateFormat("yyyy-MM-dd");
             java.util.Date startDate = new java.sql.Date(dateOnlyFormat.parse(startDateStr).getTime());
             java.util.Date endDate = new java.sql.Date(dateOnlyFormat.parse(endDateStr).getTime());
-            
+
             System.out.println(startDate + " " + endDate);
             // Validate: startDate must not be after endDate
             if (startDate.after(endDate)) {
@@ -1340,7 +1346,7 @@ public class AdminController extends BaseController {
 
             // Gọi ExcelUtils với ServletContext và log file path
             ServletContext context = request.getServletContext();
-            
+
             String logFilePath = context.getRealPath("/logs/inventory_log.txt");
             System.out.println(logFilePath);
             File excelFile = ExcelUtils.generateInventoryReport(context, startDate, endDate, logFilePath);
@@ -1430,7 +1436,7 @@ public class AdminController extends BaseController {
             String proNameToUse = (proName != null && !proName.trim().isEmpty()) ? proName : existingProduct.getProName();
             String proDescriptionToUse = (proDescription != null && !proDescription.trim().isEmpty()) ? proDescription : existingProduct.getProDescription();
             int proTypeId = (proTypeIdStr != null && !proTypeIdStr.trim().isEmpty()) ? Integer.parseInt(proTypeIdStr) : existingProduct.getProTypeId();
-            
+
             // Handle price conversion properly
             java.math.BigDecimal proPrice;
             if (proPriceStr != null && !proPriceStr.trim().isEmpty()) {
@@ -1549,18 +1555,18 @@ public class AdminController extends BaseController {
         try {
             String feedbackIdStr = request.getParameter("feedbackId");
             int feedbackId = Integer.parseInt(feedbackIdStr);
-            
+
             FeedbackDAO feedbackDAO = new FeedbackDAO();
-            
+
             // Delete the feedback (assuming database has CASCADE DELETE for replies)
             feedbackDAO.deleteFeedback(feedbackId);
-            
+
             // Set success message
             HttpSession session = request.getSession();
             session.setAttribute("successMessage", "Feedback deleted successfully.");
-            
+
             response.sendRedirect("AdminController?tab=feedbacks");
-            
+
         } catch (Exception e) {
             log("Error deleting feedback: " + e.getMessage());
             if (!response.isCommitted()) {
@@ -1577,26 +1583,26 @@ public class AdminController extends BaseController {
             throws ServletException, IOException {
         try {
             String replyIdStr = request.getParameter("replyId");
-            
+
             if (replyIdStr == null || replyIdStr.trim().isEmpty()) {
                 request.setAttribute("ERROR", "Reply ID is required.");
                 request.getRequestDispatcher("error.jsp").forward(request, response);
                 return;
             }
-            
+
             int replyId = Integer.parseInt(replyIdStr);
-            
+
             ReplyFeedbackDAO replyDAO = new ReplyFeedbackDAO();
-            
+
             // Delete the reply
             replyDAO.deleteReply(replyId);
-            
+
             // Set success message
             HttpSession session = request.getSession();
             session.setAttribute("successMessage", "Reply deleted successfully.");
-            
+
             response.sendRedirect("AdminController?tab=feedbacks");
-            
+
         } catch (Exception e) {
             log("Error deleting reply: " + e.getMessage());
             if (!response.isCommitted()) {
@@ -1613,22 +1619,22 @@ public class AdminController extends BaseController {
             throws ServletException, IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        
+
         String cusId = request.getParameter("cusId");
-        
+
         try {
             CustomerDAO customerDAO = new CustomerDAO();
             OrderDAO orderDAO = new OrderDAO();
-            
+
             // Get customer details
             Customer customer = customerDAO.getCustomerById(cusId);
-            
+
             // Get customer's order history
             List<Order> orders = orderDAO.getOrdersByCustomerId(cusId);
-            
+
             // Create response JSON
             Map<String, Object> responseData = new HashMap<>();
-            
+
             if (customer != null) {
                 responseData.put("success", true);
                 responseData.put("customer", customer);
@@ -1637,22 +1643,22 @@ public class AdminController extends BaseController {
                 responseData.put("success", false);
                 responseData.put("message", "Customer not found");
             }
-            
+
             // Convert to JSON and send response
             Gson gson = new Gson();
             String jsonResponse = gson.toJson(responseData);
-            
+
             response.getWriter().write(jsonResponse);
-            
+
         } catch (Exception e) {
             // Handle error
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "Error loading customer information: " + e.getMessage());
-            
+
             Gson gson = new Gson();
             String jsonResponse = gson.toJson(errorResponse);
-            
+
             response.getWriter().write(jsonResponse);
         }
     }
@@ -1668,7 +1674,7 @@ public class AdminController extends BaseController {
             throws ServletException, IOException {
         processRequest(request, response);
     }
-    
+
     /**
      * Load basic admin data needed for admin.jsp
      */
@@ -1687,16 +1693,16 @@ public class AdminController extends BaseController {
                 request.setAttribute("profile", staffProfile);
             }
         }
-        
+
         // Load basic data for navigation and common functionality
         CustomerDAO cusDAO = new CustomerDAO();
         StaffDAO staffDAO = new StaffDAO();
         ProductDAO productDAO = new ProductDAO();
-        
+
         List<Customer> users = cusDAO.getAllCustomers();
         List<Staff> staffs = staffDAO.getAll();
         List<Product> products = productDAO.getAllProducts();
-        
+
         request.setAttribute("users", users);
         request.setAttribute("staffs", staffs);
         request.setAttribute("prds", products);
@@ -1713,28 +1719,28 @@ public class AdminController extends BaseController {
 
             AttributeDAO attributeDAO = new AttributeDAO();
             List<Attribute> attributes = attributeDAO.getAll();
-            
+
             // Apply filters
             if (filterTypeId != null && !filterTypeId.trim().isEmpty()) {
                 attributes = attributes.stream()
-                    .filter(attr -> String.valueOf(attr.getProTypeId()).equals(filterTypeId))
-                    .collect(java.util.stream.Collectors.toList());
+                        .filter(attr -> String.valueOf(attr.getProTypeId()).equals(filterTypeId))
+                        .collect(java.util.stream.Collectors.toList());
             }
-            
+
             if (filterAttributeName != null && !filterAttributeName.trim().isEmpty()) {
                 attributes = attributes.stream()
-                    .filter(attr -> attr.getAttributeName().toLowerCase().contains(filterAttributeName.toLowerCase()))
-                    .collect(java.util.stream.Collectors.toList());
+                        .filter(attr -> attr.getAttributeName().toLowerCase().contains(filterAttributeName.toLowerCase()))
+                        .collect(java.util.stream.Collectors.toList());
             }
 
             // Set filtered attributes BEFORE loading admin page
             request.setAttribute("attributes", attributes);
             request.setAttribute("activeTab", "attributes");
-            
+
             // Preserve filter parameters
             request.setAttribute("filterTypeId", filterTypeId);
             request.setAttribute("filterAttributeName", filterAttributeName);
-            
+
             // Load other data but preserve filtered attributes  
             loadAdminPageWithFilteredAttributes(request, response);
         } catch (Exception e) {
@@ -1758,7 +1764,7 @@ public class AdminController extends BaseController {
             if (revenueSession.getAttribute("yearlyRevenueMap") != null) {
                 request.setAttribute("yearlyRevenueMap", revenueSession.getAttribute("yearlyRevenueMap"));
                 request.setAttribute("yearlyGrowthRateMap", revenueSession.getAttribute("yearlyGrowthRateMap"));
-                
+
                 // Move specific year data if available
                 if (revenueSession.getAttribute("selectedYear") != null) {
                     request.setAttribute("selectedYear", revenueSession.getAttribute("selectedYear"));
@@ -1768,7 +1774,7 @@ public class AdminController extends BaseController {
                     request.setAttribute("productRevenueList", revenueSession.getAttribute("productRevenueList"));
                     request.setAttribute("revenueYear", revenueSession.getAttribute("revenueYear"));
                 }
-                
+
                 // Clear session after moving to request
                 revenueSession.removeAttribute("yearlyRevenueMap");
                 revenueSession.removeAttribute("yearlyGrowthRateMap");
@@ -1797,21 +1803,20 @@ public class AdminController extends BaseController {
             List<FeedbackReplyView> viewFeedbacks = viewfeedbackDAO.getAllFeedbackReplies();
             // DON'T load attributes - they are already filtered and set
             List<ProductAttribute> productAttributes = paDAO.getAll();
-            
-           
+
             // Add: Load all products for product tab
             ProductDAO productDAO = new ProductDAO();
             List<Product> products = productDAO.getAllProducts();
-            
+
             ProductTypeDAO typeDAO = new ProductTypeDAO();
             List<ProductTypes> types = typeDAO.getAllProductTypes();
-            
+
             // Create a map for type ID to type name lookup
             Map<Integer, String> typeMap = new HashMap<>();
             for (ProductTypes type : types) {
                 typeMap.put(type.getId(), type.getName());
             }
-            
+
             BigDecimal totalRevenue = ordDao.getTotalRevenue();
 
             // 2. Load ViewProductAttributes
@@ -1837,7 +1842,7 @@ public class AdminController extends BaseController {
             StockDAO dao = new StockDAO();
             List<Map<String, Object>> productStockList = dao.getAllProductStockData();
             request.setAttribute("productStockList", productStockList);
-            
+
             List<String> noStockProIds = stockDAO.getProductsWithoutStock();
             request.setAttribute("noStockProIds", noStockProIds);
 
@@ -1865,7 +1870,7 @@ public class AdminController extends BaseController {
 
             AttributeDAO attributeDAO = new AttributeDAO();
             List<Attribute> attributes = attributeDAO.getAll();
-            
+
             // Filter attributes by type ID
             List<Attribute> filteredAttributes = new ArrayList<>();
             for (Attribute attr : attributes) {

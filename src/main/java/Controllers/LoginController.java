@@ -81,22 +81,24 @@ public class LoginController extends HttpServlet {
                 } else {
                     System.out.println("Password incorrect");
                     request.setAttribute("ERROR", "Incorrect username or password");
+                    url = ERROR;
                 }
             } else {
                 System.out.println("User not found");
                 request.setAttribute("ERROR", "Incorrect username or password");
+                url = ERROR;
             }
         } catch (Exception e) {
             log("Error at LoginController: " + e.toString());
             request.setAttribute("ERROR", "An error occurred during login. Please try again.");
             url = ERROR;
         } finally {
-            // Only redirect if we haven't already redirected and url is set
+            // Only forward if we haven't already redirected and url is set
             if (!response.isCommitted() && url != null && !url.isEmpty()) {
                 try {
-                    response.sendRedirect(url);
+                    request.getRequestDispatcher(url).forward(request, response);
                 } catch (Exception e) {
-                    log("Error redirecting: " + e.toString());
+                    log("Error forwarding: " + e.toString());
                 }
             }
         }
