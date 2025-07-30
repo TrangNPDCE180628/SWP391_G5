@@ -227,10 +227,10 @@
                                             Receiver's Phone <span class="text-danger">*</span>
                                         </label> 
                                         <input type="tel" class="form-control" id="receiverPhone" name="receiverPhone"
-                                               required placeholder="Enter phone number" 
-                                               value="${not empty order.receiverPhone ? order.receiverPhone : userProfile.cusPhone}" 
-                                               pattern="0\\d{9,14}" maxlength="15" inputmode="numeric"
-                                               title="Phone number must start with 0 and contain 10–15 digits"> 
+                                               required placeholder="Enter phone number"
+                                               value="${not empty order.receiverPhone ? order.receiverPhone : userProfile.cusPhone}"
+                                               maxlength="15" inputmode="numeric"
+                                               title="Phone number must start with 0 and contain 10–15 digits">
 
                                         <div class="form-text">
                                             Phone number must start with 0 and contain 10–15 digits. 

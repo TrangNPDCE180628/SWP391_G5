@@ -4,7 +4,6 @@
  */
 document.addEventListener('DOMContentLoaded', function () {
     const paymentMethods = document.querySelectorAll('.payment-method');
-
     // Highlight selected payment method
     function toggleCardFields() {
         const selectedMethod = document.querySelector('input[name=paymentMethod]:checked').value;
@@ -30,42 +29,70 @@ function selectPaymentMethod(method) {
     document.getElementById(method).checked = true;
     document.getElementById(method).dispatchEvent(new Event('change'));
 }
-
 function validateForm() {
-    const paymentMethod = document.querySelector('input[name=paymentMethod]:checked').value;
-    const shippingAddress = document.getElementById('shippingAddress').value.trim();
-    const receiverName = document.getElementById('receiverName').value.trim();
-    const receiverPhone = document.getElementById('receiverPhone').value.trim();
+    const receiverName = document.getElementById('receiverName');
+    const receiverPhone = document.getElementById('receiverPhone');
+    const shippingAddress = document.getElementById('shippingAddress');
+    const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
 
-    if (receiverName.length < 2) {
-        showToast('Please enter the receiver\'s name (at least 2 characters)');
-        document.getElementById('receiverName').focus();
+    let isValid = true;
+
+    // Validate Receiver's Name
+    if (receiverName.value.trim() === '') {
+        alert('Receiver\'s Name cannot be empty.');
+        receiverName.focus();
+        isValid = false;
         return false;
     }
 
-    if (!/^0\d{9,14}$/.test(receiverPhone)) {
-        showToast('Please enter a valid phone number (10–15 digits, starts with 0)');
-        document.getElementById('receiverPhone').focus();
+    // Validate Receiver's Phone
+    const phonePattern = /^0\d{9,14}$/; // Regex for phone number starting with 0 and 10-15 digits
+    if (receiverPhone.value.trim() === '') {
+        alert('Receiver\'s Phone cannot be empty.');
+        receiverPhone.focus();
+        isValid = false;
+        return false;
+    } else if (!phonePattern.test(receiverPhone.value.trim())) {
+        alert('Invalid phone number format. It must start with 0 and contain 10-15 digits.');
+        receiverPhone.focus();
+        isValid = false;
         return false;
     }
 
-    if (shippingAddress.length < 10) {
-        showToast('Please enter detailed delivery address (at least 10 characters)');
-        document.getElementById('shippingAddress').focus();
+    // Validate Shipping Address
+    if (shippingAddress.value.trim() === '') {
+        alert('Shipping address cannot be empty.');
+        shippingAddress.focus();
+        isValid = false;
         return false;
     }
 
-    // Change form action dynamically
-    const form = document.querySelector('form[onsubmit="return validateForm()"]');
-    if (paymentMethod === "vnpay") {
-        form.action = `${window.location.origin}${pageContext.request.contextPath}/ajaxServlet`; // đúng servlet
-    } else {
-        form.action = `${window.location.origin}${pageContext.request.contextPath}/PaymentController`;
+    // Validate Payment Method (at least one must be selected)
+    let paymentMethodSelected = false;
+    for (const radio of paymentMethodRadios) {
+        if (radio.checked) {
+            paymentMethodSelected = true;
+            break;
+        }
     }
 
-    return true;
+    if (!paymentMethodSelected) {
+        alert('Please select a payment method.');
+        isValid = false;
+        return false;
+    }
+
+    return isValid; // Return true if all validations pass
 }
 
+// Function to handle payment method selection (from your existing HTML)
+function selectPaymentMethod(methodId) {
+    document.getElementById(methodId).checked = true;
+}
+// Function to handle payment method selection (from your existing HTML)
+function selectPaymentMethod(methodId) {
+    document.getElementById(methodId).checked = true;
+}
 let isPaymentConfirmed = false;
 
 document.querySelector('form[onsubmit="return validateForm()"]')
