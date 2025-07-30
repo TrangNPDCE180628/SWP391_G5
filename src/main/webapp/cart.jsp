@@ -48,6 +48,32 @@
                 background-color: #f0f0f0;
                 border: 2px solid #6c757d;
             }
+            
+            /* Breadcrumb Styling */
+            .breadcrumb {
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border: 1px solid #dee2e6;
+                margin-bottom: 15px;
+            }
+            .breadcrumb-item + .breadcrumb-item::before {
+                content: "›";
+                color: #6c757d;
+                font-size: 1.2rem;
+                font-weight: bold;
+            }
+            .breadcrumb-item a {
+                color: #495057;
+                transition: color 0.3s ease, transform 0.2s ease;
+            }
+            .breadcrumb-item a:hover {
+                color: #007bff;
+                text-decoration: underline !important;
+                transform: translateY(-1px);
+            }
+            .breadcrumb-item.active {
+                color: #6c757d;
+                font-weight: 500;
+            }
 
         </style>
     </head>
@@ -112,7 +138,25 @@
                     </div>
                 </div>
             </nav>
-
+            
+            <!-- Cart Breadcrumb -->
+            <div class="container mt-3">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb bg-light p-3 rounded shadow-sm">
+                        <!-- Home Link -->
+                        <li class="breadcrumb-item">
+                            <a href="HomeController" class="text-decoration-none">
+                                <i class="fas fa-home me-1"></i>Home
+                            </a>
+                        </li>
+                        <!-- Cart Active -->
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <i class="fas fa-shopping-cart me-1"></i>Shopping Cart
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+                       
             <!-- Main content -->
             <div class="container content">
                 <h2 class="mb-4"><i class="fas fa-cart-shopping"></i> Your Shopping Cart</h2>

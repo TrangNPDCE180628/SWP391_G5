@@ -111,11 +111,20 @@
                 <!-- Phone -->
                 <div class="mb-3">
                     <label for="phone" class="form-label">Phone</label>
-                    <input type="tel" name="phone" id="phone" class="form-control" required pattern="[0-9]{10,12}"
-                           title="Phone number should contain 10 to 12 digits"
+                    <input type="tel" name="phone" id="phone" class="form-control" required pattern="0[0-9]{9,11}"
+                           title="Phone number must start with 0 and contain 10-12 digits"
                            placeholder="Enter your phone number" minlength="10" maxlength="12"
                            value="<%= request.getParameter("phone") != null ? request.getParameter("phone") : ""%>">
-                    <div class="form-text">10-12 digits only</div>
+                    <div class="form-text">Must start with 0, 10-12 digits total</div>
+                </div>
+
+                <!-- Address -->
+                <div class="mb-3">
+                    <label for="address" class="form-label">Address</label>
+                    <textarea name="address" id="address" class="form-control" required
+                              placeholder="Enter your address" minlength="2" maxlength="100" rows="3"
+                              title="Address must be between 2 and 100 characters"><%= request.getParameter("address") != null ? request.getParameter("address") : ""%></textarea>
+                    <div class="form-text">2-100 characters</div>
                 </div>
 
                 <!-- Submit -->
@@ -139,6 +148,7 @@
                 const fullname = document.getElementById('fullname');
                 const gmail = document.getElementById('gmail');
                 const phone = document.getElementById('phone');
+                const address = document.getElementById('address');
 
                 // Username validation
                 username.addEventListener('input', function() {
@@ -180,8 +190,19 @@
                 // Phone validation
                 phone.addEventListener('input', function() {
                     const value = this.value;
-                    const isValid = /^[0-9]{10,12}$/.test(value);
-                    toggleValidation(this, isValid, 'Phone number must contain 10-12 digits');
+                    const isValid = /^0[0-9]{9,11}$/.test(value);
+                    toggleValidation(this, isValid, 'Phone number must start with 0 and contain 10-12 digits');
+                });
+
+                // Address validation
+                address.addEventListener('input', function() {
+                    const value = this.value;
+                    const isValid = value.length >= 2 && value.length <= 100;
+                    let message = '';
+                    if (value.length < 2) message = 'Address must be at least 2 characters';
+                    else if (value.length > 100) message = 'Address must be at most 100 characters';
+                    
+                    toggleValidation(this, isValid, message);
                 });
 
                 // Only allow numbers in phone field
@@ -215,7 +236,7 @@
 
                 // Form submission validation
                 form.addEventListener('submit', function(e) {
-                    const fields = [username, password, fullname, gmail, phone];
+                    const fields = [username, password, fullname, gmail, phone, address];
                     let isFormValid = true;
 
                     fields.forEach(field => {

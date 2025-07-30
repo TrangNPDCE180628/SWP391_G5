@@ -157,6 +157,49 @@
             .shadow-sm {
                 box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
             }
+            
+            /* Enhanced Description Styling */
+            .description-card {
+                transition: all 0.3s ease;
+                border: 1px solid #e9ecef !important;
+                overflow: hidden; /* Prevent content overflow */
+            }
+            .description-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+            }
+            .description-content {
+                position: relative;
+                word-wrap: break-word; /* Break long words */
+                overflow-wrap: break-word; /* Modern browsers */
+                hyphens: auto; /* Auto hyphenation */
+                max-width: 100%; /* Ensure it doesn't exceed container */
+            }
+            .description-content p {
+                word-break: break-word; /* Break long words if needed */
+                line-height: 1.6; /* Better readability */
+                margin-bottom: 0;
+            }
+            .description-content::before {
+                content: '';
+                position: absolute;
+                left: -15px;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background: linear-gradient(to bottom, #007bff, #28a745);
+                border-radius: 2px;
+                flex-shrink: 0; /* Don't shrink the border */
+            }
+            .badge {
+                font-size: 0.75rem;
+                padding: 6px 10px;
+                font-weight: 500;
+                transition: transform 0.2s ease;
+            }
+            .badge:hover {
+                transform: scale(1.05);
+            }
             /* [END ADDED] */
         </style>
     </head>
@@ -226,7 +269,11 @@
                 </div>
             </div>
         </nav>
-
+        
+        <!-- Include Breadcrumb -->
+        <c:set var="breadcrumbType" value="product-detail" />
+        <%@ include file="includes/breadcrumb.jsp" %>
+                      
         <!-- Product Detail Section -->
         <c:choose>
             <c:when test="${not empty product}">
@@ -238,6 +285,44 @@
                                 <!-- [ADDED]: Status tag -->
                                 <span class="product-status-tag like-new">Like New</span>
                                 <img src="images/products/${product.proImageMain}" class="product-image-large" alt="${product.proName}">
+
+                                <!-- Enhanced Description Section -->
+                                <div class="mb-4 text-start">
+                                    <div class="description-card bg-light border rounded-3 p-4 shadow-sm">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <i class="fas fa-info-circle text-primary me-2 fs-5 flex-shrink-0"></i>
+                                            <h5 class="fw-bold mb-0 text-primary">Product Description</h5>
+                                        </div>
+                                        <div class="description-content ps-3">
+                                            <c:choose>
+                                                <c:when test="${not empty product.proDescription}">
+                                                    <p class="mb-0 lh-lg text-dark" style="font-size: 0.95rem;">
+                                                        ${product.proDescription}
+                                                    </p>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <p class="mb-0 text-muted fst-italic">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                                        No detailed description available for this product.
+                                                    </p>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                        
+                                        <!-- Additional Info Tags -->
+                                        <div class="mt-3 d-flex flex-wrap gap-2">
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success flex-shrink-0">
+                                                <i class="fas fa-shield-alt me-1"></i>Warranty Included
+                                            </span>
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info flex-shrink-0">
+                                                <i class="fas fa-truck me-1"></i>Fast Delivery
+                                            </span>
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning flex-shrink-0">
+                                                <i class="fas fa-star me-1"></i>Premium Quality
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <!-- Product Details -->
                             <div class="col-md-6">
@@ -248,11 +333,7 @@
                                     <span>₫</span>
                                 </p>
 
-                                <!-- Description -->
-                                <div class="mb-4">
-                                    <h5 class="fw-bold">Description</h5>
-                                    <p>${product.proDescription}</p>
-                                </div>
+
                                 <!-- Product Attributes -->
                                 <c:if test="${not empty attributes}">
                                     <div class="spec-box mb-4">
@@ -441,5 +522,7 @@
         </footer>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        
+        
     </body>
 </html>

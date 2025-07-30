@@ -45,9 +45,10 @@ public class RegisterController extends HttpServlet {
             String gender = request.getParameter("gender");
             String gmail = request.getParameter("gmail");
             String phone = request.getParameter("phone");
+            String address = request.getParameter("address");
 
             // Validate input với điều kiện chi tiết hơn
-            String validationError = validateRegistrationInput(username, password, fullname, gender, gmail, phone);
+            String validationError = validateRegistrationInput(username, password, fullname, gender, gmail, phone, address);
             if (validationError != null) {
                 request.setAttribute("ERROR", validationError);
                 request.getRequestDispatcher(ERROR).forward(request, response);
@@ -103,6 +104,7 @@ public class RegisterController extends HttpServlet {
             session.setAttribute("regGender", gender);
             session.setAttribute("regGmail", gmail);
             session.setAttribute("regPhone", phone);
+            session.setAttribute("regAddress", address);
             
             System.out.println("Session data stored, waiting for OTP verification");
             System.out.println("=== END REGISTRATION DEBUG ===");
@@ -157,10 +159,11 @@ public class RegisterController extends HttpServlet {
                 String gender = (String) session.getAttribute("regGender");
                 String gmail = (String) session.getAttribute("regGmail");
                 String phone = (String) session.getAttribute("regPhone");
+                String address = (String) session.getAttribute("regAddress");
 
                 // Kiểm tra session data
                 if (username == null || password == null || fullname == null || 
-                    gender == null || gmail == null || phone == null) {
+                    gender == null || gmail == null || phone == null || address == null) {
                     System.out.println("Session data missing! User needs to register again.");
                     request.setAttribute("ERROR", "Session expired. Please register again.");
                     request.getRequestDispatcher("register.jsp").forward(request, response);
@@ -170,7 +173,7 @@ public class RegisterController extends HttpServlet {
                 System.out.println("Session data - Username: " + username + ", Gmail: " + gmail);
 
                 // Validate again before creating customer (double check)
-                String validationError = validateRegistrationInput(username, password, fullname, gender, gmail, phone);
+                String validationError = validateRegistrationInput(username, password, fullname, gender, gmail, phone, address);
                 if (validationError != null) {
                     System.out.println("Validation failed during OTP verification: " + validationError);
                     request.setAttribute("ERROR", "Registration data invalid: " + validationError);
@@ -211,6 +214,7 @@ public class RegisterController extends HttpServlet {
                         user.setCusGender(gender);
                         user.setCusGmail(gmail);
                         user.setCusPhone(phone);
+                        user.setCusAddress(address);
                         user.setCusImage("default.png");
 
                         dao.insertCustomer(user);
@@ -243,6 +247,7 @@ public class RegisterController extends HttpServlet {
                 session.removeAttribute("regGender");
                 session.removeAttribute("regGmail");
                 session.removeAttribute("regPhone");
+                session.removeAttribute("regAddress");
 
                 // Set success message
                 session.setAttribute("SUCCESS", "Registration completed successfully! Please login with your new account.");
@@ -265,7 +270,7 @@ public class RegisterController extends HttpServlet {
     }
 
     private String validateRegistrationInput(String username, String password, String fullname, 
-                                           String gender, String gmail, String phone) {
+                                           String gender, String gmail, String phone, String address) {
         // Check if any field is null or empty
         if (username == null || username.trim().isEmpty()) {
             return "Username is required";
@@ -284,6 +289,9 @@ public class RegisterController extends HttpServlet {
         }
         if (phone == null || phone.trim().isEmpty()) {
             return "Phone is required";
+        }
+        if (address == null || address.trim().isEmpty()) {
+            return "Address is required";
         }
 
         // Validate username (only letters and numbers, 3-20 characters)
@@ -315,8 +323,13 @@ public class RegisterController extends HttpServlet {
         }
 
         // Validate phone (10-12 digits)
-        if (!phone.matches("^[0-9]{10,12}$")) {
-            return "Phone number must contain 10-12 digits";
+        if (!phone.matches("^0[0-9]{9,11}$")) {
+            return "Phone number must start with 0 and contain 10-12 digits";
+        }
+
+        // Validate address (2-100 characters)
+        if (address.length() < 2 || address.length() > 100) {
+            return "Address must be between 2 and 100 characters";
         }
 
         return null; // No validation errors

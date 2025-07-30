@@ -5,11 +5,13 @@ import DAOs.FeedbackReplyViewDAO;
 import DAOs.OrderDAO;
 import DAOs.ProductDAO;
 import DAOs.ProductAttributeDAO;
+import DAOs.ProductTypeDAO;
 import DAOs.ReplyFeedbackDAO;
 import Models.Feedback;
 import Models.FeedbackReplyView;
 import Models.Product;
 import Models.ProductAttribute;
+import Models.ProductTypes;
 import Models.ReplyFeedback;
 import Models.User;
 import javax.servlet.ServletException;
@@ -75,12 +77,17 @@ public class ProductDetailServlet extends HttpServlet {
                 ProductAttributeDAO attributeDAO = new ProductAttributeDAO();
                 List<ProductAttribute> attributes = attributeDAO.getByProductId(productId);
 
+                // [THÊM MỚI]: Lấy danh sách ProductTypes để hiển thị breadcrumb
+                ProductTypeDAO productTypeDAO = new ProductTypeDAO();
+                List<ProductTypes> productTypes = productTypeDAO.getAllProductTypes();
+
                 FeedbackReplyViewDAO feedbackReplyViewDAO = new FeedbackReplyViewDAO();
                 List<FeedbackReplyView> FeedbackReplyViews = feedbackReplyViewDAO.getFeedbackRepliesByProduct(productId);
 
                 request.setAttribute("viewfeedbacks", FeedbackReplyViews);
                 request.setAttribute("product", product);
                 request.setAttribute("attributes", attributes);
+                request.setAttribute("productTypes", productTypes);
                 request.getRequestDispatcher("product-detail.jsp").forward(request, response);
             } else {
                 // [CẬP NHẬT]: Chuyển hướng đến trang lỗi thay vì product-list

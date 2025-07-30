@@ -13,12 +13,13 @@ public class Customer {
     private String cusImage;
     private String cusGmail;
     private String cusPhone;
+    private String cusAddress;
 
     public Customer() {
     }
 
     public Customer(String cusId, String username, String cusPassword, String cusFullName,
-                    String cusGender, String cusImage, String cusGmail, String cusPhone) {
+                    String cusGender, String cusImage, String cusGmail, String cusPhone, String cusAddress) {
         this.cusId = cusId;
         this.username = username;
         this.cusPassword = cusPassword;
@@ -27,6 +28,7 @@ public class Customer {
         this.cusImage = cusImage;
         this.cusGmail = cusGmail;
         this.cusPhone = cusPhone;
+        this.cusAddress = cusAddress;
     }
 
     public String getCusId() {
@@ -97,6 +99,14 @@ public class Customer {
         this.cusPhone = cusPhone;
     }
 
+    public String getCusAddress() {
+        return cusAddress;
+    }
+
+    public void setCusAddress(String cusAddress) {
+        this.cusAddress = cusAddress;
+    }
+
     @Override
     public String toString() {
         return "Customer{" +
@@ -108,6 +118,7 @@ public class Customer {
                 ", cusImage='" + cusImage + '\'' +
                 ", cusGmail='" + cusGmail + '\'' +
                 ", cusPhone='" + cusPhone + '\'' +
+                ", cusAddress='" + cusAddress + '\'' +
                 '}';
     }
 

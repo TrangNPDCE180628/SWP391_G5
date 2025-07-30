@@ -121,6 +121,7 @@ public class CartController extends BaseController {
             session.setAttribute("cart", cartMap);
             session.setAttribute("stockMap", stockMap);
             session.setAttribute("cartSize", cartMap.size());
+            
 
             int totalQty = cartDAO.getTotalQuantityByCusId(cusId);
             session.setAttribute("cartTotalQuantity", totalQty);

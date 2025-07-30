@@ -15,7 +15,7 @@ public class CustomerDAO {
 
     // CREATE
     public void insertCustomer(Customer customer) throws SQLException, ClassNotFoundException {
-        String sql = "INSERT INTO Customer (cusId, username, cusPassword, cusFullName, cusGender, cusImage, cusGmail, cusPhone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Customer (cusId, username, cusPassword, cusFullName, cusGender, cusImage, cusGmail, cusPhone, cusAddress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, customer.getCusId());
@@ -26,6 +26,7 @@ public class CustomerDAO {
             stmt.setString(6, customer.getCusImage());
             stmt.setString(7, customer.getCusGmail());
             stmt.setString(8, customer.getCusPhone());
+            stmt.setString(9, customer.getCusAddress());
 
             stmt.executeUpdate();
         }
@@ -48,6 +49,7 @@ public class CustomerDAO {
                 customer.setCusImage(rs.getString("cusImage"));
                 customer.setCusGmail(rs.getString("cusGmail"));
                 customer.setCusPhone(rs.getString("cusPhone"));
+                customer.setCusAddress(rs.getString("cusAddress"));
                 customers.add(customer);
             }
         }
@@ -72,6 +74,7 @@ public class CustomerDAO {
                     customer.setCusImage(rs.getString("cusImage"));
                     customer.setCusGmail(rs.getString("cusGmail"));
                     customer.setCusPhone(rs.getString("cusPhone"));
+                    customer.setCusAddress(rs.getString("cusAddress"));
                     return customer;
                 }
             }
@@ -81,7 +84,7 @@ public class CustomerDAO {
 
     // UPDATE
     public void updateCustomer(Customer customer) throws SQLException, ClassNotFoundException {
-        String sql = "UPDATE Customer SET username=?, cusPassword=?, cusFullName=?, cusGender=?, cusImage=?, cusGmail=?, cusPhone=? WHERE cusId=?";
+        String sql = "UPDATE Customer SET username=?, cusPassword=?, cusFullName=?, cusGender=?, cusImage=?, cusGmail=?, cusPhone=?, cusAddress=? WHERE cusId=?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, customer.getUsername());
@@ -91,7 +94,8 @@ public class CustomerDAO {
             stmt.setString(5, customer.getCusImage());
             stmt.setString(6, customer.getCusGmail());
             stmt.setString(7, customer.getCusPhone());
-            stmt.setString(8, customer.getCusId());
+            stmt.setString(8, customer.getCusAddress());
+            stmt.setString(9, customer.getCusId());
 
             stmt.executeUpdate();
         }
