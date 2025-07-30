@@ -72,6 +72,7 @@ public class CustomerDAO {
                     customer.setCusImage(rs.getString("cusImage"));
                     customer.setCusGmail(rs.getString("cusGmail"));
                     customer.setCusPhone(rs.getString("cusPhone"));
+                    customer.setCusAddress(rs.getString("cusAddress"));
                     return customer;
                 }
             }

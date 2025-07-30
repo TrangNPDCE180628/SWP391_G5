@@ -173,6 +173,9 @@ public class PaymentController extends HttpServlet {
                     cart.values().stream().mapToInt(ViewCartCustomer::getQuantity).sum());
 
             /* 8. Chuyển tới trang payment.jsp */
+            CustomerDAO customerDAO = new CustomerDAO();
+            Customer profile = customerDAO.getCustomerById(user.getId());
+            request.setAttribute("userProfile", profile);
             request.setAttribute("order", order);
             request.getRequestDispatcher("payment.jsp").forward(request, response);
 
@@ -331,6 +334,12 @@ public class PaymentController extends HttpServlet {
                 if (order == null) {
                     throw new IllegalArgumentException("Order not found.");
                 }
+                User user = (User) session.getAttribute("LOGIN_USER");
+                if (user != null) {
+                    CustomerDAO customerDAO = new CustomerDAO();
+                    Customer profile = customerDAO.getCustomerById(user.getId());
+                    request.setAttribute("userProfile", profile);
+                }
 
                 // Cập nhật lại thông tin user vừa nhập để hiển thị lại form
                 order.setReceiverName(request.getParameter("receiverName"));
@@ -339,7 +348,7 @@ public class PaymentController extends HttpServlet {
                 order.setPaymentMethod(request.getParameter("paymentMethod"));
 
                 request.setAttribute("order", order);
-
+                
             } catch (Exception ignored) {
                 ignored.printStackTrace();
             }
@@ -416,12 +425,15 @@ public class PaymentController extends HttpServlet {
                     response.sendRedirect("login.jsp");
                     return;
                 }
+                CustomerDAO customerDAO = new CustomerDAO();
+                Customer profile = customerDAO.getCustomerById(user.getId());
 
                 OrderDAO dao = new OrderDAO();
                 Order order = dao.getOrderById(orderId);
 
                 if (order != null && "pending".equalsIgnoreCase(order.getOrderStatus())
                         && order.getCusId().equals(user.getId())) {
+                    request.setAttribute("userProfile", profile);
                     request.setAttribute("order", order);
                     request.getRequestDispatcher("payment.jsp").forward(request, response);
                     return;

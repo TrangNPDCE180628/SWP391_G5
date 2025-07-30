@@ -214,42 +214,36 @@
                                     </div>
 
                                     <!-- Receiver Name -->
-                                    <div class="mb-4">
-                                        <label for="receiverName" class="form-label fw-bold">Receiver's Name <span class="text-danger">*</span></label>
+                                    <div class="mb-4"> 
+                                        <label for="receiverName" class="form-label fw-bold">Receiver's Name <span class="text-danger">*</span></label> 
                                         <input type="text" class="form-control" id="receiverName" name="receiverName"
-                                               required placeholder="Enter receiver's full name" value="${order.receiverName != null ? order.receiverName : ''}">
-                                    </div>
+                                               required placeholder="Enter receiver's full name" 
+                                               value="${not empty order.receiverName ? order.receiverName : userProfile.fullName}">
+                                    </div> 
 
                                     <!-- Receiver Phone -->
-                                    <div class="mb-4">
-                                        <label for="receiverPhone" class="form-label fw-bold">
+                                    <div class="mb-4"> 
+                                        <label for="receiverPhone" class="form-label fw-bold"> 
                                             Receiver's Phone <span class="text-danger">*</span>
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            class="form-control"
-                                            id="receiverPhone"
-                                            name="receiverPhone"
-                                            required
-                                            placeholder="Enter phone number"
-                                            value="${order.receiverPhone != null ? order.receiverPhone : ''}"
-                                            pattern="0\d{9,14}"
-                                            maxlength="15"
-                                            inputmode="numeric"
-                                            title="Phone number must start with 0 and contain 10–15 digits"
-                                            >
+                                        </label> 
+                                        <input type="tel" class="form-control" id="receiverPhone" name="receiverPhone"
+                                               required placeholder="Enter phone number" 
+                                               value="${not empty order.receiverPhone ? order.receiverPhone : userProfile.cusPhone}" 
+                                               pattern="0\\d{9,14}" maxlength="15" inputmode="numeric"
+                                               title="Phone number must start with 0 and contain 10–15 digits"> 
+
                                         <div class="form-text">
-                                            Phone number must start with 0 and contain 10–15 digits.
+                                            Phone number must start with 0 and contain 10–15 digits. 
                                         </div>
                                     </div>
 
 
                                     <!-- Shipping Address -->
-                                    <div class="mb-4">
+                                    <div class="mb-4"> 
                                         <label for="shippingAddress" class="form-label fw-bold">Shipping address <span class="text-danger">*</span></label>
-                                        <textarea class="form-control" id="shippingAddress" name="shippingAddress" 
-                                                  rows="3" required placeholder="Enter detailed delivery address (house number, street, ward/commune, district, province/city)">${order.shippingAddress}</textarea>
-                                        <div class="form-text">Please enter detailed shipping address</div>
+                                        <textarea class="form-control" id="shippingAddress" name="shippingAddress" rows="3" required>${not empty order.shippingAddress ? order.shippingAddress : userProfile.cusAddress}</textarea> 
+
+                                        <div class="form-text">Please enter detailed shipping address</div> 
                                     </div>
 
                                     <!-- Order Summary -->
