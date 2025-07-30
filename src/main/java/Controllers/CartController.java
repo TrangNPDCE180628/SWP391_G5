@@ -71,6 +71,9 @@ public class CartController extends BaseController {
                 case "update":
                     updateCart(request, response);
                     break;
+                case "setQuantity":
+                    setProductQuantity(request, response);
+                    break;
                 case "remove":
                     removeFromCart(request, response);
                     break;
@@ -248,13 +251,13 @@ public class CartController extends BaseController {
                 return;
             }
 
-            int change = Integer.parseInt(request.getParameter("change"));
+            int change = Integer.parseInt(request.getParameter("change")); // This will be +1 or -1
 
             LinkedHashMap<String, ViewCartCustomer> cart
                     = (LinkedHashMap<String, ViewCartCustomer>) session.getAttribute("cart");
 
             if (cart == null) {
-                session.setAttribute("error", "Không tìm thấy giỏ hàng để cập nhật!");
+                session.setAttribute("error", "Cart not found for update!");
                 response.sendRedirect("cart.jsp");
                 return;
             }
@@ -268,7 +271,8 @@ public class CartController extends BaseController {
             }
 
             if (item != null) {
-                int newQuantity = item.getQuantity() + change;
+                int currentQuantity = item.getQuantity();
+                int newQuantity = currentQuantity + change; // Calculate new quantity based on change
 
                 StockDAO stockDAO = new StockDAO();
                 int stock = stockDAO.getStockProductByProductId(productId);
@@ -276,15 +280,16 @@ public class CartController extends BaseController {
                 CartDAO cartDAO = new CartDAO();
 
                 if (newQuantity > stock) {
-                    session.setAttribute("error", "Product '" + item.getProName() + "' exceeds stock quantity (" + stock + ")");
+                    session.setAttribute("error", "Product '" + item.getProName() + "' exceeds available stock (" + stock + ").");
                 } else if (newQuantity > 0) {
                     cartDAO.updateQuantity(item.getCartId(), newQuantity);
-                    session.setAttribute("message", "Quantity update successful!");
-                } else if (newQuantity <= 0) {
+                    session.setAttribute("message", "Quantity updated successfully!");
+                } else if (newQuantity <= 0) { // If new quantity is 0 or less, remove it
                     cartDAO.deleteCartItem(item.getCartId());
                     session.setAttribute("message", "Product removed!");
                 }
 
+                // Reload cart from DB to reflect changes
                 List<ViewCartCustomer> updatedCartList = cartDAO.getViewCartByCusId(cusId);
                 LinkedHashMap<String, ViewCartCustomer> updatedCart = new LinkedHashMap<>();
                 for (ViewCartCustomer vc : updatedCartList) {
@@ -301,6 +306,9 @@ public class CartController extends BaseController {
                 session.setAttribute("error", "No products found in the cart!");
             }
 
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            session.setAttribute("error", "Invalid change value provided.");
         } catch (Exception e) {
             e.printStackTrace();
             session.setAttribute("error", "Cart update failed: " + e.getMessage());
@@ -336,6 +344,89 @@ public class CartController extends BaseController {
                 e.printStackTrace();
                 session.setAttribute("error", "Removing product from cart failed!");
             }
+        }
+
+        response.sendRedirect("cart.jsp");
+    }
+
+    private void setProductQuantity(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+        String productId = request.getParameter("productId");
+        String cusId = (String) session.getAttribute("cusId");
+
+        try {
+            if (cusId == null) {
+                session.setAttribute("error", "You need to login to operate!");
+                response.sendRedirect("login.jsp");
+                return;
+            }
+
+            // Get the new quantity from the request
+            int newQuantity = Integer.parseInt(request.getParameter("newQuantity")); // Expecting 'newQuantity'
+
+            if (newQuantity < 1) { // Ensure quantity is at least 1
+                newQuantity = 1;
+            }
+
+            LinkedHashMap<String, ViewCartCustomer> cart
+                    = (LinkedHashMap<String, ViewCartCustomer>) session.getAttribute("cart");
+
+            if (cart == null) {
+                session.setAttribute("error", "Cart not found for update!"); // Updated message
+                response.sendRedirect("cart.jsp");
+                return;
+            }
+
+            ViewCartCustomer item = null;
+            for (Map.Entry<String, ViewCartCustomer> entry : cart.entrySet()) {
+                if (entry.getKey().trim().equals(productId.trim())) {
+                    item = entry.getValue();
+                    break;
+                }
+            }
+
+            if (item != null) {
+                StockDAO stockDAO = new StockDAO();
+                int stock = stockDAO.getStockProductByProductId(productId);
+
+                CartDAO cartDAO = new CartDAO();
+
+                if (newQuantity > stock) {
+                    session.setAttribute("error", "Product '" + item.getProName() + "' exceeds available stock (" + stock + "). Maximum quantity allowed is " + stock + ".");
+                    // Set quantity to max available stock if exceeding
+                    cartDAO.updateQuantity(item.getCartId(), stock);
+                } else if (newQuantity > 0) {
+                    cartDAO.updateQuantity(item.getCartId(), newQuantity);
+                    session.setAttribute("message", "Quantity updated successfully!");
+                } else { // If newQuantity is 0 or less, remove the item
+                    cartDAO.deleteCartItem(item.getCartId());
+                    session.setAttribute("message", "Product removed from cart!");
+                }
+
+                // Reload cart from DB to reflect changes
+                List<ViewCartCustomer> updatedCartList = cartDAO.getViewCartByCusId(cusId);
+                LinkedHashMap<String, ViewCartCustomer> updatedCart = new LinkedHashMap<>();
+                for (ViewCartCustomer vc : updatedCartList) {
+                    updatedCart.put(vc.getProId(), vc);
+                }
+
+                session.setAttribute("cart", updatedCart);
+                session.setAttribute("cartSize", updatedCart.size());
+
+                int totalQty = cartDAO.getTotalQuantityByCusId(cusId);
+                session.setAttribute("cartTotalQuantity", totalQty);
+
+            } else {
+                session.setAttribute("error", "Product not found in cart!");
+            }
+
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            session.setAttribute("error", "Invalid quantity provided.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            session.setAttribute("error", "Cart update failed: " + e.getMessage());
         }
 
         response.sendRedirect("cart.jsp");

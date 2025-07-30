@@ -157,8 +157,9 @@
                                         <td>
                                             <div class="d-inline-flex align-items-center">
                                                 <button type="button" class="btn btn-sm btn-outline-secondary update-btn" data-id="${item.key}" data-change="-1" aria-label="Decrease quantity">−</button>
-                                                <input type="text" readonly class="form-control form-control-sm mx-2 text-center" 
-                                                       style="width: 100px; user-select:none;" value="${item.value.quantity}" />
+                                                <input type="number" class="form-control form-control-sm mx-2 text-center quantity-input"
+                                                       style="width: 100px;" value="${item.value.quantity}"
+                                                       data-id="${item.key}" min="1" />
                                                 <button type="button" class="btn btn-sm btn-outline-secondary update-btn" data-id="${item.key}" data-change="1" aria-label="Increase quantity">+</button>
                                             </div>
                                         </td>
@@ -360,6 +361,34 @@
             document.querySelectorAll('input\[name="selectedProductIds"]').forEach(cb => {
 
                 cb.addEventListener('change', saveSelectedProducts);
+            });
+            // Add this new section within your <script> tags in cart.jsp
+            document.querySelectorAll(".quantity-input").forEach(input => {
+                input.addEventListener("change", () => {
+                    const productId = input.dataset.id;
+                    let newQuantity = parseInt(input.value);
+
+                    // Basic validation for direct input
+                    if (isNaN(newQuantity) || newQuantity < 1) {
+                        newQuantity = 1; // Default to 1 if invalid
+                        input.value = 1; // Update input field
+                    }
+
+                    const updateForm = document.getElementById("updateForm");
+                    const updateProductId = document.getElementById("updateProductId");
+                    const updateChange = document.getElementById("updateChange"); // This will now hold newQuantity
+
+                    // Set action to a new specific action if you want to handle direct input differently
+                    // For simplicity, we will still use 'update', but your Java needs to differentiate.
+                    updateForm.action = "CartController"; // Ensure action is correct
+                    updateForm.querySelector("input[name='action']").value = "setQuantity"; // New action for direct quantity set
+
+                    updateProductId.value = productId;
+                    updateChange.name = "newQuantity"; // Change parameter name to newQuantity
+                    updateChange.value = newQuantity;
+
+                    updateForm.submit();
+                });
             });
             document.addEventListener("DOMContentLoaded", () => {
                 const checkboxes = document.querySelectorAll('input[name="selectedProductIds"]');
