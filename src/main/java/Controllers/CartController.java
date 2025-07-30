@@ -133,11 +133,12 @@ public class CartController extends BaseController {
 
     private void addToCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        
-        String productId = request.getParameter("productId");
-        String cusId ="";
 
-         // Check authentication manually first
+        String productId = request.getParameter("productId");
+        String sourcePage = request.getParameter("sourcePage"); // Lấy thông tin trang nguồn
+        String cusId = "";
+
+        // Check authentication manually first
         HttpSession session = request.getSession(false);
         User loginUser = null;
         if (session != null) {
@@ -160,7 +161,6 @@ public class CartController extends BaseController {
             return;
         }
         try {
-            
 
             ProductDAO productDAO = new ProductDAO();
             StockDAO stockDAO = new StockDAO();
@@ -171,7 +171,12 @@ public class CartController extends BaseController {
 
             if (product == null || stockQuantity <= 0) {
                 session.setAttribute("error", "Product is invalid or out of stock!");
-                response.sendRedirect("HomeController");
+                // Redirect dựa trên trang nguồn
+                if ("detail".equals(sourcePage)) {
+                    response.sendRedirect("product-detail?id=" + productId);
+                } else {
+                    response.sendRedirect("HomeController");
+                }
                 return;
             }
 
@@ -186,7 +191,12 @@ public class CartController extends BaseController {
             }
             if (currentCartQty + 1 > stockQuantity) {
                 session.setAttribute("error", "Product '" + product.getProName() + "' exceeds stock quantity (" + stockQuantity + ")");
-                response.sendRedirect("HomeController");
+                // Redirect dựa trên trang nguồn
+                if ("detail".equals(sourcePage)) {
+                    response.sendRedirect("product-detail?id=" + productId);
+                } else {
+                    response.sendRedirect("HomeController");
+                }
                 return;
             }
 
@@ -201,17 +211,27 @@ public class CartController extends BaseController {
 
             session.setAttribute("cart", updatedCart);
             session.setAttribute("cartSize", updatedCart.size());
-            session.setAttribute("message", "Product added to cart!");
+            session.setAttribute("message", "Product '" + product.getProName() + "' added to cart successfully!");
 
             int totalQty = cartDAO.getTotalQuantityByCusId(cusId);
             session.setAttribute("cartTotalQuantity", totalQty);
 
-            response.sendRedirect("HomeController");
+            // Redirect dựa trên trang nguồn
+            if ("detail".equals(sourcePage)) {
+                response.sendRedirect("product-detail?id=" + productId);
+            } else {
+                response.sendRedirect("HomeController");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
             session.setAttribute("error", "Error adding to cart!");
-            response.sendRedirect("HomeController");
+            // Redirect dựa trên trang nguồn
+            if ("detail".equals(sourcePage)) {
+                response.sendRedirect("product-detail?proId=" + productId);
+            } else {
+                response.sendRedirect("HomeController");
+            }
         }
     }
 

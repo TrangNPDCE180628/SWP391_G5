@@ -7,18 +7,16 @@ public class OrderDetail {
     private String proId;
     private int quantity;
     private double unitPrice;
-    private Integer voucherId;
 
     public OrderDetail() {
     }
 
-    public OrderDetail(int orderDetailId, int orderId, String proId, int quantity, double unitPrice, Integer voucherId) {
+    public OrderDetail(int orderDetailId, int orderId, String proId, int quantity, double unitPrice) {
         this.orderDetailId = orderDetailId;
         this.orderId = orderId;
         this.proId = proId;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
-        this.voucherId = voucherId;
     }
   
     public int getOrderDetailId() {
@@ -64,11 +62,5 @@ public class OrderDetail {
     public double getTotalPrice() {
         return quantity * unitPrice;
     }
-    public Integer getVoucherId() {
-        return voucherId;
-    }
-
-    public void setVoucherId(Integer voucherId) {
-        this.voucherId = voucherId;
-    }
+  
 }

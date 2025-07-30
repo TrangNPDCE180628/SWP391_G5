@@ -163,6 +163,11 @@
                 transform: scale(1.05);
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             }
+            .toast {
+                min-width: 300px;
+                box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,.1);
+            }
+
         </style>
     </head>
     <body>
@@ -237,21 +242,6 @@
 
         <!-- Main Content -->
         <div class="container">
-            <!-- Messages -->
-            <c:if test="${not empty sessionScope.message}">
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>${sessionScope.message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <% session.removeAttribute("message"); %>
-            </c:if>
-            <c:if test="${not empty sessionScope.error}">
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-circle me-2"></i>${sessionScope.error}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <% session.removeAttribute("error");%>
-            </c:if>
 
             <!-- Category Filter -->
             <div class="category-filter shadow-sm p-4 mb-5 bg-white rounded" id="categories">
@@ -291,13 +281,15 @@
                                 </div>
                             </a>
                             <!-- [END UPDATED] -->
-                            <form action="CartController" method="GET">
+                            <form action="CartController" method="POST" class="d-inline">
                                 <input type="hidden" name="action" value="add">
                                 <input type="hidden" name="productId" value="${product.proId}">
-                                <button type="submit" class="btn btn-add-cart">
+                                <input type="hidden" name="sourcePage" value="home">
+                                <button type="submit" class="btn btn-add-cart w-100">
                                     <i class="fas fa-shopping-cart me-2"></i>Add to Cart
                                 </button>
                             </form>
+
                         </div>
                     </div>
                 </c:forEach>
@@ -363,11 +355,41 @@
                 </div>
             </div>
         </footer>
+        <c:if test="${not empty sessionScope.message || not empty sessionScope.error}">
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
+                <div class="toast align-items-center text-white
+                     ${not empty sessionScope.message ? 'bg-success' : 'bg-danger'} border-0 show"
+                     role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas ${not empty sessionScope.message ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
+                            ${not empty sessionScope.message ? sessionScope.message : sessionScope.error}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                                aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+            <%
+                session.removeAttribute("message");
+                session.removeAttribute("error");
+            %>
+        </c:if>
+
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 const shopNowButton = document.querySelector('.btn-light');
+                const successToastEl = document.getElementById('toastMessage');
+                const errorToastEl = document.getElementById('toastError');
+
+                if (successToastEl) {
+                    new bootstrap.Toast(successToastEl, {delay: 4000}).show();
+                }
+                if (errorToastEl) {
+                    new bootstrap.Toast(errorToastEl, {delay: 5000}).show();
+                }
                 shopNowButton.addEventListener('click', function (e) {
                     e.preventDefault();
                     const productsSection = document.getElementById('categories');

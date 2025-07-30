@@ -15,39 +15,26 @@ public class OrderDetailDAO {
             throw new IllegalArgumentException("OrderDetail cannot be null");
         }
 
-        String sql = "INSERT INTO OrderDetail (orderId, proId, quantity, unitPrice, voucherId) "
-                + "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO OrderDetail (orderId, proId, quantity, unitPrice) "
+                + "VALUES (?, ?, ?, ?)";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, detail.getOrderId());
             stmt.setString(2, detail.getProId());
             stmt.setInt(3, detail.getQuantity());
             stmt.setBigDecimal(4, java.math.BigDecimal.valueOf(detail.getUnitPrice())); // ✅
-            if (detail.getVoucherId() != null) {
-                stmt.setInt(5, detail.getVoucherId());
-            } else {
-                stmt.setNull(5, Types.INTEGER);
-            }
-
             return stmt.executeUpdate() > 0;
         }
     }
 
     public void create(OrderDetail orderDetail) throws SQLException, ClassNotFoundException {
-        String sql = "INSERT INTO OrderDetail (orderId, proId, quantity, unitPrice, voucherId) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO OrderDetail (orderId, proId, quantity, unitPrice) VALUES (?, ?, ?, ?)";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, orderDetail.getOrderId());
             stmt.setString(2, orderDetail.getProId());
             stmt.setInt(3, orderDetail.getQuantity());
             stmt.setDouble(4, orderDetail.getUnitPrice());
-
-            if (orderDetail.getVoucherId() != null) {
-                stmt.setInt(5, orderDetail.getVoucherId());
-            } else {
-                stmt.setNull(5, Types.INTEGER);
-            }
-
             stmt.executeUpdate();
 
             ResultSet rs = stmt.getGeneratedKeys();
@@ -66,21 +53,14 @@ public class OrderDetailDAO {
         }
 
         String sql
-                = "INSERT INTO OrderDetail (orderId, proId, quantity, unitPrice, voucherId) "
-                + "VALUES (?, ?, ?, ?, ?)";
+                = "INSERT INTO OrderDetail (orderId, proId, quantity, unitPrice) "
+                + "VALUES (?, ?, ?, ?)";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, detail.getOrderId());
             stmt.setString(2, detail.getProId());
             stmt.setInt(3, detail.getQuantity());
             stmt.setDouble(4, detail.getUnitPrice());
-
-            if (detail.getVoucherId() != null) {
-                stmt.setInt(5, detail.getVoucherId());
-            } else {
-                stmt.setNull(5, Types.INTEGER);
-            }
-
             if (stmt.executeUpdate() > 0) {
                 try ( ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
@@ -158,7 +138,7 @@ public class OrderDetailDAO {
         }
 
         String sql
-                = "UPDATE OrderDetail SET orderId = ?, proId = ?, quantity = ?, unitPrice = ?, voucherId = ? "
+                = "UPDATE OrderDetail SET orderId = ?, proId = ?, quantity = ?, unitPrice = ?"
                 + "WHERE orderDetailId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -166,34 +146,20 @@ public class OrderDetailDAO {
             stmt.setString(2, detail.getProId());
             stmt.setInt(3, detail.getQuantity());
             stmt.setDouble(4, detail.getUnitPrice());
-
-            if (detail.getVoucherId() != null) {
-                stmt.setInt(5, detail.getVoucherId());
-            } else {
-                stmt.setNull(5, Types.INTEGER);
-            }
-
-            stmt.setInt(6, detail.getOrderDetailId());
+            stmt.setInt(5, detail.getOrderDetailId());
             return stmt.executeUpdate() > 0;
         }
     }
 
     public void update(OrderDetail orderDetail) throws SQLException, ClassNotFoundException {
-        String sql = "UPDATE OrderDetail SET orderId = ?, proId = ?, quantity = ?, unitPrice = ?, voucherId = ? WHERE orderDetailId = ?";
+        String sql = "UPDATE OrderDetail SET orderId = ?, proId = ?, quantity = ?, unitPrice = ? WHERE orderDetailId = ?";
         try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, orderDetail.getOrderId());
             stmt.setString(2, orderDetail.getProId());
             stmt.setInt(3, orderDetail.getQuantity());
             stmt.setDouble(4, orderDetail.getUnitPrice());
-
-            if (orderDetail.getVoucherId() != null) {
-                stmt.setInt(5, orderDetail.getVoucherId());
-            } else {
-                stmt.setNull(5, Types.INTEGER);
-            }
-
-            stmt.setInt(6, orderDetail.getOrderDetailId());
+            stmt.setInt(5, orderDetail.getOrderDetailId());
 
             stmt.executeUpdate();
         }
@@ -258,9 +224,6 @@ public class OrderDetailDAO {
         d.setProId(rs.getString("proId"));
         d.setQuantity(rs.getInt("quantity"));
         d.setUnitPrice(rs.getDouble("unitPrice"));
-
-        int vId = rs.getInt("voucherId");
-        d.setVoucherId(rs.wasNull() ? null : vId);
         return d;
     }
     // Helper method
@@ -271,8 +234,6 @@ public class OrderDetailDAO {
                 rs.getInt("orderId"),
                 rs.getString("proId"),
                 rs.getInt("quantity"),
-                rs.getDouble("unitPrice"),
-                rs.getObject("voucherId") != null ? rs.getInt("voucherId") : null
-        );
+                rs.getDouble("unitPrice"));
     }
 }

@@ -157,6 +157,71 @@
             .shadow-sm {
                 box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
             }
+
+            /* Pay Now Modal Styles */
+            .modal-header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-bottom: none;
+            }
+            .modal-header .btn-close {
+                filter: invert(1);
+            }
+            .quantity-control {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 15px;
+            }
+            .quantity-btn {
+                width: 40px;
+                height: 40px;
+                border: 2px solid #007bff;
+                background: white;
+                color: #007bff;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            .quantity-btn:hover {
+                background: #007bff;
+                color: white;
+            }
+            .quantity-input {
+                width: 80px;
+                text-align: center;
+                border: 2px solid #e9ecef;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 1.1rem;
+            }
+            .voucher-select {
+                border: 2px solid #e9ecef;
+                border-radius: 8px;
+                padding: 10px;
+            }
+            .voucher-select:focus {
+                border-color: #007bff;
+                box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+            }
+            .order-summary {
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-radius: 12px;
+                padding: 20px;
+            }
+            .summary-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+            }
+            .final-total {
+                font-size: 1.3rem;
+                font-weight: bold;
+                color: #dc3545;
+            }
             /* [END ADDED] */
         </style>
     </head>
@@ -238,6 +303,12 @@
                                 <!-- [ADDED]: Status tag -->
                                 <span class="product-status-tag like-new">Like New</span>
                                 <img src="images/products/${product.proImageMain}" class="product-image-large" alt="${product.proName}">
+
+                                <!-- Description -->
+                                <div class="my-4">
+                                    <h5 class="fw-bold">Description</h5>
+                                    <p>${product.proDescription}</p>
+                                </div> 
                             </div>
                             <!-- Product Details -->
                             <div class="col-md-6">
@@ -248,11 +319,6 @@
                                     <span>₫</span>
                                 </p>
 
-                                <!-- Description -->
-                                <div class="mb-4">
-                                    <h5 class="fw-bold">Description</h5>
-                                    <p>${product.proDescription}</p>
-                                </div>
                                 <!-- Product Attributes -->
                                 <c:if test="${not empty attributes}">
                                     <div class="spec-box mb-4">
@@ -274,13 +340,23 @@
                                 </ul>
                                 <!-- [UPDATED]: Buttons with new styling -->
                                 <div class="d-grid gap-2 mb-4">
+                                    <!-- Pay Now Button -->
+                                    <c:if test="${not empty sessionScope.LOGIN_USER}">
+                                        <button type="button" class="btn btn-buy-now w-100" data-bs-toggle="modal" data-bs-target="#payNowModal">
+                                            <i class="fas fa-credit-card me-2"></i>Pay Now
+                                        </button>
+                                    </c:if>
+
+
                                     <form action="CartController" method="POST" class="d-inline">
                                         <input type="hidden" name="action" value="add">
                                         <input type="hidden" name="productId" value="${product.proId}">
+                                        <input type="hidden" name="sourcePage" value="detail">
                                         <button type="submit" class="btn btn-add-cart w-100">
                                             <i class="fas fa-shopping-cart me-2"></i>Add to Cart
                                         </button>
                                     </form>
+
                                 </div>
                                 <!-- Back to Home -->
                                 <a href="HomeController" class="btn btn-outline-secondary btn-back">
@@ -298,7 +374,114 @@
                 </div>
             </c:otherwise>
         </c:choose>
+        <!-- Pay Now Modal -->
+        <div class="modal fade" id="payNowModal" tabindex="-1" aria-labelledby="payNowModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="payNowModalLabel">
+                            <i class="fas fa-credit-card me-2"></i>Quick Purchase
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="payNowForm" action="DirectPaymentController" method="POST">
+                            <input type="hidden" name="action" value="create">
+                            <input type="hidden" name="productId" value="${product.proId}">
 
+                            <!-- Product Info -->
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <img src="images/products/${product.proImageMain}" class="img-fluid rounded" alt="${product.proName}">
+                                </div>
+                                <div class="col-md-8">
+                                    <h6 class="fw-bold">${product.proName}</h6>
+                                    <p class="text-danger fw-bold fs-5">
+                                        <fmt:formatNumber value="${product.proPrice}" type="number" maxFractionDigits="0"/>₫
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Quantity Selection -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Quantity:</label>
+                                <div class="quantity-control">
+                                    <button type="button" class="quantity-btn" onclick="decreaseQuantity()">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" class="form-control quantity-input" id="quantity" name="quantity" value="1" min="1" max="10" readonly>
+                                    <button type="button" class="quantity-btn" onclick="increaseQuantity()">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Voucher Selection -->
+                            <div class="mb-4">
+                                <label for="voucherSelect" class="form-label fw-bold">Voucher (Optional):</label>
+                                <select class="form-select voucher-select" id="voucherSelect" name="voucherCode" onchange="updateTotal()">
+                                    <option value="">No voucher</option>
+                                    <c:forEach items="${sessionScope.vouchers}" var="voucher">
+                                        <option value="${voucher.voucherCode}" 
+                                                data-discount-type="${voucher.discountType}"
+                                                data-discount-value="${voucher.discountValue}"
+                                                data-min-order="${voucher.minOrderAmount}"
+                                                data-max-discount="${voucher.maxDiscountValue}">
+                                            ${voucher.voucherCode} - 
+                                            <c:choose>
+                                                <c:when test="${voucher.discountType == 'percentage'}">
+                                                    ${voucher.discountValue}% OFF
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <fmt:formatNumber value="${voucher.discountValue}" type="number"/>₫ OFF
+                                                </c:otherwise>
+                                            </c:choose>
+                                            (Min: <fmt:formatNumber value="${voucher.minOrderAmount}" type="number"/>₫)
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+
+                            <!-- Order Summary -->
+                            <div class="order-summary">
+                                <h6 class="fw-bold mb-3">Order Summary</h6>
+                                <div class="summary-row">
+                                    <span>Unit Price:</span>
+                                    <span id="unitPrice"><fmt:formatNumber value="${product.proPrice}" type="number"/>₫</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Quantity:</span>
+                                    <span id="displayQuantity">1</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Subtotal:</span>
+                                    <span id="subtotal"><fmt:formatNumber value="${product.proPrice}" type="number"/>₫</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Discount:</span>
+                                    <span id="discount" class="text-success">0₫</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Shipping:</span>
+                                    <span id="shipping">30,000₫</span>
+                                </div>
+                                <hr>
+                                <div class="summary-row final-total">
+                                    <span>Total:</span>
+                                    <span id="finalTotal"><fmt:formatNumber value="${product.proPrice + 30000}" type="number"/>₫</span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" onclick="submitPayNow()">
+                            <i class="fas fa-arrow-right me-2"></i>Proceed to Payment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- FEEDBACK SECTION UPGRADED -->
         <c:if test="${not empty viewfeedbacks}">
             <div class="mt-5">
@@ -439,7 +622,41 @@
                 </div>
             </div>
         </footer>
+        <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+        <c:if test="${not empty sessionScope.message || not empty sessionScope.error}">
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
+                <div class="toast align-items-center text-white
+                     ${not empty sessionScope.message ? 'bg-success' : 'bg-danger'} border-0 show"
+                     role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas ${not empty sessionScope.message ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
+                            ${not empty sessionScope.message ? sessionScope.message : sessionScope.error}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                                aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+            <%
+                session.removeAttribute("message");
+                session.removeAttribute("error");
+            %>
+        </c:if>
+
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script>
+                            // Tự động ẩn toast sau 3 giây
+                            setTimeout(() => {
+                                const toastEl = document.getElementById('liveToast');
+                                if (toastEl) {
+                                    const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+                                    toast.hide();
+                                }
+                            }, 3000);
+        </script>
+
     </body>
 </html>

@@ -6,12 +6,14 @@ import DAOs.OrderDAO;
 import DAOs.ProductDAO;
 import DAOs.ProductAttributeDAO;
 import DAOs.ReplyFeedbackDAO;
+import DAOs.VoucherDAO;
 import Models.Feedback;
 import Models.FeedbackReplyView;
 import Models.Product;
 import Models.ProductAttribute;
 import Models.ReplyFeedback;
 import Models.User;
+import Models.Voucher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -69,6 +71,9 @@ public class ProductDetailServlet extends HttpServlet {
 
             ProductDAO productDAO = new ProductDAO();
             Product product = productDAO.getById(productId);
+            VoucherDAO voucherDAO = new VoucherDAO();
+            List<Voucher> vouchers = voucherDAO.getAllActive();
+            request.setAttribute("availableVouchers", vouchers);
 
             if (product != null) {
                 // [THÊM MỚI]: Lấy danh sách thuộc tính sản phẩm
@@ -125,10 +130,16 @@ public class ProductDetailServlet extends HttpServlet {
             FeedbackDAO dao = new FeedbackDAO();
             dao.insertFeedback(feedback);
 
+            // Set thông báo vào session
+            request.getSession().setAttribute("success", "Gửi đánh giá thành công!");
+
+            // Redirect về product-detail
             response.sendRedirect("product-detail?id=" + proId);
         } catch (Exception e) {
-            request.setAttribute("error", "Failed to submit feedback: " + e.getMessage());
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+            String proId = request.getParameter("proId");
+            // Set thông báo lỗi vào session
+            request.getSession().setAttribute("error", "Gửi đánh giá thất bại: " + e.getMessage());
+            response.sendRedirect("product-detail?id=" + proId); // trở lại product-detail với toast báo lỗi
         }
     }
 
