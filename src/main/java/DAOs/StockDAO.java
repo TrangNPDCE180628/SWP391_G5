@@ -18,8 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-
 /**
  *
  * @author SE18-CE180628-Nguyen Pham Doan Trang
@@ -311,5 +309,20 @@ public class StockDAO {
             ps.setString(2, proId);
             ps.executeUpdate();
         }
+    }
+
+    public boolean decreaseStockIfAvailable(String proId, int quantityToDecrease) throws SQLException, ClassNotFoundException {
+        // Câu lệnh này vừa trừ, vừa kiểm tra điều kiện trong một thao tác
+        Connection conn = DBContext.getConnection();
+        String sql = "UPDATE Stock SET stockQuantity = stockQuantity - ? WHERE proId = ? AND stockQuantity >= ?";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setInt(1, quantityToDecrease);
+        ps.setString(2, proId);
+        ps.setInt(3, quantityToDecrease);
+
+        int rowsAffected = ps.executeUpdate();
+
+        // Nếu có 1 dòng được cập nhật, nghĩa là đã trừ kho thành công
+        return rowsAffected > 0;
     }
 }

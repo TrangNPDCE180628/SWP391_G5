@@ -6,12 +6,14 @@ import DAOs.OrderDAO;
 import DAOs.ProductDAO;
 import DAOs.ProductAttributeDAO;
 import DAOs.ReplyFeedbackDAO;
+import DAOs.StockDAO;
 import DAOs.VoucherDAO;
 import Models.Feedback;
 import Models.FeedbackReplyView;
 import Models.Product;
 import Models.ProductAttribute;
 import Models.ReplyFeedback;
+import Models.Stock;
 import Models.User;
 import Models.Voucher;
 import javax.servlet.ServletException;
@@ -20,7 +22,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.http.HttpSession;
 
 @WebServlet(name = "ProductDetailServlet", urlPatterns = {"/product-detail"})
@@ -71,18 +76,37 @@ public class ProductDetailServlet extends HttpServlet {
 
             ProductDAO productDAO = new ProductDAO();
             Product product = productDAO.getById(productId);
-            VoucherDAO voucherDAO = new VoucherDAO();
-            List<Voucher> vouchers = voucherDAO.getAllActive();
-            request.setAttribute("availableVouchers", vouchers);
+            StockDAO stockDAO = new StockDAO();
+            Stock stock = stockDAO.getStockByProductId(productId);
 
-            if (product != null) {
+            if (product != null && stock != null) {
                 // [THÊM MỚI]: Lấy danh sách thuộc tính sản phẩm
                 ProductAttributeDAO attributeDAO = new ProductAttributeDAO();
                 List<ProductAttribute> attributes = attributeDAO.getByProductId(productId);
 
                 FeedbackReplyViewDAO feedbackReplyViewDAO = new FeedbackReplyViewDAO();
                 List<FeedbackReplyView> FeedbackReplyViews = feedbackReplyViewDAO.getFeedbackRepliesByProduct(productId);
+                // Lấy danh sách voucher
+                VoucherDAO voucherDAO = new VoucherDAO();
+                List<Voucher> vouchers; // Không cần khởi tạo null nữa
 
+                try {
+                    vouchers = voucherDAO.getAllActive();
+                    // Chỉ đặt thuộc tính vào session NẾU lấy dữ liệu thành công
+                    System.out.println("DEBUG: ProductDetailServlet fetched " + vouchers.size() + " vouchers.");
+
+                    request.getSession().setAttribute("vouchers", vouchers);
+                } catch (SQLException | ClassNotFoundException ex) {
+                    // Nếu có lỗi, in chi tiết lỗi ra console của server để dễ debug
+                    System.err.println("ERROR fetching vouchers: " + ex.getMessage());
+                    ex.printStackTrace(); // In ra toàn bộ dấu vết lỗi
+
+                    // Gửi một danh sách rỗng để tránh lỗi NullPointerException trên trang JSP
+                    vouchers = new java.util.ArrayList<>();
+                    request.getSession().setAttribute("vouchers", vouchers);
+                }
+                request.setAttribute("stock", stock); 
+                request.getSession().setAttribute("voucher", vouchers);
                 request.setAttribute("viewfeedbacks", FeedbackReplyViews);
                 request.setAttribute("product", product);
                 request.setAttribute("attributes", attributes);

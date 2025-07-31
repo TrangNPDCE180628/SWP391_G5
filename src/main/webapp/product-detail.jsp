@@ -170,13 +170,13 @@
             .quantity-control {
                 display: flex;
                 align-items: center;
-                justify-content: center;
+                justify-content: flex-start;
                 gap: 15px;
             }
             .quantity-btn {
-                width: 40px;
-                height: 40px;
-                border: 2px solid #007bff;
+                width: 30px;
+                height: 30px;
+                border: 1px solid #007bff;
                 background: white;
                 color: #007bff;
                 border-radius: 8px;
@@ -191,9 +191,9 @@
                 color: white;
             }
             .quantity-input {
-                width: 80px;
+                width: 60px;
                 text-align: center;
-                border: 2px solid #e9ecef;
+                border: 1px solid #e9ecef;
                 border-radius: 8px;
                 font-weight: bold;
                 font-size: 1.1rem;
@@ -374,7 +374,7 @@
                 </div>
             </c:otherwise>
         </c:choose>
-        <!-- Pay Now Modal -->
+
         <div class="modal fade" id="payNowModal" tabindex="-1" aria-labelledby="payNowModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -385,77 +385,62 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form id="payNowForm" action="DirectPaymentController" method="POST">
-                            <input type="hidden" name="action" value="create">
+                        <form id="payNowForm" action="PaymentController" method="POST">
+                            <input type="hidden" name="action" value="paynow"> 
                             <input type="hidden" name="productId" value="${product.proId}">
+                            <input type="hidden" name="voucherCode" id="selectedVoucherCode">
 
-                            <!-- Product Info -->
                             <div class="row mb-4">
-                                <div class="col-md-4">
+                                <div class="col-md-2">
                                     <img src="images/products/${product.proImageMain}" class="img-fluid rounded" alt="${product.proName}">
                                 </div>
-                                <div class="col-md-8">
+                                <div class="col-md-7">
                                     <h6 class="fw-bold">${product.proName}</h6>
-                                    <p class="text-danger fw-bold fs-5">
+                                    <p class="text-muted">Stock: ${stock.stockQuantity}</p>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <p class="text-danger fw-bold fs-5 mb-0" id="unitPrice">
                                         <fmt:formatNumber value="${product.proPrice}" type="number" maxFractionDigits="0"/>₫
                                     </p>
                                 </div>
                             </div>
 
-                            <!-- Quantity Selection -->
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">Quantity:</label>
-                                <div class="quantity-control">
-                                    <button type="button" class="quantity-btn" onclick="decreaseQuantity()">
-                                        <i class="fas fa-minus"></i>
-                                    </button>
-                                    <input type="number" class="form-control quantity-input" id="quantity" name="quantity" value="1" min="1" max="10" readonly>
-                                    <button type="button" class="quantity-btn" onclick="increaseQuantity()">
-                                        <i class="fas fa-plus"></i>
+                            <div class="row align-items-center mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Quantity:</label>
+                                    <div class="quantity-control">
+                                        <button type="button" class="quantity-btn" onclick="decreaseQuantity()">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <input type="number" class="form-control quantity-input" id="quantity" name="quantity" value="1" min="1" max="${stock.stockQuantity}">
+                                        <button type="button" class="quantity-btn" onclick="increaseQuantity()">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Voucher:</label>
+                                    <div id="voucherDisplay" class="d-none">
+                                        <span class="badge bg-success fs-6 me-2" id="selectedVoucherText"></span>
+                                        <button type="button" class="btn-close" aria-label="Remove Voucher" id="removeVoucherBtn"></button>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary" id="selectVoucherBtn" data-bs-toggle="modal" data-bs-target="#voucherModal">
+                                        <i class="fas fa-ticket-alt me-2"></i>Select Voucher
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Voucher Selection -->
-                            <div class="mb-4">
-                                <label for="voucherSelect" class="form-label fw-bold">Voucher (Optional):</label>
-                                <select class="form-select voucher-select" id="voucherSelect" name="voucherCode" onchange="updateTotal()">
-                                    <option value="">No voucher</option>
-                                    <c:forEach items="${sessionScope.vouchers}" var="voucher">
-                                        <option value="${voucher.voucherCode}" 
-                                                data-discount-type="${voucher.discountType}"
-                                                data-discount-value="${voucher.discountValue}"
-                                                data-min-order="${voucher.minOrderAmount}"
-                                                data-max-discount="${voucher.maxDiscountValue}">
-                                            ${voucher.voucherCode} - 
-                                            <c:choose>
-                                                <c:when test="${voucher.discountType == 'percentage'}">
-                                                    ${voucher.discountValue}% OFF
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <fmt:formatNumber value="${voucher.discountValue}" type="number"/>₫ OFF
-                                                </c:otherwise>
-                                            </c:choose>
-                                            (Min: <fmt:formatNumber value="${voucher.minOrderAmount}" type="number"/>₫)
-                                        </option>
-                                    </c:forEach>
-                                </select>
-                            </div>
 
-                            <!-- Order Summary -->
                             <div class="order-summary">
                                 <h6 class="fw-bold mb-3">Order Summary</h6>
-                                <div class="summary-row">
-                                    <span>Unit Price:</span>
-                                    <span id="unitPrice"><fmt:formatNumber value="${product.proPrice}" type="number"/>₫</span>
-                                </div>
                                 <div class="summary-row">
                                     <span>Subtotal:</span>
                                     <span id="subtotal"><fmt:formatNumber value="${product.proPrice}" type="number"/>₫</span>
                                 </div>
                                 <div class="summary-row">
                                     <span>Discount:</span>
-                                    <span id="discount" class="text-success">0₫</span>
+                                    <span id="discount" class="text-success">- 0₫</span>
                                 </div>
                                 <div class="summary-row">
                                     <span>Shipping:</span>
@@ -474,6 +459,57 @@
                         <button type="button" class="btn btn-success" onclick="submitPayNow()">
                             <i class="fas fa-arrow-right me-2"></i>Proceed to Payment
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="voucherModal" tabindex="-1" aria-labelledby="voucherModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Select voucher</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <c:forEach var="voucher" items="${sessionScope.vouchers}">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card shadow-sm position-relative voucher-card">
+                                        <span class="badge bg-primary position-absolute top-0 end-0 m-2">
+                                            x${voucher.quantity}
+                                        </span>
+                                        <div class="card-body">
+                                            <h5 class="card-title text-primary">${voucher.codeName}</h5>
+                                            <p class="card-text small">
+                                                Discount:
+                                                <strong>
+                                                    <c:choose>
+                                                        <c:when test="${voucher.discountType == 'percentage'}">${voucher.discountValue}%</c:when>
+                                                        <c:otherwise>
+                                                            <fmt:formatNumber value="${voucher.discountValue}" type="number" currencySymbol="" />₫
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </strong><br>
+                                                Min. Order: <fmt:formatNumber value="${voucher.minOrderAmount}" type="number" />₫<br>
+                                                Max Discount: <fmt:formatNumber value="${voucher.maxDiscountValue}" type="number"/>₫
+                                            </p>
+                                            <p class="card-text small text-muted">
+                                                End Date: <fmt:formatDate value="${voucher.endDate}" pattern="dd/MM/yyyy"/>
+                                            </p>
+                                            <button type="button" class="btn btn-outline-success apply-voucher-btn"
+                                                    data-code="${voucher.codeName}"
+                                                    data-type="${voucher.discountType}"
+                                                    data-value="${voucher.discountValue}"
+                                                    data-min="${voucher.minOrderAmount}"
+                                                    data-max="${voucher.maxDiscountValue}">
+                                                Apply
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -642,17 +678,156 @@
 
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
         <script>
-                            // Tự động ẩn toast sau 3 giây
+                            // Tự động ẩn toast sau 3 giây (mã hiện có)
                             setTimeout(() => {
-                                const toastEl = document.getElementById('liveToast');
-                                if (toastEl) {
+                                const toastElList = document.querySelectorAll('.toast.show');
+                                toastElList.forEach(toastEl => {
                                     const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
                                     toast.hide();
-                                }
-                            }, 3000);
-        </script>
+                                });
+                                // Xóa session attributes sau khi toast đã được hiển thị
+            <%
+                session.removeAttribute("message");
+                session.removeAttribute("error");
+            %>
+                            }, 5000); // Tăng thời gian hiển thị lên 5 giây
 
+                            // --- SCRIPT CHO PAY NOW MODAL ---
+                            // --- KHAI BÁO BIẾN ---
+                            // DOM Elements cho Modal Thanh toán
+                            const payNowForm = document.getElementById('payNowForm');
+                            const quantityInput = document.getElementById('quantity');
+                            const subtotalEl = document.getElementById('subtotal');
+                            const discountEl = document.getElementById('discount');
+                            const finalTotalEl = document.getElementById('finalTotal');
+
+                            // DOM Elements cho Voucher
+                            const voucherModal = new bootstrap.Modal(document.getElementById('voucherModal'));
+                            const voucherDisplay = document.getElementById('voucherDisplay');
+                            const selectedVoucherText = document.getElementById('selectedVoucherText');
+                            const selectVoucherBtn = document.getElementById('selectVoucherBtn');
+                            const removeVoucherBtn = document.getElementById('removeVoucherBtn');
+                            const hiddenVoucherInput = document.getElementById('selectedVoucherCode');
+                            const applyVoucherBtns = document.querySelectorAll('.apply-voucher-btn');
+
+                            // Biến lưu trạng thái
+                            const basePrice = parseFloat('${product.proPrice}');
+                            const shippingCost = 30000;
+                            let selectedVoucher = null; // Object để lưu thông tin voucher được chọn
+
+                            // --- CÁC HÀM TIỆN ÍCH ---
+                            /**
+                             * Định dạng số thành chuỗi tiền tệ Việt Nam (vd: 100000 -> "100.000₫")
+                             */
+                            function formatCurrency(number) {
+                                if (isNaN(number))
+                                    return '0₫';
+                                return new Intl.NumberFormat('vi-VN').format(number) + '₫';
+                            }
+
+                            // --- HÀM TÍNH TOÁN CHÍNH ---
+                            /**
+                             * Cập nhật lại toàn bộ "Order Summary" dựa trên số lượng và voucher.
+                             */
+                            function updateTotal() {
+                                const quantity = parseInt(quantityInput.value) || 1;
+                                const subtotal = basePrice * quantity;
+                                let discountAmount = 0;
+
+                                // Tính toán giảm giá nếu có voucher được chọn và đơn hàng đủ điều kiện
+                                if (selectedVoucher && subtotal >= selectedVoucher.min) {
+                                    if (selectedVoucher.type === 'percentage') {
+                                        discountAmount = (subtotal * selectedVoucher.value) / 100;
+                                        // Áp dụng mức giảm giá tối đa
+                                        if (selectedVoucher.max > 0 && discountAmount > selectedVoucher.max) {
+                                            discountAmount = selectedVoucher.max;
+                                        }
+                                    } else { // 'fixed'
+                                        discountAmount = selectedVoucher.value;
+                                    }
+                                }
+
+                                const finalTotal = subtotal - discountAmount + shippingCost;
+
+                                // Cập nhật giao diện
+                                subtotalEl.textContent = formatCurrency(subtotal);
+                                discountEl.textContent = "- " + formatCurrency(discountAmount);
+                                finalTotalEl.textContent = formatCurrency(finalTotal);
+                            }
+
+                            // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
+                            // Nút [+]
+                            function increaseQuantity() {
+                                const max = parseInt(quantityInput.max);
+                                if (parseInt(quantityInput.value) < max) {
+                                    quantityInput.value++;
+                                    updateTotal();
+                                }
+                            }
+
+                            // Nút [-]
+                            function decreaseQuantity() {
+                                if (parseInt(quantityInput.value) > 1) {
+                                    quantityInput.value--;
+                                    updateTotal();
+                                }
+                            }
+
+                            // Xử lý khi người dùng tự nhập số lượng
+                            quantityInput.addEventListener('input', () => {
+                                const max = parseInt(quantityInput.max);
+                                if (parseInt(quantityInput.value) > max) {
+                                    quantityInput.value = max; // Tự động giảm về tối đa nếu nhập quá
+                                }
+                                if (parseInt(quantityInput.value) < 1) {
+                                    quantityInput.value = 1; // Ngăn nhập số nhỏ hơn 1
+                                }
+                                updateTotal();
+                            });
+
+                            // Lắng nghe sự kiện click trên tất cả các nút "Apply" voucher
+                            applyVoucherBtns.forEach(btn => {
+                                btn.addEventListener('click', function () {
+                                    // Lưu thông tin voucher vào biến selectedVoucher
+                                    selectedVoucher = {
+                                        code: this.dataset.code,
+                                        type: this.dataset.type,
+                                        value: parseFloat(this.dataset.value),
+                                        min: parseFloat(this.dataset.min),
+                                        max: parseFloat(this.dataset.max)
+                                    };
+
+                                    // Cập nhật giao diện để hiển thị voucher đã chọn
+                                    selectedVoucherText.textContent = selectedVoucher.code;
+                                    hiddenVoucherInput.value = selectedVoucher.code;
+                                    voucherDisplay.classList.remove('d-none');
+                                    selectVoucherBtn.classList.add('d-none');
+
+                                    // Đóng modal chọn voucher và cập nhật lại tổng tiền
+                                    voucherModal.hide();
+                                    updateTotal();
+                                });
+                            });
+
+                            // Xử lý khi bấm nút xóa voucher
+                            removeVoucherBtn.addEventListener('click', () => {
+                                selectedVoucher = null; // Xóa voucher đã chọn
+                                hiddenVoucherInput.value = ''; // Xóa code trong input ẩn
+                                voucherDisplay.classList.add('d-none');
+                                selectVoucherBtn.classList.remove('d-none');
+                                updateTotal(); // Tính lại tiền
+                            });
+
+                            // Nút "Proceed to Payment"
+                            function submitPayNow() {
+                                payNowForm.submit();
+                            }
+
+                            // Tính toán lại tổng tiền ngay khi modal thanh toán được mở
+                            document.getElementById('payNowModal').addEventListener('show.bs.modal', function () {
+                                updateTotal();
+                            });
+        </script>
     </body>
 </html>
