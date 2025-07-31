@@ -232,6 +232,41 @@ public class VoucherDAO {
         return false;
     }
 
+    /**
+     * Giảm số lượng của một voucher đi 1.
+     *
+     * @param codeName Mã của voucher cần giảm.
+     * @throws SQLException
+     */
+    public void decreaseQuantity(String codeName) throws SQLException {
+        String sql = "UPDATE Voucher SET quantity = quantity - 1 WHERE codeName = ? AND quantity > 0";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, codeName);
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Error decreasing voucher quantity: " + e.getMessage());
+            // Hoặc sử dụng logger của bạn
+            // Logger.getLogger(VoucherDAO.class.getName()).log(Level.SEVERE, null, e);
+        }
+    }
+
+    /**
+     * Tăng số lượng của một voucher lên 1 (dùng cho việc rollback).
+     *
+     * @param codeName Mã của voucher cần tăng.
+     * @throws SQLException
+     */
+    public void increaseQuantity(String codeName) throws SQLException {
+        String sql = "UPDATE Voucher SET quantity = quantity + 1 WHERE codeName = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, codeName);
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Error increasing voucher quantity for rollback: " + e.getMessage());
+            // Hoặc sử dụng logger của bạn
+        }
+    }
+
     // Helper method: convert ResultSet to Voucher object
     private Voucher extractVoucher(ResultSet rs) throws SQLException {
         return new Voucher(

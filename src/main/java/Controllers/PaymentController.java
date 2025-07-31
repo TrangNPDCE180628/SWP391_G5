@@ -36,6 +36,9 @@ public class PaymentController extends HttpServlet {
                 case "confirm":
                     confirmPayment(request, response);
                     break;
+                case "createDirectOrder":
+                    createDirectOrder(request, response);
+                    break;
                 case "cancel":
                     cancelOrder(request, response);
                     break;
@@ -348,7 +351,7 @@ public class PaymentController extends HttpServlet {
                 order.setPaymentMethod(request.getParameter("paymentMethod"));
 
                 request.setAttribute("order", order);
-                
+
             } catch (Exception ignored) {
                 ignored.printStackTrace();
             }
@@ -410,6 +413,241 @@ public class PaymentController extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
+
+    private void createDirectOrder(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
+
+        HttpSession session = request.getSession(false);
+        int generatedOrderId = -1; // Dùng để rollback nếu có lỗi
+
+        // Lấy proId ngay từ đầu để dùng trong trường hợp redirect lỗi
+        String proId = request.getParameter("productId");
+
+        try {
+            /* 1. Kiểm tra đăng nhập */
+            User user = (User) session.getAttribute("LOGIN_USER");
+            if (user == null) {
+                response.sendRedirect("login.jsp");
+                return;
+            }
+
+            /* 2. Lấy thông tin từ form Mua Ngay */
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+            String voucherCode = request.getParameter("voucherCode");
+
+            /* 3. Lấy thông tin, kiểm tra tồn kho & tính toán ban đầu */
+            StockDAO stockDAO = new StockDAO();
+            ProductDAO productDAO = new ProductDAO();
+            Product product = productDAO.getById(proId); // Giả định tên phương thức là getById
+
+            if (product == null) {
+                throw new Exception("Product with ID " + proId + " not found.");
+            }
+
+            if (stockDAO.getQuantity(proId) < quantity) {
+                session.setAttribute("error", "Product " + product.getProName() + " is out of stock for the requested quantity.");
+                response.sendRedirect("product-detail?id=" + proId);
+                return;
+            }
+
+            BigDecimal unitPrice = product.getProPrice();
+            BigDecimal totalAmount = unitPrice.multiply(BigDecimal.valueOf(quantity));
+
+            // Chuẩn bị sẵn OrderDetail, chưa có orderId
+            OrderDetail od = new OrderDetail();
+            od.setProId(proId);
+            od.setQuantity(quantity);
+            od.setUnitPrice(unitPrice.doubleValue());
+
+            /* 4. Xử lý voucher */
+            BigDecimal discountAmount = BigDecimal.ZERO;
+            Integer voucherId = null;
+            if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+                Voucher v = new VoucherDAO().getByCode(voucherCode);
+                if (v != null && totalAmount.compareTo(v.getMinOrderAmount()) >= 0 && v.getQuantity() > 0) {
+                    voucherId = v.getVoucherId();
+                    if ("percentage".equalsIgnoreCase(v.getDiscountType())) {
+                        discountAmount = totalAmount.multiply(v.getDiscountValue()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                        if (v.getMaxDiscountValue() != null && v.getMaxDiscountValue().compareTo(BigDecimal.ZERO) > 0 && discountAmount.compareTo(v.getMaxDiscountValue()) > 0) {
+                            discountAmount = v.getMaxDiscountValue();
+                        }
+                    } else { // fixed_amount
+                        discountAmount = v.getDiscountValue();
+                    }
+                } else {
+                    session.setAttribute("error", "Voucher is invalid or ineligible.");
+                    response.sendRedirect("product-detail?id=" + proId);
+                    return;
+                }
+            }
+
+            /* 5. Tạo đối tượng Order */
+            Order order = new Order();
+            order.setCusId(String.valueOf(user.getId())); // Giả định phương thức là getId()
+            order.setOrderDate(new Timestamp(System.currentTimeMillis()));
+            order.setTotalAmount(totalAmount);
+            order.setDiscountAmount(discountAmount);
+
+            BigDecimal shippingFee = new BigDecimal("30000"); // Phí ship cố định
+            BigDecimal finalAmount = totalAmount.subtract(discountAmount).add(shippingFee);
+            order.setFinalAmount(finalAmount);
+
+            order.setOrderStatus("pending");
+            order.setVoucherId(voucherId);
+
+            // Tạo order trong DB và lấy ID
+            OrderDAO orderDAO = new OrderDAO();
+            generatedOrderId = orderDAO.createOrder(order); // Giả sử createOrder trả về ID
+            order.setOrderId(generatedOrderId);
+
+            /* 6. Lưu OrderDetail với orderId đã có */
+            od.setOrderId(generatedOrderId);
+            OrderDetailDAO detailDAO = new OrderDetailDAO();
+            if (!detailDAO.createOrderDetail(od)) { // Giả định tên phương thức
+                throw new SQLException("Unable to save order details for direct purchase.");
+            }
+
+            /* 7. Trừ kho và giảm số lượng voucher */
+            stockDAO.decreaseStockAfterOrder(proId, quantity); // Dùng chung phương thức với createOrder
+            if (voucherId != null) {
+                new VoucherDAO().decreaseQuantity(voucherCode); // Giảm số lượng voucher đã dùng
+            }
+
+            /* 8. Chuyển tới trang thanh toán */
+            CustomerDAO customerDAO = new CustomerDAO();
+            Customer profile = customerDAO.getCustomerById(user.getId());
+            request.setAttribute("userProfile", profile);
+            request.setAttribute("order", order);
+            request.getRequestDispatcher("payment.jsp").forward(request, response);
+
+        } catch (Exception ex) {
+            // 9. ROLLBACK: Nếu đã tạo Order nhưng có lỗi ở các bước sau
+            if (generatedOrderId > 0) {
+                try {
+                    // Xóa Order, các OrderDetail sẽ được xóa theo (nhờ cascading delete trong DB)
+                    new OrderDAO().delete(generatedOrderId);
+                    // Hoàn lại số lượng voucher nếu có
+                    String voucherCode = request.getParameter("voucherCode");
+                    if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+                        new VoucherDAO().increaseQuantity(voucherCode); // Bạn cần tạo phương thức này
+                    }
+                } catch (Exception e) {
+                    Logger.getLogger(PaymentController.class.getName()).log(Level.SEVERE, "Error during rollback", e);
+                }
+            }
+
+            // Ghi log và báo lỗi cho người dùng
+            Logger.getLogger(PaymentController.class.getName()).log(Level.SEVERE, "DirectOrder Error", ex);
+            session.setAttribute("error", "Order processing error: " + ex.getMessage());
+            response.sendRedirect("product-detail?id=" + proId);
+        }
+    }
+//    private void createDirectOrder(HttpServletRequest request, HttpServletResponse response)
+//            throws ServletException, IOException, SQLException, ClassNotFoundException {
+//        response.setContentType("text/html;charset=UTF-8");
+//        request.setCharacterEncoding("UTF-8");
+//
+//        HttpSession session = request.getSession(false);
+//
+//        try {
+//            /* 1. Kiểm tra đăng nhập */
+//            User user = (User) session.getAttribute("LOGIN_USER");
+//            if (user == null) {
+//                response.sendRedirect("login.jsp");
+//                return;
+//            }
+//
+//            /* 2. Lấy thông tin từ form Mua Ngay */
+//            String proId = request.getParameter("productId");
+//            int quantity = Integer.parseInt(request.getParameter("quantity"));
+//            String voucherCode = request.getParameter("voucherCode");
+//
+//            /* 3. Lấy thông tin sản phẩm và kiểm tra tồn kho */
+//            StockDAO stockDAO = new StockDAO();
+//            ProductDAO productDAO = new ProductDAO();
+//            // Giả sử phương thức của bạn là getById, nếu là getProductByID thì bạn hãy đổi lại cho đúng
+//            Product product = productDAO.getById(proId);
+//
+//            if (product == null || stockDAO.getQuantity(proId) < quantity) {
+//                String errorMsg = (product == null) ? "Product not found." : "Product is out of stock for the requested quantity.";
+//                session.setAttribute("error", errorMsg);
+//                response.sendRedirect("product-detail?id=" + proId);
+//                return;
+//            }
+//
+//            /* 4. Tính toán tiền tệ */
+//            BigDecimal unitPrice = product.getProPrice();
+//            BigDecimal totalAmount = unitPrice.multiply(BigDecimal.valueOf(quantity));
+//            BigDecimal discountAmount = BigDecimal.ZERO;
+//            BigDecimal shippingFee = new BigDecimal("30000");
+//            Integer voucherId = null;
+//
+//            /* 5. Xử lý voucher */
+//            if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+//                VoucherDAO voucherDAO = new VoucherDAO();
+//                Voucher v = voucherDAO.getByCode(voucherCode);
+//                if (v != null && totalAmount.compareTo(v.getMinOrderAmount()) >= 0 && v.getQuantity() > 0) {
+//                    voucherId = v.getVoucherId();
+//                    if ("percentage".equalsIgnoreCase(v.getDiscountType())) {
+//                        discountAmount = totalAmount.multiply(v.getDiscountValue()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+//                        if (discountAmount.compareTo(v.getMaxDiscountValue()) > 0 && v.getMaxDiscountValue().compareTo(BigDecimal.ZERO) > 0) {
+//                            discountAmount = v.getMaxDiscountValue();
+//                        }
+//                    } else { // fixed_amount
+//                        discountAmount = v.getDiscountValue();
+//                    }
+//                    voucherDAO.decreaseQuantity(voucherCode);
+//                }
+//            }
+//
+//            BigDecimal finalAmount = totalAmount.subtract(discountAmount).add(shippingFee);
+//
+//            /* 6. Tạo đối tượng Order */
+//            OrderDAO orderDAO = new OrderDAO();
+//            Order order = new Order();
+//
+//            // Set các trường theo model `Order.java`
+//            order.setCusId(String.valueOf(user.getId())); // Giả sử user.getId() là đúng
+//            order.setOrderDate(new Timestamp(System.currentTimeMillis()));
+//            order.setTotalAmount(totalAmount);
+//            order.setDiscountAmount(discountAmount);
+//            order.setFinalAmount(finalAmount);
+//            order.setVoucherId(voucherId);
+//            order.setOrderStatus("Pending");
+//            order.setPaymentMethod(null); // Sẽ được cập nhật ở trang thanh toán
+//
+//            // === BỎ QUA VIỆC SET THÔNG TIN NGƯỜI NHẬN TẠI ĐÂY ===
+//            // order.setShippingAddress(...); 
+//            // order.setReceiverName(...);   
+//            // order.setReceiverPhone(...);  
+//            // =======================================================
+//            int generatedOrderId = orderDAO.createOrder(order);
+//            order.setOrderId(generatedOrderId);
+//
+//            /* 7. Tạo OrderDetail */
+//            OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
+//            OrderDetail od = new OrderDetail();
+//            od.setOrderId(generatedOrderId);
+//            od.setProId(proId);
+//            od.setQuantity(quantity);
+//            od.setUnitPrice(unitPrice.doubleValue());
+//            orderDetailDAO.create(od);
+//
+//            /* 8. Cập nhật kho */
+//            stockDAO.updateStock(proId, -quantity);
+//
+//            /* 9. Chuyển hướng đến trang thanh toán */
+//            session.setAttribute("orderToPay", order);
+//            response.sendRedirect("payment.jsp");
+//
+//        } catch (Exception e) {
+//            Logger.getLogger(PaymentController.class.getName()).log(Level.SEVERE, "DirectOrder Error", e);
+//            session.setAttribute("error", "An unexpected error occurred during checkout.");
+//            response.sendRedirect("product-detail?id=" + request.getParameter("productId"));
+//        }
+//    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

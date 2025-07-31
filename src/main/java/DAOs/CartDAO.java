@@ -42,6 +42,17 @@ public class CartDAO {
         }
     }
 
+    public boolean updateProQuantity(int cartId, int newQuantity) throws SQLException, ClassNotFoundException {
+        boolean check = false;
+        String sql = "UPDATE Cart SET quantity = ? WHERE cartId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newQuantity);
+            ps.setInt(2, cartId);
+            check = ps.executeUpdate() > 0;
+        }
+        return check;
+    }
+
     // Xóa sản phẩm trong giỏ theo cartId
     public void deleteCartItem(int cartId) throws SQLException, ClassNotFoundException {
         String sql = "DELETE FROM Cart WHERE cartId = ?";
@@ -49,6 +60,19 @@ public class CartDAO {
             stmt.setInt(1, cartId);
             stmt.executeUpdate();
         }
+    }
+
+    public boolean deleteProCartItem(int cartId) throws SQLException, ClassNotFoundException {
+        boolean check = false; // Khởi tạo biến boolean để kiểm tra kết quả
+        String sql = "DELETE FROM Cart WHERE cartId = ?";
+        try ( Connection conn = DBContext.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, cartId);
+            int affectedRows = ps.executeUpdate(); // Lấy số hàng bị ảnh hưởng
+            if (affectedRows > 0) {
+                check = true; // Nếu có hàng bị ảnh hưởng, tức là xóa thành công
+            }
+        }
+        return check; // Trả về kết quả
     }
 
     // Xóa toàn bộ giỏ hàng của khách

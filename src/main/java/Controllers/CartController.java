@@ -365,15 +365,11 @@ public class CartController extends BaseController {
             // Get the new quantity from the request
             int newQuantity = Integer.parseInt(request.getParameter("newQuantity")); // Expecting 'newQuantity'
 
-            if (newQuantity < 1) { // Ensure quantity is at least 1
-                newQuantity = 1;
-            }
-
             LinkedHashMap<String, ViewCartCustomer> cart
                     = (LinkedHashMap<String, ViewCartCustomer>) session.getAttribute("cart");
 
             if (cart == null) {
-                session.setAttribute("error", "Cart not found for update!"); // Updated message
+                session.setAttribute("error", "Cart not found for update!");
                 response.sendRedirect("cart.jsp");
                 return;
             }
@@ -385,23 +381,22 @@ public class CartController extends BaseController {
                     break;
                 }
             }
-
             if (item != null) {
+                int currentQuantity = item.getQuantity();
+
                 StockDAO stockDAO = new StockDAO();
                 int stock = stockDAO.getStockProductByProductId(productId);
 
                 CartDAO cartDAO = new CartDAO();
 
                 if (newQuantity > stock) {
-                    session.setAttribute("error", "Product '" + item.getProName() + "' exceeds available stock (" + stock + "). Maximum quantity allowed is " + stock + ".");
-                    // Set quantity to max available stock if exceeding
-                    cartDAO.updateQuantity(item.getCartId(), stock);
+                    session.setAttribute("error", "Product '" + item.getProName() + "' exceeds available stock (" + stock + ").");
                 } else if (newQuantity > 0) {
                     cartDAO.updateQuantity(item.getCartId(), newQuantity);
                     session.setAttribute("message", "Quantity updated successfully!");
-                } else { // If newQuantity is 0 or less, remove the item
+                } else if (newQuantity <= 0) { // If new quantity is 0 or less, remove it
                     cartDAO.deleteCartItem(item.getCartId());
-                    session.setAttribute("message", "Product removed from cart!");
+                    session.setAttribute("message", "Product removed!");
                 }
 
                 // Reload cart from DB to reflect changes
